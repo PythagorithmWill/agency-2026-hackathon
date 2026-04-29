@@ -1,0 +1,34 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Pre-warmed cache (DB-derived, regenerated on demand)
+cache/
+
+# Node
+node_modules/
+*.log
+npm-debug.log*
+
+# Next.js
+.next/
+out/
+dist/
+build/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+e2e-screenshots/
+
+# TS
+tsconfig.tsbuildinfo
+next-env.d.ts

@@ -1,0 +1,55 @@
+{
+  "name": "pythagorithm-suitability",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Pythagorithm — prospective accountability for federal spending. Agency 2026 hackathon, Ottawa, April 29 2026.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "embed": "tsx scripts/embed-corpus.ts",
+    "verify-db": "tsx scripts/verify-db.ts",
+    "audit": "npm audit --audit-level=high"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.700.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.13.0",
+    "gsap": "^3.15.0",
+    "next": "^15.5.15",
+    "pg": "^8.13.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "voyageai": "^0.0.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@tailwindcss/postcss": "^4.0.0-beta.7",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.5.15",
+    "happy-dom": "^20.9.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.0.0-beta.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "overrides": {
+    "postcss": "^8.5.6"
+  }
+}
