@@ -59,6 +59,12 @@ export function SearchInput({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  onSubmit();
+                }
+              }}
               autoFocus
               placeholder="Search by topic, recipient, program, or paste a draft excerpt"
               className="flex-1 bg-transparent border-0 outline-none text-[22px] leading-[28px] placeholder:italic placeholder:text-[var(--color-fg-subtle)]"
@@ -67,7 +73,15 @@ export function SearchInput({
             <textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Paste your draft solicitation. Working title, scope, recipient — whatever you have."
+              onKeyDown={(e) => {
+                // Cmd/Ctrl-Enter submits a draft from the textarea so plain
+                // Enter still inserts newlines (drafts are multi-line).
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  onSubmit();
+                }
+              }}
+              placeholder="Paste your draft solicitation. Working title, scope, recipient — whatever you have. (⌘/Ctrl+Enter to submit)"
               className="flex-1 bg-transparent border-0 outline-none text-[18px] leading-[26px] placeholder:italic placeholder:text-[var(--color-fg-subtle)] resize-none py-5 max-h-[180px]"
               rows={3}
             />
