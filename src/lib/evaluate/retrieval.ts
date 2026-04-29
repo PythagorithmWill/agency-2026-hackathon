@@ -197,13 +197,15 @@ function fedSearchSql({
   withDept: boolean;
   limit: number;
 }): string {
-  // For ad-hoc topic searches we drop the floor to $25K so research-scale
-  // grants surface (most NSERC / CFI / CIHR awards land between $25K and
-  // $250K). The 250K floor only applies in evaluate-a-draft mode where the
-  // candidate range is bounded by the user's anticipated amount.
+  // Ad-hoc search uses a $100K floor — high enough that broad queries
+  // like "AI" or "research" don't have to ts_rank 50K+ candidate rows
+  // (the previous $25K floor pushed search latency past 60s), low
+  // enough that real research / contribution grants still surface.
+  // Truly large research portfolios run well over $100K; the small
+  // long-tail of <$100K awards is uninteresting for at-a-glance scan.
   const amountClause = withAmountRange
     ? "agreement_value BETWEEN $2 AND $3"
-    : "agreement_value >= 25000";
+    : "agreement_value >= 100000";
   const deptParamIdx = withAmountRange ? 4 : 2;
   const deptClause = withDept
     ? `AND (
