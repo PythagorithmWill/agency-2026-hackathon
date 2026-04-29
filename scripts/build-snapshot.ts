@@ -5,12 +5,37 @@
  * before each demo).
  *
  * Usage:
- *   DATABASE_URL=... npx tsx scripts/build-snapshot.ts
+ *   npx tsx scripts/build-snapshot.ts
+ *
+ * Auto-loads DATABASE_URL from .env.local (the Next.js convention).
+ * Override by exporting DATABASE_URL in the shell first.
  *
  * Each query runs through `longQuery` with a per-statement timeout
  * raised to 60s. The whole pipeline runs sequentially (not in parallel)
  * so we don't blow through the 10-connection pool.
  */
+
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+// Load .env.local before anything else imports the pool.
+function loadEnvLocal() {
+  if (process.env.DATABASE_URL) return;
+  const envPath = path.resolve(process.cwd(), ".env.local");
+  try {
+    const raw = readFileSync(envPath, "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const m = line.match(/^([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/i);
+      if (!m) continue;
+      const [, key, valRaw] = m;
+      const val = valRaw.replace(/^["']|["']$/g, "");
+      if (!process.env[key]) process.env[key] = val;
+    }
+  } catch {
+    // .env.local missing — fall through; pool will throw a clearer error
+  }
+}
+loadEnvLocal();
 
 import {
   loadOverviewStats,
@@ -22,14 +47,19 @@ import {
   loadTemporalSeriesFed,
   loadForecastFed,
   loadConcentrationFed,
+  loadDepartmentRecipients,
+  loadDepartmentPrograms,
 } from "../src/lib/analytics/queries";
 import {
   SNAPSHOT_VERSION,
   writeSnapshot,
   snapshotPath,
   type AnalyticsSnapshot,
+  type DepartmentProfileSnapshot,
 } from "../src/lib/analytics/snapshot";
 import { closePool } from "../src/lib/db/pool";
+
+const TOP_DEPT_PROFILE_COUNT = 15;
 
 interface RunResult<T> {
   name: string;
@@ -109,6 +139,45 @@ async function main() {
     process.exit(1);
   }
 
+  // Per-department profiles for the top N departments.
+  console.log(`\nBuilding per-department profiles (top ${TOP_DEPT_PROFILE_COUNT})...`);
+  const departmentProfiles: Record<string, DepartmentProfileSnapshot> = {};
+  const top = (topDepts.value ?? []).slice(0, TOP_DEPT_PROFILE_COUNT);
+  for (const d of top) {
+    const recipients = await timed(`  recipients(${d.department.slice(0, 30)})`, () =>
+      loadDepartmentRecipients(d.department, 25, "long"),
+    );
+    const programs = await timed(`  programs (${d.department.slice(0, 30)})`, () =>
+      loadDepartmentPrograms(d.department, 25, "long"),
+    );
+    const deptSeries = await timed(`  series   (${d.department.slice(0, 30)})`, () =>
+      loadTemporalSeriesFed({ department: d.department, budget: "long" }),
+    );
+    const deptForecast = await timed(`  forecast (${d.department.slice(0, 30)})`, () =>
+      loadForecastFed({ department: d.department, forwardYears: 3, budget: "long" }),
+    );
+    if (!recipients.ok) notes.push(`Dept profile recipients failed for ${d.department}: ${recipients.error}`);
+    if (!programs.ok) notes.push(`Dept profile programs failed for ${d.department}: ${programs.error}`);
+    if (!deptSeries.ok) notes.push(`Dept profile series failed for ${d.department}: ${deptSeries.error}`);
+
+    departmentProfiles[d.department] = {
+      department: d.department,
+      totalSpend: d.total,
+      agreementCount: d.agreementCount,
+      recipientCount: d.recipientCount,
+      programCount: 0,
+      topRecipients: (recipients.value ?? []).map((r) => ({
+        recipient: r.recipient,
+        bn: r.bn,
+        total: r.total,
+        agreementCount: r.agreementCount,
+      })),
+      topPrograms: programs.value ?? [],
+      temporalSeries: deptSeries.value ?? { bySeries: d.department, points: [] },
+      forecast: deptForecast.value ?? null,
+    };
+  }
+
   const dataAsOfFy =
     series.value && series.value.points.length > 0
       ? series.value.points[series.value.points.length - 1].fy
@@ -129,6 +198,8 @@ async function main() {
     amendmentGrowth: growth.value ?? [],
     temporalSeries: series.value!,
     forecast: forecast.value ?? null,
+
+    departmentProfiles,
 
     notes,
   };

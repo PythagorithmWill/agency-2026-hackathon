@@ -28,11 +28,11 @@ export function Hero() {
           initial={reduce ? false : { opacity: 0, y: 8 }}
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
           transition={{ delay: 1.0, duration: 0.5, ease }}
-          className="mt-12 mx-auto max-w-[720px] text-[24px] leading-[34px] italic text-[var(--color-fg-muted)]"
+          className="mt-12 mx-auto max-w-[820px] text-[24px] leading-[34px] italic text-[var(--color-fg-muted)]"
         >
-          Search and evaluate federal contracts and grants before they're
-          posted publicly. Surface duplication, concentration, and
-          calibration issues during drafting — not after audit.
+          Follow the money — federal grants, Alberta contracts, charity flows,
+          sole-source amendments — across millions of records, in calibrated
+          language, with full citation.
         </motion.p>
 
         <motion.div

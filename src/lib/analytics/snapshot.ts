@@ -26,7 +26,28 @@ import type {
  * Schema is versioned. Breaking changes increment SNAPSHOT_VERSION;
  * the dashboard refuses to render against a mismatched snapshot.
  */
-export const SNAPSHOT_VERSION = 1;
+export const SNAPSHOT_VERSION = 2;
+
+export interface DepartmentProfileSnapshot {
+  department: string;
+  totalSpend: number;
+  agreementCount: number;
+  recipientCount: number;
+  programCount: number;
+  topRecipients: Array<{
+    recipient: string;
+    bn: string | null;
+    total: number;
+    agreementCount: number;
+  }>;
+  topPrograms: Array<{
+    program: string;
+    total: number;
+    agreementCount: number;
+  }>;
+  temporalSeries: TemporalSeries;
+  forecast: ForecastResult | null;
+}
 
 export interface AnalyticsSnapshot {
   version: number;
@@ -43,6 +64,12 @@ export interface AnalyticsSnapshot {
   amendmentGrowth: AmendmentGrowthRow[];
   temporalSeries: TemporalSeries;
   forecast: ForecastResult | null;
+
+  /**
+   * Per-department profiles for the top 15 departments by spend.
+   * Keyed by exact department name (matches owner_org_title).
+   */
+  departmentProfiles: Record<string, DepartmentProfileSnapshot>;
 
   /**
    * Notes from the precompute run — partial failures, count anomalies,

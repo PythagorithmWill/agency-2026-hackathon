@@ -519,3 +519,253 @@ export async function scanAmendmentGrowthFed(
     };
   });
 }
+
+/* ─── single-entity profile queries (department / recipient) ───── */
+
+export interface DepartmentProfileRow {
+  department: string;
+  totalSpend: number;
+  agreementCount: number;
+  recipientCount: number;
+  programCount: number;
+  fyRange: { start: number; end: number };
+}
+
+export async function loadDepartmentProfile(
+  department: string,
+  budget: Budget = "fast",
+): Promise<DepartmentProfileRow | null> {
+  const r = await run(budget)<{
+    total: string | number | null;
+    agreement_count: string | number | null;
+    recipient_count: string | number | null;
+    program_count: string | number | null;
+    fy_min: string | number | null;
+    fy_max: string | number | null;
+  }>(
+    `${FED_CURRENT_CTE}
+     SELECT
+       SUM(agreement_value)::numeric AS total,
+       COUNT(*) AS agreement_count,
+       COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
+       COUNT(DISTINCT prog_name_en) AS program_count,
+       MIN(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_min,
+       MAX(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_max
+     FROM agreement_current
+     WHERE owner_org_title = $1`,
+    [department],
+  );
+  const row = r.rows[0];
+  if (!row || !row.agreement_count || Number(row.agreement_count) === 0) return null;
+  return {
+    department,
+    totalSpend: Number(row.total) || 0,
+    agreementCount: Number(row.agreement_count) || 0,
+    recipientCount: Number(row.recipient_count) || 0,
+    programCount: Number(row.program_count) || 0,
+    fyRange: {
+      start: Number(row.fy_min) || 0,
+      end: Number(row.fy_max) || 0,
+    },
+  };
+}
+
+export async function loadDepartmentRecipients(
+  department: string,
+  limit = 25,
+  budget: Budget = "fast",
+): Promise<RecipientTotal[]> {
+  const r = await run(budget)<{
+    recipient: string | null;
+    bn: string | null;
+    total: string | number | null;
+    agreement_count: string | number | null;
+  }>(
+    `${FED_CURRENT_CTE}
+     SELECT
+       recipient_legal_name AS recipient,
+       recipient_business_number AS bn,
+       SUM(agreement_value)::numeric AS total,
+       COUNT(*) AS agreement_count
+     FROM agreement_current
+     WHERE owner_org_title = $1
+     GROUP BY recipient_legal_name, recipient_business_number
+     ORDER BY total DESC
+     LIMIT $2`,
+    [department, limit],
+  );
+  return r.rows.map((row) => ({
+    recipient: row.recipient ?? "—",
+    bn: row.bn ?? null,
+    total: Number(row.total) || 0,
+    agreementCount: Number(row.agreement_count) || 0,
+  }));
+}
+
+export async function loadDepartmentPrograms(
+  department: string,
+  limit = 25,
+  budget: Budget = "fast",
+): Promise<{ program: string; total: number; agreementCount: number }[]> {
+  const r = await run(budget)<{
+    program: string | null;
+    total: string | number | null;
+    agreement_count: string | number | null;
+  }>(
+    `${FED_CURRENT_CTE}
+     SELECT
+       prog_name_en AS program,
+       SUM(agreement_value)::numeric AS total,
+       COUNT(*) AS agreement_count
+     FROM agreement_current
+     WHERE owner_org_title = $1 AND prog_name_en IS NOT NULL
+     GROUP BY prog_name_en
+     ORDER BY total DESC
+     LIMIT $2`,
+    [department, limit],
+  );
+  return r.rows.map((row) => ({
+    program: row.program ?? "—",
+    total: Number(row.total) || 0,
+    agreementCount: Number(row.agreement_count) || 0,
+  }));
+}
+
+export interface RecipientProfileRow {
+  legalName: string;
+  bn: string | null;
+  province: string | null;
+  totalReceived: number;
+  agreementCount: number;
+  departmentCount: number;
+  programCount: number;
+  fyRange: { start: number; end: number };
+}
+
+/**
+ * Recipient lookup by BN. The corpus uses recipient_business_number as
+ * the canonical identifier; recipient_legal_name varies (translation,
+ * publisher reformatting). We accept both: if the input parses as a
+ * BN we filter on BN, otherwise we filter on the legal name.
+ */
+export async function loadRecipientProfile(
+  identifier: string,
+  budget: Budget = "fast",
+): Promise<RecipientProfileRow | null> {
+  const isBn = /^\d{9,}/.test(identifier);
+  const filterClause = isBn
+    ? "recipient_business_number = $1"
+    : "recipient_legal_name = $1";
+  const r = await run(budget)<{
+    legal_name: string | null;
+    bn: string | null;
+    province: string | null;
+    total: string | number | null;
+    agreement_count: string | number | null;
+    department_count: string | number | null;
+    program_count: string | number | null;
+    fy_min: string | number | null;
+    fy_max: string | number | null;
+  }>(
+    `${FED_CURRENT_CTE}
+     SELECT
+       MAX(recipient_legal_name) AS legal_name,
+       MAX(recipient_business_number) AS bn,
+       MAX(recipient_province) AS province,
+       SUM(agreement_value)::numeric AS total,
+       COUNT(*) AS agreement_count,
+       COUNT(DISTINCT owner_org_title) AS department_count,
+       COUNT(DISTINCT prog_name_en) AS program_count,
+       MIN(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_min,
+       MAX(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_max
+     FROM agreement_current
+     WHERE ${filterClause}`,
+    [identifier],
+  );
+  const row = r.rows[0];
+  if (!row || !row.agreement_count || Number(row.agreement_count) === 0) return null;
+  return {
+    legalName: row.legal_name ?? identifier,
+    bn: row.bn ?? null,
+    province: row.province ?? null,
+    totalReceived: Number(row.total) || 0,
+    agreementCount: Number(row.agreement_count) || 0,
+    departmentCount: Number(row.department_count) || 0,
+    programCount: Number(row.program_count) || 0,
+    fyRange: {
+      start: Number(row.fy_min) || 0,
+      end: Number(row.fy_max) || 0,
+    },
+  };
+}
+
+export async function loadRecipientByDepartment(
+  identifier: string,
+  budget: Budget = "fast",
+): Promise<{ department: string; total: number; agreementCount: number }[]> {
+  const isBn = /^\d{9,}/.test(identifier);
+  const filterClause = isBn
+    ? "recipient_business_number = $1"
+    : "recipient_legal_name = $1";
+  const r = await run(budget)<{
+    department: string | null;
+    total: string | number | null;
+    agreement_count: string | number | null;
+  }>(
+    `${FED_CURRENT_CTE}
+     SELECT
+       owner_org_title AS department,
+       SUM(agreement_value)::numeric AS total,
+       COUNT(*) AS agreement_count
+     FROM agreement_current
+     WHERE ${filterClause}
+       AND owner_org_title IS NOT NULL
+     GROUP BY owner_org_title
+     ORDER BY total DESC`,
+    [identifier],
+  );
+  return r.rows.map((row) => ({
+    department: row.department ?? "—",
+    total: Number(row.total) || 0,
+    agreementCount: Number(row.agreement_count) || 0,
+  }));
+}
+
+export async function loadRecipientAgreements(
+  identifier: string,
+  limit = 50,
+  budget: Budget = "fast",
+): Promise<RecentAgreement[]> {
+  const isBn = /^\d{9,}/.test(identifier);
+  const filterClause = isBn
+    ? "recipient_business_number = $1"
+    : "recipient_legal_name = $1";
+  const r = await run(budget)<{
+    ref_number: string | null;
+    recipient_legal_name: string | null;
+    owner_org_title: string | null;
+    prog_name_en: string | null;
+    agreement_value: string | number | null;
+    agreement_start_date: string | null;
+    recipient_province: string | null;
+  }>(
+    `${FED_CURRENT_CTE}
+     SELECT
+       ref_number, recipient_legal_name, owner_org_title, prog_name_en,
+       agreement_value, agreement_start_date, recipient_province
+     FROM agreement_current
+     WHERE ${filterClause}
+     ORDER BY agreement_value DESC
+     LIMIT $2`,
+    [identifier, limit],
+  );
+  return r.rows.map((row) => ({
+    recordId: row.ref_number ?? "",
+    recipient: row.recipient_legal_name ?? "—",
+    department: row.owner_org_title ?? "—",
+    program: row.prog_name_en ?? null,
+    value: Number(row.agreement_value) || 0,
+    startDate: row.agreement_start_date,
+    province: row.recipient_province,
+  }));
+}

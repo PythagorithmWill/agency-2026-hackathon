@@ -61,6 +61,9 @@ export function HomepageFooter() {
           <div className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)] mt-2">
             Built on the Pythagorithm Proof Methodology v1.0
           </div>
+          <div className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.1em] text-[var(--color-fg-subtle)] mt-1 normal-case tracking-normal italic">
+            Follow the money — Alberta TRACE methodology, federal corpus, open source.
+          </div>
         </div>
       </div>
     </footer>
