@@ -33,7 +33,14 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
     });
   } catch (err: unknown) {
     const e = err as { code?: string; name?: string; message?: string };
-    console.error("[DB] query failed:", e.message ?? String(err), {
+    const msg = e.message ?? String(err);
+    // Pool query_timeout is an expected failure mode under contention —
+    // every caller wraps with Promise.allSettled / catch. Log at warn
+    // level so it doesn't trigger Next's dev error overlay. Real errors
+    // (syntax, schema, connection-loss) still surface to console.error.
+    const isTimeout = msg.toLowerCase().includes("timeout");
+    const logger = isTimeout ? console.warn : console.error;
+    logger("[DB] query failed:", msg, {
       code: e.code ?? "unknown",
       name: e.name ?? "Error",
       text: text.slice(0, 120),
