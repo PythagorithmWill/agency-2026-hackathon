@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-REGION="${AWS_REGION:-us-west-2}"
+REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-$(aws configure get region 2>/dev/null || echo us-east-1)}}"
 ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
 REPO_URI="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/glassbox"
 IMAGE_TAG="$(date -u +%Y%m%d-%H%M%S)"
