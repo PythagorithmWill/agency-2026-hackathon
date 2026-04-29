@@ -125,11 +125,20 @@ html, body {
   .scroll-arrow { animation: none; }
 }
 
-/* Search input wrapper — kept as a relative positioning anchor for any
-   future overlays. The previous focus-within accent border was removed
-   per design feedback; the input's own border-strong is sufficient. */
+/* Search input wrapper — relative anchor for any future overlays.
+   The previous focus-within accent border was removed per design.
+   The wrapper's own border-strong is the visible focus surface,
+   so we suppress the global *:focus-visible teal ring on the inputs
+   themselves (the caret + wrap border are enough for accessibility). */
 .search-input-wrap {
   position: relative;
+}
+.search-input-wrap input:focus,
+.search-input-wrap input:focus-visible,
+.search-input-wrap textarea:focus,
+.search-input-wrap textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Skeleton / progress bar */
