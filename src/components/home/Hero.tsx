@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { GlassboxWordmark } from "../brand/GlassboxMark";
+import { MapleLeaf } from "../brand/MapleLeaf";
 import { SearchInput } from "../SearchInput";
 
 /**
@@ -98,8 +99,24 @@ export function Hero() {
         style={{ opacity: 0.55 }}
       />
 
+      {/* Maple leaf — right-side silhouette echoing the hackathon's
+          Ottawa setting. Subtle Canadian red, parallaxes in the same
+          column as the dark overlay so it sits "in" the photograph
+          rather than floating in the foreground. */}
+      <div
+        aria-hidden
+        className="absolute z-[2] inset-y-0 right-0 hidden md:flex items-center pointer-events-none"
+        style={{ width: "min(46vw, 620px)" }}
+      >
+        <MapleLeaf
+          className="w-full h-auto max-h-[68vh] mr-[-6vw] drop-shadow-[0_18px_48px_rgba(0,0,0,0.45)]"
+          fill="#D52B1E"
+          opacity={0.18}
+        />
+      </div>
+
       {/* Atmospheric drift accents */}
-      <div className="atmosphere-drift z-[2]" aria-hidden />
+      <div className="atmosphere-drift z-[3]" aria-hidden />
 
       {/* Foreground — pulled up & fades as user scrolls */}
       <div
@@ -119,8 +136,15 @@ export function Hero() {
         </div>
 
         <div
+          className="mt-5 font-[var(--font-mono)] text-[12px] md:text-[13px] uppercase tracking-[0.32em] text-white/85 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
+          style={{ animation: "glassbox-fade-up 0.5s ease-out 0.35s both" }}
+        >
+          Making government transparent
+        </div>
+
+        <div
           className="mt-12"
-          style={{ animation: "glassbox-fade-up 0.5s ease-out 0.5s both" }}
+          style={{ animation: "glassbox-fade-up 0.5s ease-out 0.6s both" }}
         >
           <SearchInput />
         </div>
