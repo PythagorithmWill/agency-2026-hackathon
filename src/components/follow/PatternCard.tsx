@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import type { PatternDef } from "@/lib/patterns/registry";
 import { PatternStatusPill } from "./PatternStatusPill";
 
@@ -9,7 +6,8 @@ interface Props {
   pattern: PatternDef;
   /** Optional live match-count badge (rendered as "{n} records match"). */
   matchCount?: number | null;
-  /** Animation index for staggered reveal. */
+  /** Animation index — kept for API parity, no longer used after a
+   *  framer-motion whileInView race-on-unmount caused removeChild crashes. */
   index?: number;
 }
 
@@ -20,15 +18,18 @@ interface Props {
  * attribution line where applicable.
  *
  * Click → /follow/{id}.
+ *
+ * Animation note: previously wrapped in a framer-motion whileInView
+ * stagger — that crashed during navigation away from the homepage
+ * (React tried to remove a DOM node already detached by the in-flight
+ * animation). Using a CSS reveal animation instead, gated by index.
  */
 export function PatternCard({ pattern, matchCount, index = 0 }: Props) {
-  const reduce = useReducedMotion();
   return (
-    <motion.div
-      initial={reduce ? false : { opacity: 0, y: 12 }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.5, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+    <div
+      style={{
+        animation: `glassbox-fade-up 0.5s ease-out ${index * 0.06}s both`,
+      }}
     >
       <Link
         href={`/follow/${pattern.id}` as never}
@@ -64,7 +65,12 @@ export function PatternCard({ pattern, matchCount, index = 0 }: Props) {
             Pattern based on Alberta TRACE methodology
           </div>
         )}
+        {pattern.challenge && (
+          <div className="mt-1 font-[var(--font-mono)] text-[9.5px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] leading-snug">
+            Challenge #{pattern.challenge}
+          </div>
+        )}
       </Link>
-    </motion.div>
+    </div>
   );
 }

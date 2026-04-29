@@ -1,5 +1,7 @@
 import { fundingLoopsDetector } from "./funding-loops";
 import { amendmentPurposeDriftDetector } from "./amendment-purpose-drift";
+import { soleSourceCreepDetector } from "./sole-source-creep";
+import { zombieRecipientsDetector } from "./zombie-recipients";
 import { PATTERNS } from "./registry";
 import type { PatternDetector } from "./types";
 
@@ -12,6 +14,8 @@ import type { PatternDetector } from "./types";
 const REGISTRY: Record<string, PatternDetector> = {
   "funding-loops": fundingLoopsDetector,
   "amendment-purpose-drift": amendmentPurposeDriftDetector,
+  "sole-source-creep": soleSourceCreepDetector,
+  "zombie-recipients": zombieRecipientsDetector,
 };
 
 export function getDetector(patternId: string): PatternDetector | null {
