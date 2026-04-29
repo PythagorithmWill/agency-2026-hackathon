@@ -4,21 +4,30 @@ import type {
   ProofToken,
 } from "../types";
 import { calibrationFlags } from "../gov/validators";
-import {
-  generateMockComparables,
-  buildAwardeeConcentration,
-} from "./mockComparables";
+import { buildAwardeeConcentration } from "./mockComparables";
+import { retrieveComparables } from "./retrieval";
 import { scoreSubmission } from "../suitability/engine";
 import { hashEvidence, makeProofId, sealProofToken, standardDisclaimers } from "../proof";
 
 /**
- * Compose a full EvaluationResult from a draft submission. Currently uses
- * the deterministic mockComparables generator; once the embedding job
- * has populated the corpus, this is swapped to live hybrid retrieval
- * (BM25 + cosine) against pgvector.
+ * Compose a full EvaluationResult from a draft submission. Calls
+ * `retrieveComparables` against fed.grants_contributions on the live
+ * Render Postgres replica with the F-3 max-amendment CTE; falls back to
+ * the deterministic mockComparables generator only on retrieval error
+ * or zero matches (logged loudly to stderr).
+ *
+ * `buildAwardeeConcentration` stays — it works on whatever comparable
+ * set we end up with.
  */
-export function buildEvaluationResult(submission: DraftSubmission): EvaluationResult {
-  const comparables = generateMockComparables(submission.draftText, submission.workingTitle);
+export async function buildEvaluationResult(
+  submission: DraftSubmission,
+): Promise<EvaluationResult> {
+  const comparables = await retrieveComparables(
+    submission.draftText,
+    submission.workingTitle,
+    submission.anticipatedAmount,
+    submission.awardingDepartment,
+  );
   const awardeeConcentration = buildAwardeeConcentration(comparables);
   const flags = calibrationFlags(submission.draftText);
 

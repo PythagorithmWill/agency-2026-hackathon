@@ -34,7 +34,7 @@ export async function POST(request: Request): Promise<Response> {
     anticipatedFiscalYear: Number.isFinite(payload.anticipatedFiscalYear) ? payload.anticipatedFiscalYear : 2027,
   };
 
-  const result = buildEvaluationResult(submission);
+  const result = await buildEvaluationResult(submission);
   saveEvaluation(result);
 
   return NextResponse.json({
