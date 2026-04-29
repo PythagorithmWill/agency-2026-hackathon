@@ -27,14 +27,14 @@ export const metadata: Metadata = {
       "Prospective accountability for federal and Alberta provincial spending. Search, evaluate, and audit before the money goes out.",
     type: "website",
     siteName: "Glassbox",
-    images: [{ url: "/og.svg", width: 1200, height: 630, alt: "Glassbox — See through the spend." }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Glassbox — See through the spend." }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Glassbox — See through the spend.",
     description:
       "Prospective accountability for federal and Alberta provincial spending.",
-    images: ["/og.svg"],
+    images: ["/og.png"],
   },
   robots: { index: false, follow: false },
 };
