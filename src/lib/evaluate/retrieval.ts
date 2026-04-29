@@ -108,8 +108,163 @@ export async function retrieveComparables(
     anticipatedAmount > 0 ? Math.max(100_000, anticipatedAmount * 0.4) : 100_000;
   const maxAmount =
     anticipatedAmount > 0 ? anticipatedAmount * 2.5 : 250_000_000;
+  const deptFilter = normalizeDept(_awardingDept);
 
-  const sql = `
+  // First attempt — with dept prefilter when present.
+  let rows: Row[] = [];
+  try {
+    const r = await query<Row>(buildRetrieveSql(true), [tsq, minAmount, maxAmount, deptFilter]);
+    rows = r.rows;
+  } catch (err) {
+    console.warn(
+      "[retrieve] SHIPPING_MOCK_FALLBACK — query threw:",
+      (err as Error).message,
+    );
+    return generateMockComparables(draftText, workingTitle);
+  }
+
+  // DEPT_PREFILTER_THIN — relax dept filter when the result set is too sparse.
+  if (deptFilter && rows.length < 3) {
+    console.warn(
+      `[retrieve] DEPT_PREFILTER_THIN: ${deptFilter} returned ${rows.length}, relaxing`,
+    );
+    try {
+      const r = await query<Row>(buildRetrieveSql(false), [tsq, minAmount, maxAmount]);
+      rows = r.rows;
+    } catch (err) {
+      console.warn(
+        "[retrieve] SHIPPING_MOCK_FALLBACK — relax query threw:",
+        (err as Error).message,
+      );
+      return generateMockComparables(draftText, workingTitle);
+    }
+  }
+
+  if (rows.length === 0) {
+    console.warn(
+      `[retrieve] SHIPPING_MOCK_FALLBACK — 0 rows for tsquery '${tsq}'`,
+    );
+    return generateMockComparables(draftText, workingTitle);
+  }
+
+  const maxRank = Math.max(...rows.map((r) => Number(r.rank) || 0), 1e-6);
+
+  return rows.map((row, i) => mapRow(row, i, maxRank));
+}
+
+/**
+ * Standalone search against the federal corpus. Same FTS pipeline as
+ * `retrieveComparables` but without the amount-range prefilter (the user
+ * is exploring, not evaluating against a specific budget) and with a
+ * larger LIMIT 25. Department filter applied when present, with the same
+ * relax-when-thin behavior.
+ */
+export async function searchCorpus(
+  queryText: string,
+  awardingDept?: string,
+): Promise<ComparableRecord[]> {
+  const tsq = tsqueryFor(queryText, "");
+  if (!tsq) return [];
+
+  const deptFilter = normalizeDept(awardingDept);
+  const sqlWith = `
+    WITH agreement_current AS (
+      SELECT DISTINCT ON (
+        ref_number,
+        COALESCE(recipient_business_number, recipient_legal_name, _id::text)
+      )
+        ref_number, recipient_legal_name, recipient_business_number,
+        recipient_province, owner_org_title, prog_name_en,
+        agreement_value, agreement_start_date, description_en,
+        ts_rank_cd(
+          to_tsvector('english', description_en),
+          to_tsquery('english', $1),
+          32
+        ) AS rank
+      FROM fed.grants_contributions
+      WHERE agreement_value >= 250000
+        AND description_en IS NOT NULL
+        AND length(description_en) >= 80
+        AND to_tsvector('english', description_en) @@ to_tsquery('english', $1)
+        AND (
+          $2::text IS NULL
+          OR owner_org_title = $2
+          OR owner_org_title ILIKE $2 || '%'
+        )
+      ORDER BY
+        ref_number,
+        COALESCE(recipient_business_number, recipient_legal_name, _id::text),
+        NULLIF(amendment_number, '')::int DESC NULLS LAST,
+        _id DESC
+    )
+    SELECT * FROM agreement_current
+    ORDER BY rank DESC
+    LIMIT 25
+  `;
+  const sqlWithout = `
+    WITH agreement_current AS (
+      SELECT DISTINCT ON (
+        ref_number,
+        COALESCE(recipient_business_number, recipient_legal_name, _id::text)
+      )
+        ref_number, recipient_legal_name, recipient_business_number,
+        recipient_province, owner_org_title, prog_name_en,
+        agreement_value, agreement_start_date, description_en,
+        ts_rank_cd(
+          to_tsvector('english', description_en),
+          to_tsquery('english', $1),
+          32
+        ) AS rank
+      FROM fed.grants_contributions
+      WHERE agreement_value >= 250000
+        AND description_en IS NOT NULL
+        AND length(description_en) >= 80
+        AND to_tsvector('english', description_en) @@ to_tsquery('english', $1)
+      ORDER BY
+        ref_number,
+        COALESCE(recipient_business_number, recipient_legal_name, _id::text),
+        NULLIF(amendment_number, '')::int DESC NULLS LAST,
+        _id DESC
+    )
+    SELECT * FROM agreement_current
+    ORDER BY rank DESC
+    LIMIT 25
+  `;
+
+  let rows: Row[];
+  try {
+    const r = await query<Row>(sqlWith, [tsq, deptFilter]);
+    rows = r.rows;
+    if (deptFilter && rows.length < 3) {
+      console.warn(
+        `[search] DEPT_PREFILTER_THIN: ${deptFilter} returned ${rows.length}, relaxing`,
+      );
+      const r2 = await query<Row>(sqlWithout, [tsq]);
+      rows = r2.rows;
+    }
+  } catch (err) {
+    console.warn("[search] query threw:", (err as Error).message);
+    return [];
+  }
+
+  if (rows.length === 0) return [];
+  const maxRank = Math.max(...rows.map((r) => Number(r.rank) || 0), 1e-6);
+  return rows.map((row, i) => mapRow(row, i, maxRank));
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Shared helpers
+   ───────────────────────────────────────────────────────────────────── */
+
+function buildRetrieveSql(withDept: boolean): string {
+  const deptClause = withDept
+    ? `AND (
+          $4::text IS NULL
+          OR owner_org_title = $4
+          OR owner_org_title ILIKE $4 || '%'
+        )`
+    : "";
+  return `
     WITH agreement_current AS (
       SELECT DISTINCT ON (
         ref_number,
@@ -128,6 +283,7 @@ export async function retrieveComparables(
         AND description_en IS NOT NULL
         AND length(description_en) >= 80
         AND to_tsvector('english', description_en) @@ to_tsquery('english', $1)
+        ${deptClause}
       ORDER BY
         ref_number,
         COALESCE(recipient_business_number, recipient_legal_name, _id::text),
@@ -138,45 +294,41 @@ export async function retrieveComparables(
     ORDER BY rank DESC
     LIMIT 12
   `;
+}
 
-  let rows: Row[];
-  try {
-    const r = await query<Row>(sql, [tsq, minAmount, maxAmount]);
-    rows = r.rows;
-  } catch (err) {
-    console.warn(
-      "[retrieve] SHIPPING_MOCK_FALLBACK — query threw:",
-      (err as Error).message,
-    );
-    return generateMockComparables(draftText, workingTitle);
-  }
+const NULL_DEPT_VALUES = new Set([
+  "",
+  "any",
+  "(any)",
+  "(any department)",
+  "other / not yet assigned",
+  "other",
+  "not yet assigned",
+]);
 
-  if (rows.length === 0) {
-    console.warn(
-      `[retrieve] SHIPPING_MOCK_FALLBACK — 0 rows for tsquery '${tsq}'`,
-    );
-    return generateMockComparables(draftText, workingTitle);
-  }
+function normalizeDept(d?: string | null): string | null {
+  if (!d) return null;
+  const trimmed = d.trim();
+  if (NULL_DEPT_VALUES.has(trimmed.toLowerCase())) return null;
+  return trimmed;
+}
 
-  const maxRank = Math.max(...rows.map((r) => Number(r.rank) || 0), 1e-6);
-
-  return rows.map((row, i): ComparableRecord => {
-    const desc = row.description_en ?? "";
-    const excerpt = desc.length > 240 ? desc.slice(0, 240) + "…" : desc;
-    const sim = Math.max(0, Math.min(1, Number(row.rank) / maxRank));
-    return {
-      recordId: row.ref_number ?? `fed-${i}`,
-      sourceDataset: "fed",
-      recipientLegalName: row.recipient_legal_name ?? "—",
-      recipientBn: row.recipient_business_number ?? null,
-      recipientProvince: row.recipient_province ?? null,
-      awardingDept: row.owner_org_title ?? "—",
-      programCode: row.prog_name_en ?? null,
-      fiscalYear: fiscalYearOf(row.agreement_start_date),
-      agreementValue: Number(row.agreement_value) || 0,
-      description: excerpt,
-      similarity: sim,
-      retrievalReason: "keyword",
-    };
-  });
+function mapRow(row: Row, i: number, maxRank: number): ComparableRecord {
+  const desc = row.description_en ?? "";
+  const excerpt = desc.length > 240 ? desc.slice(0, 240) + "…" : desc;
+  const sim = Math.max(0, Math.min(1, Number(row.rank) / maxRank));
+  return {
+    recordId: row.ref_number ?? `fed-${i}`,
+    sourceDataset: "fed",
+    recipientLegalName: row.recipient_legal_name ?? "—",
+    recipientBn: row.recipient_business_number ?? null,
+    recipientProvince: row.recipient_province ?? null,
+    awardingDept: row.owner_org_title ?? "—",
+    programCode: row.prog_name_en ?? null,
+    fiscalYear: fiscalYearOf(row.agreement_start_date),
+    agreementValue: Number(row.agreement_value) || 0,
+    description: excerpt,
+    similarity: sim,
+    retrievalReason: "keyword",
+  };
 }
