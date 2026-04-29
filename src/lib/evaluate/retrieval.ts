@@ -197,9 +197,13 @@ function fedSearchSql({
   withDept: boolean;
   limit: number;
 }): string {
+  // For ad-hoc topic searches we drop the floor to $25K so research-scale
+  // grants surface (most NSERC / CFI / CIHR awards land between $25K and
+  // $250K). The 250K floor only applies in evaluate-a-draft mode where the
+  // candidate range is bounded by the user's anticipated amount.
   const amountClause = withAmountRange
     ? "agreement_value BETWEEN $2 AND $3"
-    : "agreement_value >= 250000";
+    : "agreement_value >= 25000";
   const deptParamIdx = withAmountRange ? 4 : 2;
   const deptClause = withDept
     ? `AND (

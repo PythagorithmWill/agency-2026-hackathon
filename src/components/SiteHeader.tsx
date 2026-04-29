@@ -94,24 +94,28 @@ export function SiteHeader() {
         <nav className="flex items-center gap-6 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] text-[var(--color-fg-muted)]">
           <Link
             href={"/follow" as never}
+            data-tour-id="tour-nav-follow"
             className="hover:text-[var(--color-fg)] transition-colors"
           >
             Follow the money
           </Link>
           <Link
             href={"/recommendations" as never}
+            data-tour-id="tour-nav-recommendations"
             className="hover:text-[var(--color-fg)] transition-colors"
           >
             Recommendations
           </Link>
           <Link
             href={"/transparency" as never}
+            data-tour-id="tour-nav-transparency"
             className="hover:text-[var(--color-fg)] transition-colors"
           >
             Transparency
           </Link>
           <Link
             href={"/methodology" as never}
+            data-tour-id="tour-nav-methodology"
             className="hover:text-[var(--color-fg)] transition-colors"
           >
             Methodology

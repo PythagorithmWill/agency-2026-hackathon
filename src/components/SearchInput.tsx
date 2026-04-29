@@ -42,7 +42,7 @@ export function SearchInput({
   };
 
   return (
-    <div className="mx-auto max-w-[720px] w-full">
+    <div className="mx-auto max-w-[720px] w-full" data-tour-id="tour-search">
       <form
         onSubmit={(e) => {
           e.preventDefault();

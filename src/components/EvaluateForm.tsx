@@ -27,9 +27,28 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
   const [fiscalYear, setFiscalYear] = useState(2027);
 
   const flags = useMemo(() => calibrationFlags(draftText), [draftText]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Show what's blocking submit so the button isn't a dead end. The API
+  // requires workingTitle non-empty AND draftText >= 40 chars; surface
+  // both before the user clicks.
+  const validation = (() => {
+    const wtOK = workingTitle.trim().length > 0;
+    const draftLen = draftText.trim().length;
+    const draftOK = draftLen >= 40;
+    if (!wtOK && !draftOK) return "Add a working title and at least 40 characters of draft text.";
+    if (!wtOK) return "Working title is required.";
+    if (!draftOK) return `Draft needs at least 40 characters (currently ${draftLen}).`;
+    return null;
+  })();
+  const canSubmit = validation === null && !working;
 
   const onSubmit = async () => {
-    if (!draftText.trim() || !workingTitle.trim()) return;
+    setSubmitError(null);
+    if (!canSubmit) {
+      setSubmitError(validation);
+      return;
+    }
     const submission = {
       workingTitle,
       draftText,
@@ -37,13 +56,26 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
       anticipatedAmount: Number(anticipatedAmount.replace(/[^0-9.]/g, "")) || 0,
       anticipatedFiscalYear: fiscalYear,
     };
-    const res = await fetch("/api/draft/evaluate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(submission),
-    });
+    let res: Response;
+    try {
+      res = await fetch("/api/draft/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submission),
+      });
+    } catch (e) {
+      setSubmitError(`Network error: ${(e as Error).message}`);
+      return;
+    }
     if (!res.ok) {
-      console.error("evaluate failed", res.status);
+      let msg = `Evaluate API failed (${res.status})`;
+      try {
+        const body = (await res.json()) as { error?: string };
+        if (body.error) msg = body.error;
+      } catch {
+        /* ignore */
+      }
+      setSubmitError(msg);
       return;
     }
     const data = (await res.json()) as { evaluationId: string };
@@ -159,13 +191,23 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
           </div>
         </Field>
 
-        <div className="flex items-center justify-end gap-4">
+        <div className="flex items-center justify-end gap-4 flex-wrap">
+          {validation && (
+            <div className="flex-1 min-w-0 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.06em] text-[var(--color-fg-muted)]">
+              {validation}
+            </div>
+          )}
+          {submitError && (
+            <div className="flex-1 min-w-0 rounded-md border border-[var(--color-accent-fail)]/40 bg-[var(--color-bg-elev-1)] px-3 py-2 text-[12px] text-[var(--color-accent-fail)]">
+              {submitError}
+            </div>
+          )}
           <button
             type="submit"
-            disabled={working || !draftText.trim() || !workingTitle.trim()}
+            disabled={!canSubmit}
             className="group inline-flex items-center gap-3 px-7 h-14 rounded-[16px] bg-[var(--color-accent)] text-[var(--color-bg)] text-[var(--text-body)] font-semibold hover:opacity-90 transition disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            Evaluate draft
+            {working ? "Evaluating…" : "Evaluate draft"}
             <span aria-hidden className="transition-transform group-hover:translate-x-2">
               →
             </span>
