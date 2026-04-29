@@ -46,13 +46,13 @@ fed_totals AS (
   GROUP BY 1
 ),
 loop_score AS (
+  -- cra.loop_universe is keyed by bn (per-entity loop summary), so we use
+  -- it directly without a join to loop_participants.
   SELECT
-    lp.bn AS bn_root,
-    MAX(lu.score) AS max_loop_score,
-    COUNT(DISTINCT lu.loop_id) AS loop_count
-  FROM cra.loop_participants lp
-  JOIN cra.loop_universe lu USING (loop_id)
-  GROUP BY 1
+    bn AS bn_root,
+    score AS max_loop_score,
+    total_loops AS loop_count
+  FROM cra.loop_universe
 ),
 violations AS (
   SELECT
@@ -63,7 +63,7 @@ violations AS (
 ),
 scored AS (
   SELECT
-    e.entity_id,
+    e.id AS entity_id,
     e.canonical_name,
     e.bn_root,
     e.dataset_sources,

@@ -180,7 +180,7 @@ export function GlassBox({ findings }: { findings: FindingCardType[] }) {
   );
 }
 
-function activeStratumFor(f: FindingCardType): string {
+function activeStratumFor(_f: FindingCardType): string {
   // Source-linked findings (CRA loops, FED amendment creep) sit at S4.
   // Outcome briefs that have synthesis sit at S3. Glass Box findings are
   // primarily S4 — we descended along a strand to a source row.

@@ -35,7 +35,7 @@ async function prewarm(seed: Seed): Promise<unknown> {
   const ilike = `%${seed.name}%`;
   const [golden, loops, agreements, violations] = await Promise.all([
     query(
-      `SELECT entity_id, canonical_name, bn_root, dataset_sources, addresses
+      `SELECT id, canonical_name, bn_root, dataset_sources, addresses
          FROM general.entity_golden_records
         WHERE canonical_name ILIKE $1
            OR ($2::text IS NOT NULL AND bn_root = $2)
@@ -43,13 +43,13 @@ async function prewarm(seed: Seed): Promise<unknown> {
       [ilike, seed.bn ?? null],
     ),
     query(
-      `SELECT lu.loop_id, lu.score, lu.hops
+      `SELECT lu.bn, lu.legal_name, lu.score, lu.total_loops,
+              lu.max_bottleneck, lu.total_circular_amt
          FROM cra.loop_universe lu
-         JOIN cra.loop_participants lp USING (loop_id)
-         JOIN general.entity_golden_records e ON e.bn_root = lp.bn
+         JOIN general.entity_golden_records e ON e.bn_root = lu.bn
         WHERE e.canonical_name ILIKE $1
-        ORDER BY lu.score DESC
-        LIMIT 25`,
+        ORDER BY lu.score DESC NULLS LAST
+        LIMIT 5`,
       [ilike],
     ),
     query(

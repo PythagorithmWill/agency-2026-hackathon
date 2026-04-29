@@ -5,14 +5,14 @@
 -- Guards applied: F-3 (CTE picks max amendment_number per partition).
 --
 -- Parameters:
---   $1 = entity_id (general.entity_golden_records.entity_id)
+--   $1 = id (general.entity_golden_records.id) — string UUID/UUID-ish
 
 SET search_path TO general, cra, fed, public;
 
 WITH e AS (
   SELECT *
   FROM general.entity_golden_records
-  WHERE entity_id = $1
+  WHERE id = $1
   LIMIT 1
 ),
 agreement_current AS (
@@ -63,15 +63,16 @@ violations AS (
 ),
 loops AS (
   SELECT
-    lu.loop_id,
+    lu.bn,
+    lu.legal_name,
     lu.score,
-    lu.hops,
-    lu.notes
-  FROM cra.loop_universe lu
-  JOIN cra.loop_participants lp USING (loop_id), e
-  WHERE lp.bn = e.bn_root
-  ORDER BY lu.score DESC, lu.hops ASC
-  LIMIT 20
+    lu.total_loops,
+    lu.max_bottleneck,
+    lu.total_circular_amt
+  FROM cra.loop_universe lu, e
+  WHERE lu.bn = e.bn_root
+  ORDER BY lu.score DESC NULLS LAST
+  LIMIT 5
 )
 SELECT
   jsonb_build_object(

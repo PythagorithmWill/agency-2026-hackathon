@@ -71,7 +71,7 @@ export function StrataPanel({
           );
         })}
         {/* Tiny labels at the right of each arc */}
-        {STRATA.map((s, i) => (
+        {STRATA.map((s) => (
           <text
             key={s.id}
             x={cx + s.radius + 6}
