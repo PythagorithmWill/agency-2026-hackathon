@@ -44,10 +44,12 @@ fi
 aws ecr get-login-password --region "$REGION" |
   docker login --username AWS --password-stdin "$REPO_URI"
 
-# 3. Build
-echo "▶ Building image (Dockerfile=infra/Dockerfile)..."
+# 3. Build — force --no-cache so any past layer that captured an
+# outdated runtime ENV (e.g. missing HOSTNAME=0.0.0.0) is rebuilt.
+echo "▶ Building image (Dockerfile=infra/Dockerfile, no cache)..."
 docker build \
   -f infra/Dockerfile \
+  --no-cache \
   -t "${REPO_URI}:${IMAGE_TAG}" \
   -t "${REPO_URI}:latest" \
   --build-arg BUILD_COMMIT="$(git rev-parse --short HEAD)" \
@@ -118,6 +120,7 @@ cat > "$ENV_JSON" <<EOF
       "RuntimeEnvironmentVariables": {
         "NODE_ENV": "production",
         "NEXT_TELEMETRY_DISABLED": "1",
+        "HOSTNAME": "0.0.0.0",
         "DATABASE_URL": $(printf '%s' "$DB_URL" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
       }
     }
