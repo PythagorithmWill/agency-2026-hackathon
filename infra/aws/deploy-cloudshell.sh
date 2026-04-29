@@ -103,6 +103,23 @@ EXISTING_ARN="$(aws apprunner list-services --region "$REGION" \
   --query "ServiceSummaryList[?ServiceName=='${SERVICE_NAME}'].ServiceArn | [0]" \
   --output text)"
 
+# If a service exists in CREATE_FAILED, delete it first so we can build
+# fresh with whatever fixes are in this run (env vars / image / etc).
+if [[ -n "$EXISTING_ARN" && "$EXISTING_ARN" != "None" ]]; then
+  EXISTING_STATUS="$(aws apprunner describe-service --service-arn "$EXISTING_ARN" --region "$REGION" --query Service.Status --output text 2>/dev/null || echo UNKNOWN)"
+  if [[ "$EXISTING_STATUS" == "CREATE_FAILED" || "$EXISTING_STATUS" == "DELETE_FAILED" ]]; then
+    echo "▶ Existing service in $EXISTING_STATUS — deleting before recreate..."
+    aws apprunner delete-service --service-arn "$EXISTING_ARN" --region "$REGION" >/dev/null
+    # Wait for the delete to finish so create-service doesn't race the slot.
+    for i in {1..40}; do
+      gone="$(aws apprunner describe-service --service-arn "$EXISTING_ARN" --region "$REGION" --query Service.Status --output text 2>/dev/null || echo DELETED)"
+      [[ "$gone" == "DELETED" ]] && break
+      sleep 8
+    done
+    EXISTING_ARN=""
+  fi
+fi
+
 # Build env-var JSON in a temp file to avoid shell-escape pain with the
 # DATABASE_URL (contains @, /, ?, &, =).
 ENV_JSON="$(mktemp)"
