@@ -134,7 +134,7 @@ export function GlassBox({ findings }: { findings: FindingCardType[] }) {
           {visible.length === 0 && (
             <p className="mt-12 text-[var(--color-muted)]">
               No records match this query. The data scope is documented in
-              <a href="/about/scope" className="ml-1 underline">about/scope</a>.
+              <a href="/methodology" className="ml-1 underline">methodology</a>.
             </p>
           )}
         </div>
