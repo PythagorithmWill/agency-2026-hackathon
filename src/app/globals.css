@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography — three faces, locked */
+  --font-sans: "General Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Editorial dark palette — warm, photographic.
+     No pure #000, no pure #FFF. Three-color discipline + two signal colors. */
+  --color-ink: #1A1816;          /* background — warm near-black */
+  --color-paper: #F0EBE2;        /* primary text — warm off-white */
+  --color-vellum: #252220;       /* panels, cards — one shade above ink */
+  --color-vellum-2: #2D2A28;     /* hover state on vellum */
+  --color-rule: #3A3633;         /* 1px dividers */
+  --color-muted: #8A8580;        /* secondary text, captions */
+
+  /* Signal colors — content-meaningful only, never decorative */
+  --color-ember: #E8693C;        /* HIGH risk; calibration leak; failure */
+  --color-ember-soft: #B85A38;
+  --color-sage: #6B8E7F;         /* cleared; passed all gates; success */
+  --color-sage-soft: #56776A;
+
+  /* Type scale */
+  --text-display-1: 4.25rem;     /* 68px — Brief showpiece headline */
+  --text-display-2: 3rem;        /* 48px — section headers on Briefs */
+  --text-h1: 2rem;               /* 32px — Glass Box main title */
+  --text-h2: 1.5rem;             /* 24px — finding card entity name */
+  --text-body: 1.125rem;         /* 18px — Brief body */
+  --text-body-ui: 1rem;          /* 16px — UI body */
+  --text-small: 0.875rem;        /* 14px — captions, metadata */
+  --text-mono: 0.9375rem;        /* 15px — data displays */
+  --text-micro: 0.75rem;         /* 12px — Strata Panel labels */
+
+  --tracking-display: -0.02em;
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+}
+
+/* Self-host Fontsource imports happen via package; for hackathon prep we use
+   Google Fonts CDN via <link> in the layout to avoid a build step. */
+
+html, body {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "ss02";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Selection — match the editorial palette */
+::selection {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Focus state — single style, 2px offset outline in paper */
+*:focus-visible {
+  outline: 2px solid var(--color-paper);
+  outline-offset: 2px;
+}
+
+/* The Strand — animated SVG path used by ProofBadge → source-row reveal */
+.strand-path {
+  fill: none;
+  stroke: var(--color-paper);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.strand-path[data-risk="high"] {
+  stroke: var(--color-ember);
+}
+
+/* Skeleton loading — vellum to vellum-2 shimmer, never bouncing */
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-vellum) 0%,
+    var(--color-vellum-2) 50%,
+    var(--color-vellum) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
+}
+
+/* Reduced motion — Strand draws instantly, no shimmer, no transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .skeleton { animation: none; background: var(--color-vellum); }
+}
+
+/* Print — Brief layout becomes publication-quality at A4 */
+@media print {
+  html, body {
+    background: #FFFFFF;
+    color: #1A1816;
+    font-size: 11pt;
+  }
+
+  /* Hide non-Brief chrome */
+  nav, .no-print { display: none !important; }
+
+  .brief-body { max-width: 100%; }
+}
