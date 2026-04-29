@@ -1,0 +1,2299 @@
+{
+  "version": 1,
+  "generatedAt": "2026-04-29T12:45:01.223Z",
+  "generatedDurationMs": 101264,
+  "dataAsOfFy": 2027,
+  "overview": {
+    "totalSpendFed": 821406164324.66,
+    "agreementCountFed": 1157164,
+    "recipientCountFed": 400059,
+    "departmentCountFed": 68,
+    "programCountFed": 9173,
+    "fyRangeFed": {
+      "start": 1899,
+      "end": 2027
+    }
+  },
+  "concentration": {
+    "totalSpend": 766211782067.863,
+    "recipientCount": 25000,
+    "agreementCount": 318678,
+    "hhi": 51.741061869764266,
+    "gini": 0.8462685105326537,
+    "median": 4099442,
+    "mean": 30648471.28271452,
+    "top10": [
+      {
+        "recipient": "Government of Ontario - Ministry of Health and Long-Term Care",
+        "bn": null,
+        "total": 30556095248,
+        "share": 0.03987943798715126,
+        "agreementCount": 17
+      },
+      {
+        "recipient": "batch report│rapport en lots",
+        "bn": null,
+        "total": 25142657261.8,
+        "share": 0.03281423994022207,
+        "agreementCount": 164
+      },
+      {
+        "recipient": "Gouvernement du Québec - Ministère de la santé et des Services sociaux",
+        "bn": null,
+        "total": 15531891147,
+        "share": 0.02027101580855663,
+        "agreementCount": 26
+      },
+      {
+        "recipient": "NEXTSTAR ENERGY INC.",
+        "bn": "730481009",
+        "total": 14556000000,
+        "share": 0.018997358616329372,
+        "agreementCount": 1
+      },
+      {
+        "recipient": "PowerCo Canada Inc.",
+        "bn": "719579948",
+        "total": 13153475083,
+        "share": 0.017166892223323973,
+        "agreementCount": 1
+      },
+      {
+        "recipient": "Government of Ontario|Gouvernement de l'Ontario",
+        "bn": null,
+        "total": 10401011581.54,
+        "share": 0.013574591026869368,
+        "agreementCount": 8
+      },
+      {
+        "recipient": "Government of Alberta - Ministry of Health",
+        "bn": null,
+        "total": 9021123070,
+        "share": 0.011773667908960716,
+        "agreementCount": 19
+      },
+      {
+        "recipient": "First Nations Health Authority",
+        "bn": null,
+        "total": 8755044203.7,
+        "share": 0.011426402475920907,
+        "agreementCount": 34
+      },
+      {
+        "recipient": "Government of British Columbia - Ministry of Health",
+        "bn": "107864738",
+        "total": 8562568906,
+        "share": 0.01117519869361865,
+        "agreementCount": 12
+      },
+      {
+        "recipient": "Ministre des Finances du Québec",
+        "bn": null,
+        "total": 8464960912,
+        "share": 0.011047808334602538,
+        "agreementCount": 17
+      }
+    ],
+    "decileBreakdown": [
+      {
+        "decile": 1,
+        "share": 0.0056153355475404695
+      },
+      {
+        "decile": 2,
+        "share": 0.0065566886227873804
+      },
+      {
+        "decile": 3,
+        "share": 0.007786891556271521
+      },
+      {
+        "decile": 4,
+        "share": 0.009449181935365692
+      },
+      {
+        "decile": 5,
+        "share": 0.011860263384536572
+      },
+      {
+        "decile": 6,
+        "share": 0.015457567073487001
+      },
+      {
+        "decile": 7,
+        "share": 0.0216601435157781
+      },
+      {
+        "decile": 8,
+        "share": 0.03524452360627912
+      },
+      {
+        "decile": 9,
+        "share": 0.07545725043256937
+      },
+      {
+        "decile": 10,
+        "share": 0.8109121543253807
+      }
+    ]
+  },
+  "topDepartments": [
+    {
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 139418909649.29,
+      "agreementCount": 144663,
+      "recipientCount": 2551
+    },
+    {
+      "department": "Health Canada | Santé Canada",
+      "total": 101976172820.09,
+      "agreementCount": 2156,
+      "recipientCount": 852
+    },
+    {
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "total": 75101726405.74,
+      "agreementCount": 39700,
+      "recipientCount": 32302
+    },
+    {
+      "department": "Immigration, Refugees and Citizenship Canada | Immigration, Réfugiés et Citoyenneté Canada",
+      "total": 72437271663.58,
+      "agreementCount": 17613,
+      "recipientCount": 3830
+    },
+    {
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "total": 68553247426.08,
+      "agreementCount": 2007,
+      "recipientCount": 1440
+    },
+    {
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "total": 52783817505.31,
+      "agreementCount": 14415,
+      "recipientCount": 8181
+    },
+    {
+      "department": "Crown-Indigenous Relations and Northern Affairs Canada | Relations Couronne-Autochtones et Affaires du Nord Canada",
+      "total": 48489024217.73,
+      "agreementCount": 20011,
+      "recipientCount": 2481
+    },
+    {
+      "department": "Canadian Heritage | Patrimoine canadien",
+      "total": 28819571854.86,
+      "agreementCount": 130698,
+      "recipientCount": 30875
+    },
+    {
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "total": 27673019775.69,
+      "agreementCount": 312420,
+      "recipientCount": 108400
+    },
+    {
+      "department": "Veterans Affairs Canada | Anciens Combattants Canada",
+      "total": 24709751356.31,
+      "agreementCount": 2022,
+      "recipientCount": 1344
+    },
+    {
+      "department": "Natural Resources Canada | Ressources naturelles Canada",
+      "total": 22400956318.38,
+      "agreementCount": 10935,
+      "recipientCount": 4652
+    },
+    {
+      "department": "Transport Canada | Transports Canada",
+      "total": 21984278237.8,
+      "agreementCount": 45650,
+      "recipientCount": 5992
+    },
+    {
+      "department": "Canadian Institutes of Health Research | Instituts de recherche en santé du Canada",
+      "total": 15967858761,
+      "agreementCount": 40213,
+      "recipientCount": 25348
+    },
+    {
+      "department": "Social Sciences and Humanities Research Council of Canada | Conseil de recherches en sciences humaines du Canada",
+      "total": 12707320293.39,
+      "agreementCount": 52923,
+      "recipientCount": 37451
+    },
+    {
+      "department": "Public Safety Canada | Sécurité publique Canada",
+      "total": 12529337979.88,
+      "agreementCount": 3132,
+      "recipientCount": 2066
+    },
+    {
+      "department": "Natural Sciences and Engineering Research Council of Canada | Conseil de recherches en sciences naturelles et en génie du Canada",
+      "total": 11795517657.99,
+      "agreementCount": 111061,
+      "recipientCount": 59053
+    },
+    {
+      "department": "National Research Council Canada | Conseil national de recherches Canada",
+      "total": 9931537607.36,
+      "agreementCount": 62855,
+      "recipientCount": 25631
+    },
+    {
+      "department": "Canada Economic Development for Quebec Regions | Développement économique Canada pour les régions du Québec",
+      "total": 9071246386,
+      "agreementCount": 16025,
+      "recipientCount": 9326
+    },
+    {
+      "department": "Department of Justice Canada | Ministère de la Justice Canada",
+      "total": 8931078828.67,
+      "agreementCount": 4698,
+      "recipientCount": 1910
+    },
+    {
+      "department": "Agriculture and Agri-Food Canada | Agriculture et Agroalimentaire Canada",
+      "total": 8708551918.22,
+      "agreementCount": 16269,
+      "recipientCount": 8669
+    },
+    {
+      "department": "Atlantic Canada Opportunities Agency | Agence de promotion économique du Canada atlantique",
+      "total": 7999575019.1,
+      "agreementCount": 29411,
+      "recipientCount": 10360
+    },
+    {
+      "department": "Environment and Climate Change Canada | Environnement et Changement climatique Canada",
+      "total": 6823001067.46,
+      "agreementCount": 8383,
+      "recipientCount": 4260
+    },
+    {
+      "department": "Fisheries and Oceans Canada | Pêches et Océans Canada",
+      "total": 6267394796.5,
+      "agreementCount": 16794,
+      "recipientCount": 7530
+    },
+    {
+      "department": "Western Economic Diversification Canada | Diversification de l'économie de l'Ouest Canada",
+      "total": 5227620857.75,
+      "agreementCount": 14542,
+      "recipientCount": 8225
+    },
+    {
+      "department": "Federal Economic Development Agency for Southern Ontario | Agence fédérale de développement économique pour le Sud de l'Ontario",
+      "total": 4654520999.03,
+      "agreementCount": 4784,
+      "recipientCount": 2891
+    },
+    {
+      "department": "Public Health Agency of Canada | Agence de la santé publique du Canada",
+      "total": 3218657363.33,
+      "agreementCount": 5064,
+      "recipientCount": 1785
+    },
+    {
+      "department": "Prairies Economic Development Canada | Développement économique Canada pour les Prairies",
+      "total": 2608122187.45,
+      "agreementCount": 2098,
+      "recipientCount": 1074
+    },
+    {
+      "department": "Royal Canadian Mounted Police | Gendarmerie royale du Canada",
+      "total": 2411724599.21,
+      "agreementCount": 380,
+      "recipientCount": 247
+    },
+    {
+      "department": "Women and Gender Equality Canada | Femmes et Égalité des genres Canada",
+      "total": 1803942206,
+      "agreementCount": 2245,
+      "recipientCount": 1424
+    },
+    {
+      "department": "Canadian Space Agency | Agence spatiale canadienne",
+      "total": 1666370918.13,
+      "agreementCount": 1529,
+      "recipientCount": 742
+    },
+    {
+      "department": "National Defence | Défense nationale",
+      "total": 1090312442.88,
+      "agreementCount": 960,
+      "recipientCount": 655
+    },
+    {
+      "department": "Pacific Economic Development Canada | Développement économique Canada pour le Pacifique",
+      "total": 893679275,
+      "agreementCount": 1063,
+      "recipientCount": 626
+    },
+    {
+      "department": "Parks Canada | Parcs Canada",
+      "total": 702623561.86,
+      "agreementCount": 2353,
+      "recipientCount": 1184
+    },
+    {
+      "department": "Federal Economic Development Agency for Northern Ontario | Agence fédérale de développement économique pour le Nord de l’Ontario",
+      "total": 648892415,
+      "agreementCount": 1357,
+      "recipientCount": 605
+    },
+    {
+      "department": "Canadian Northern Economic Development Agency | Agence canadienne de développement économique du Nord",
+      "total": 460879742.88,
+      "agreementCount": 1797,
+      "recipientCount": 1452
+    },
+    {
+      "department": "Department of Finance Canada | Ministère des Finances Canada",
+      "total": 254920635.23,
+      "agreementCount": 140,
+      "recipientCount": 104
+    },
+    {
+      "department": "Impact Assessment Agency of Canada | Agence d'évaluation d'impact du Canada",
+      "total": 197314376.48,
+      "agreementCount": 4092,
+      "recipientCount": 1592
+    },
+    {
+      "department": "Correctional Service of Canada | Service correctionnel du Canada",
+      "total": 59909395.21,
+      "agreementCount": 303,
+      "recipientCount": 206
+    },
+    {
+      "department": "Polar Knowledge Canada | Savoir polaire Canada",
+      "total": 57668675.99,
+      "agreementCount": 376,
+      "recipientCount": 228
+    },
+    {
+      "department": "Canada Water Agency | Agence de l’eau du Canada",
+      "total": 56532269,
+      "agreementCount": 167,
+      "recipientCount": 144
+    },
+    {
+      "department": "Accessibility Standards Canada | Normes d’accessibilité Canada",
+      "total": 54931790,
+      "agreementCount": 107,
+      "recipientCount": 73
+    },
+    {
+      "department": "Canadian Nuclear Safety Commission | Commission canadienne de sûreté nucléaire",
+      "total": 44182206.02,
+      "agreementCount": 1037,
+      "recipientCount": 349
+    },
+    {
+      "department": "Privy Council Office | Bureau du Conseil privé",
+      "total": 39538082.72,
+      "agreementCount": 139,
+      "recipientCount": 88
+    },
+    {
+      "department": "Status of Women Canada | Condition féminine Canada",
+      "total": 34541926,
+      "agreementCount": 143,
+      "recipientCount": 140
+    },
+    {
+      "department": "Canada Revenue Agency | Agence du revenu du Canada",
+      "total": 33774293.43,
+      "agreementCount": 7078,
+      "recipientCount": 3395
+    },
+    {
+      "department": "Canada Energy Regulator | La Régie de l’énergie du Canada",
+      "total": 31259631.3,
+      "agreementCount": 693,
+      "recipientCount": 323
+    },
+    {
+      "department": "Library and Archives Canada | Bibliothèque et Archives Canada",
+      "total": 16616261.2,
+      "agreementCount": 405,
+      "recipientCount": 281
+    },
+    {
+      "department": "Immigration, Refugees and Citizenship Canada | Immigration, Réfugi��s et Citoyenneté Canada",
+      "total": 15313900.35,
+      "agreementCount": 2,
+      "recipientCount": 2
+    },
+    {
+      "department": "Canadian Food Inspection Agency | Agence canadienne d'inspection des aliments",
+      "total": 10938623.73,
+      "agreementCount": 50,
+      "recipientCount": 45
+    },
+    {
+      "department": "Treasury Board of Canada Secretariat | Secrétariat du Conseil du Trésor du Canada",
+      "total": 7948455.03,
+      "agreementCount": 47,
+      "recipientCount": 31
+    }
+  ],
+  "topPrograms": [
+    {
+      "program": "Shared Health Priorities Initiative",
+      "department": "Health Canada | Santé Canada",
+      "total": 46858743273,
+      "agreementCount": 79,
+      "recipientCount": 17
+    },
+    {
+      "program": "Settlement",
+      "department": "Immigration, Refugees and Citizenship Canada | Immigration, Réfugiés et Citoyenneté Canada",
+      "total": 41017587079.38,
+      "agreementCount": 8564,
+      "recipientCount": 1697
+    },
+    {
+      "program": "Canadian Health Systems and Programs",
+      "department": "Health Canada | Santé Canada",
+      "total": 35273540150.3,
+      "agreementCount": 407,
+      "recipientCount": 222
+    },
+    {
+      "program": "Investing in Canada Infrastructure Program",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "total": 32339520138,
+      "agreementCount": 16,
+      "recipientCount": 15
+    },
+    {
+      "program": "Electric Vehicle Battery Manufacturers",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "total": 27709475083,
+      "agreementCount": 2,
+      "recipientCount": 2
+    },
+    {
+      "program": "Treaties and Aboriginal Government",
+      "department": "Crown-Indigenous Relations and Northern Affairs Canada | Relations Couronne-Autochtones et Affaires du Nord Canada",
+      "total": 26527142702.2,
+      "agreementCount": 1458,
+      "recipientCount": 428
+    },
+    {
+      "program": "International Development Assistance Program",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "total": 21317257825.95,
+      "agreementCount": 1730,
+      "recipientCount": 528
+    },
+    {
+      "program": "Community Infrastructure",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 12531510530.28,
+      "agreementCount": 18335,
+      "recipientCount": 885
+    },
+    {
+      "program": "Child and Family Services",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 10926564961.53,
+      "agreementCount": 8184,
+      "recipientCount": 769
+    },
+    {
+      "program": "Education",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 8474337131.24,
+      "agreementCount": 17144,
+      "recipientCount": 1094
+    },
+    {
+      "program": "Reaching Home",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "total": 8224395220.43,
+      "agreementCount": 453,
+      "recipientCount": 254
+    },
+    {
+      "program": "Tripartite Health Governance",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 8220428144,
+      "agreementCount": 5,
+      "recipientCount": 3
+    },
+    {
+      "program": "Social Development",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 8180237752.2,
+      "agreementCount": 16750,
+      "recipientCount": 1390
+    },
+    {
+      "program": "Canada-Québec Accord Grant",
+      "department": "Immigration, Refugees and Citizenship Canada | Immigration, Réfugiés et Citoyenneté Canada",
+      "total": 7340960912,
+      "agreementCount": 11,
+      "recipientCount": 1
+    },
+    {
+      "program": "SIF Stream3- Attraction",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "total": 6154667192,
+      "agreementCount": 36,
+      "recipientCount": 35
+    },
+    {
+      "program": "Canada Foundation for Innovation",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "total": 5541454987,
+      "agreementCount": 2,
+      "recipientCount": 1
+    },
+    {
+      "program": "Resettlement",
+      "department": "Immigration, Refugees and Citizenship Canada | Immigration, Réfugiés et Citoyenneté Canada",
+      "total": 5395230052.73,
+      "agreementCount": 643,
+      "recipientCount": 160
+    },
+    {
+      "program": "Discovery Research",
+      "department": "Natural Sciences and Engineering Research Council of Canada | Conseil de recherches en sciences naturelles et en génie du Canada",
+      "total": 5296174029.16,
+      "agreementCount": 35724,
+      "recipientCount": 14059
+    },
+    {
+      "program": "Insight research",
+      "department": "Social Sciences and Humanities Research Council of Canada | Conseil de recherches en sciences humaines du Canada",
+      "total": 5112609785.92,
+      "agreementCount": 13132,
+      "recipientCount": 10278
+    },
+    {
+      "program": "Implementation",
+      "department": "Crown-Indigenous Relations and Northern Affairs Canada | Relations Couronne-Autochtones et Affaires du Nord Canada",
+      "total": 4869771879.82,
+      "agreementCount": 996,
+      "recipientCount": 108
+    },
+    {
+      "program": "Contribution to the Canadian Institute for Health Information",
+      "department": "Health Canada | Santé Canada",
+      "total": 4698470992,
+      "agreementCount": 11,
+      "recipientCount": 1
+    },
+    {
+      "program": "Investigator-Initiated Research",
+      "department": "Canadian Institutes of Health Research | Instituts de recherche en santé du Canada",
+      "total": 4593962293,
+      "agreementCount": 5708,
+      "recipientCount": 3854
+    },
+    {
+      "program": "New Building Canada Fund-Provincial-Territorial Infrastructure Component-National and Regional Projects",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "total": 4392262699.33,
+      "agreementCount": 137,
+      "recipientCount": 100
+    },
+    {
+      "program": "Public Transit Infrastructure Fund",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "total": 4327368749.84,
+      "agreementCount": 11,
+      "recipientCount": 2
+    },
+    {
+      "program": "National Trade Corridors Fund",
+      "department": "Transport Canada | Transports Canada",
+      "total": 4251706615.55,
+      "agreementCount": 204,
+      "recipientCount": 144
+    },
+    {
+      "program": "Legal Aid",
+      "department": "Department of Justice Canada | Ministère de la Justice Canada",
+      "total": 4132788505.66,
+      "agreementCount": 197,
+      "recipientCount": 73
+    },
+    {
+      "program": "Research Partnerships",
+      "department": "Natural Sciences and Engineering Research Council of Canada | Conseil de recherches en sciences naturelles et en génie du Canada",
+      "total": 4119975151.81,
+      "agreementCount": 13460,
+      "recipientCount": 5011
+    },
+    {
+      "program": "Contributions in Support of Home Retrofits",
+      "department": "Natural Resources Canada | Ressources naturelles Canada",
+      "total": 3959507549.07,
+      "agreementCount": 87,
+      "recipientCount": 48
+    },
+    {
+      "program": "Research Support Fund",
+      "department": "Social Sciences and Humanities Research Council of Canada | Conseil de recherches en sciences humaines du Canada",
+      "total": 3443959638,
+      "agreementCount": 1601,
+      "recipientCount": 509
+    },
+    {
+      "program": "(FNIPP) First Nations and Inuit Policing Program",
+      "department": "Public Safety Canada | Sécurité publique Canada",
+      "total": 3374414858.45,
+      "agreementCount": 307,
+      "recipientCount": 206
+    },
+    {
+      "program": "Development of Official Language Communities Program - Minority Language Education",
+      "department": "Canadian Heritage | Patrimoine canadien",
+      "total": 3337351320,
+      "agreementCount": 370,
+      "recipientCount": 41
+    },
+    {
+      "program": "Youth - Canada Summer Jobs",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "total": 3124948312.73,
+      "agreementCount": 262589,
+      "recipientCount": 88651
+    },
+    {
+      "program": "SIF Stream2- Growth",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "total": 3092625411,
+      "agreementCount": 42,
+      "recipientCount": 40
+    },
+    {
+      "program": "Northern Affairs",
+      "department": "Crown-Indigenous Relations and Northern Affairs Canada | Relations Couronne-Autochtones et Affaires du Nord Canada",
+      "total": 3033035097.02,
+      "agreementCount": 2455,
+      "recipientCount": 520
+    },
+    {
+      "program": "Other Program Reporting",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 2947727282.71,
+      "agreementCount": 5707,
+      "recipientCount": 837
+    },
+    {
+      "program": "Industrial Research Assistance Program – Contributions to Firms",
+      "department": "National Research Council Canada | Conseil national de recherches Canada",
+      "total": 2928621502.41,
+      "agreementCount": 16687,
+      "recipientCount": 8026
+    },
+    {
+      "program": "National Strategy for Drugs for Rare Diseases Program",
+      "department": "Health Canada | Santé Canada",
+      "total": 2834343027,
+      "agreementCount": 27,
+      "recipientCount": 15
+    },
+    {
+      "program": "NFR - Grant",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 2768751117.39,
+      "agreementCount": 3648,
+      "recipientCount": 210
+    },
+    {
+      "program": "Incentives for Zero-emission vehicles program",
+      "department": "Transport Canada | Transports Canada",
+      "total": 2690487965.82,
+      "agreementCount": 37212,
+      "recipientCount": 3190
+    },
+    {
+      "program": "Universal Broadband Fund",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "total": 2628778284.94,
+      "agreementCount": 460,
+      "recipientCount": 139
+    },
+    {
+      "program": "Health Promotion & Disease Prevention",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 2559124356.98,
+      "agreementCount": 7269,
+      "recipientCount": 781
+    },
+    {
+      "program": "Contributions for 2 Billion Trees",
+      "department": "Natural Resources Canada | Ressources naturelles Canada",
+      "total": 2541221435.25,
+      "agreementCount": 254,
+      "recipientCount": 172
+    },
+    {
+      "program": "Smart Renewables and Electrification Pathways Program",
+      "department": "Natural Resources Canada | Ressources naturelles Canada",
+      "total": 2495806199.11,
+      "agreementCount": 262,
+      "recipientCount": 164
+    },
+    {
+      "program": "Clean Water and Wastewater Fund",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "total": 2446159137.04,
+      "agreementCount": 13,
+      "recipientCount": 2
+    },
+    {
+      "program": "Economic Development",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 2413211167.01,
+      "agreementCount": 3938,
+      "recipientCount": 841
+    },
+    {
+      "program": "Research in Priority Areas",
+      "department": "Canadian Institutes of Health Research | Instituts de recherche en santé du Canada",
+      "total": 2366633849,
+      "agreementCount": 8445,
+      "recipientCount": 5574
+    },
+    {
+      "program": "Health System Capacity",
+      "department": "Indigenous Services Canada | Services aux Autochtones Canada",
+      "total": 2354012407.86,
+      "agreementCount": 2820,
+      "recipientCount": 545
+    },
+    {
+      "program": "Grant to Compensate Members of the RCMP for Injuries Received in the Performance of Duty",
+      "department": "Royal Canadian Mounted Police | Gendarmerie royale du Canada",
+      "total": 2253446126.53,
+      "agreementCount": 19,
+      "recipientCount": 4
+    },
+    {
+      "program": "Business Development Program",
+      "department": "Atlantic Canada Opportunities Agency | Agence de promotion économique du Canada atlantique",
+      "total": 2208539205.1,
+      "agreementCount": 10340,
+      "recipientCount": 4141
+    },
+    {
+      "program": "Grants - Multilateral Programming",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "total": 2191449927.74,
+      "agreementCount": 130,
+      "recipientCount": 27
+    }
+  ],
+  "provinceTotals": [
+    {
+      "province": "ON",
+      "total": 254886896298.5,
+      "agreementCount": 326142,
+      "recipientCount": 120885
+    },
+    {
+      "province": "QC",
+      "total": 115373846261.12,
+      "agreementCount": 204117,
+      "recipientCount": 78010
+    },
+    {
+      "province": "BC",
+      "total": 85806741202.21,
+      "agreementCount": 145215,
+      "recipientCount": 49135
+    },
+    {
+      "province": "AB",
+      "total": 70152203693.63,
+      "agreementCount": 105577,
+      "recipientCount": 37310
+    },
+    {
+      "province": "SK",
+      "total": 47218336118.56,
+      "agreementCount": 52688,
+      "recipientCount": 11164
+    },
+    {
+      "province": "MB",
+      "total": 44621312897.6,
+      "agreementCount": 52225,
+      "recipientCount": 12337
+    },
+    {
+      "province": "PE",
+      "total": 29400593650.35,
+      "agreementCount": 13140,
+      "recipientCount": 4233
+    },
+    {
+      "province": "NS",
+      "total": 18671579907.88,
+      "agreementCount": 46647,
+      "recipientCount": 15896
+    },
+    {
+      "province": "NB",
+      "total": 12876974556.3,
+      "agreementCount": 41340,
+      "recipientCount": 12815
+    },
+    {
+      "province": "NL",
+      "total": 10538391391.47,
+      "agreementCount": 32128,
+      "recipientCount": 10553
+    },
+    {
+      "province": "NU",
+      "total": 7693388345.26,
+      "agreementCount": 3044,
+      "recipientCount": 806
+    },
+    {
+      "province": "NT",
+      "total": 7296776089.59,
+      "agreementCount": 7571,
+      "recipientCount": 1632
+    },
+    {
+      "province": "YT",
+      "total": 6757632531.38,
+      "agreementCount": 6783,
+      "recipientCount": 1467
+    },
+    {
+      "province": "DC",
+      "total": 82470049.3,
+      "agreementCount": 26,
+      "recipientCount": 15
+    },
+    {
+      "province": "OC",
+      "total": 66893602.48,
+      "agreementCount": 385,
+      "recipientCount": 172
+    },
+    {
+      "province": "NY",
+      "total": 21604822.97,
+      "agreementCount": 141,
+      "recipientCount": 137
+    },
+    {
+      "province": "ZZ",
+      "total": 18376440,
+      "agreementCount": 34,
+      "recipientCount": 25
+    },
+    {
+      "province": "GE",
+      "total": 14525025.45,
+      "agreementCount": 6,
+      "recipientCount": 2
+    },
+    {
+      "province": "CO",
+      "total": 14127042,
+      "agreementCount": 19,
+      "recipientCount": 8
+    },
+    {
+      "province": "NA",
+      "total": 13687061.96,
+      "agreementCount": 48,
+      "recipientCount": 35
+    },
+    {
+      "province": "SC",
+      "total": 10147500,
+      "agreementCount": 3,
+      "recipientCount": 3
+    },
+    {
+      "province": "CA",
+      "total": 9111063.52,
+      "agreementCount": 126,
+      "recipientCount": 118
+    },
+    {
+      "province": "CH",
+      "total": 7758856,
+      "agreementCount": 22,
+      "recipientCount": 7
+    },
+    {
+      "province": "US",
+      "total": 7444536.84,
+      "agreementCount": 62,
+      "recipientCount": 58
+    },
+    {
+      "province": "MA",
+      "total": 6953370.45,
+      "agreementCount": 82,
+      "recipientCount": 77
+    },
+    {
+      "province": "IL",
+      "total": 3075583.67,
+      "agreementCount": 38,
+      "recipientCount": 36
+    },
+    {
+      "province": "PA",
+      "total": 2978334,
+      "agreementCount": 37,
+      "recipientCount": 36
+    },
+    {
+      "province": "IT",
+      "total": 2769692.8,
+      "agreementCount": 22,
+      "recipientCount": 5
+    },
+    {
+      "province": "MI",
+      "total": 2545814.32,
+      "agreementCount": 31,
+      "recipientCount": 29
+    },
+    {
+      "province": "NJ",
+      "total": 2480706.33,
+      "agreementCount": 28,
+      "recipientCount": 27
+    },
+    {
+      "province": "FR",
+      "total": 2376240,
+      "agreementCount": 15,
+      "recipientCount": 4
+    },
+    {
+      "province": "CT",
+      "total": 2001667.33,
+      "agreementCount": 27,
+      "recipientCount": 24
+    },
+    {
+      "province": "WI",
+      "total": 1123333,
+      "agreementCount": 16,
+      "recipientCount": 15
+    },
+    {
+      "province": "MD",
+      "total": 1035334,
+      "agreementCount": 18,
+      "recipientCount": 17
+    },
+    {
+      "province": "NC",
+      "total": 986205.33,
+      "agreementCount": 13,
+      "recipientCount": 12
+    },
+    {
+      "province": "DK",
+      "total": 875573,
+      "agreementCount": 2,
+      "recipientCount": 1
+    },
+    {
+      "province": "IN",
+      "total": 874720.32,
+      "agreementCount": 11,
+      "recipientCount": 11
+    },
+    {
+      "province": "11",
+      "total": 775000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "GB",
+      "total": 750896,
+      "agreementCount": 10,
+      "recipientCount": 8
+    },
+    {
+      "province": "RI",
+      "total": 746903,
+      "agreementCount": 13,
+      "recipientCount": 12
+    },
+    {
+      "province": "WA",
+      "total": 677500.33,
+      "agreementCount": 13,
+      "recipientCount": 13
+    },
+    {
+      "province": "VA",
+      "total": 653040,
+      "agreementCount": 9,
+      "recipientCount": 8
+    },
+    {
+      "province": "QB",
+      "total": 635999,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "GA",
+      "total": 553333.33,
+      "agreementCount": 6,
+      "recipientCount": 6
+    },
+    {
+      "province": "NV",
+      "total": 550000,
+      "agreementCount": 2,
+      "recipientCount": 1
+    },
+    {
+      "province": "MN",
+      "total": 496666.65,
+      "agreementCount": 5,
+      "recipientCount": 5
+    },
+    {
+      "province": "NO",
+      "total": 467013,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "TX",
+      "total": 466666.66,
+      "agreementCount": 7,
+      "recipientCount": 7
+    },
+    {
+      "province": "MO",
+      "total": 420000.33,
+      "agreementCount": 6,
+      "recipientCount": 5
+    },
+    {
+      "province": "Z7",
+      "total": 380000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "HI",
+      "total": 370000,
+      "agreementCount": 5,
+      "recipientCount": 5
+    },
+    {
+      "province": "OH",
+      "total": 360000,
+      "agreementCount": 4,
+      "recipientCount": 4
+    },
+    {
+      "province": "OR",
+      "total": 337974.13,
+      "agreementCount": 4,
+      "recipientCount": 4
+    },
+    {
+      "province": "AZ",
+      "total": 336667,
+      "agreementCount": 5,
+      "recipientCount": 4
+    },
+    {
+      "province": "ME",
+      "total": 317999,
+      "agreementCount": 3,
+      "recipientCount": 3
+    },
+    {
+      "province": "MX",
+      "total": 265000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "FL",
+      "total": 260833.33,
+      "agreementCount": 4,
+      "recipientCount": 4
+    },
+    {
+      "province": "VT",
+      "total": 256400,
+      "agreementCount": 5,
+      "recipientCount": 3
+    },
+    {
+      "province": "TN",
+      "total": 235000,
+      "agreementCount": 4,
+      "recipientCount": 4
+    },
+    {
+      "province": "NH",
+      "total": 209166.67,
+      "agreementCount": 2,
+      "recipientCount": 2
+    },
+    {
+      "province": "IS",
+      "total": 206691,
+      "agreementCount": 5,
+      "recipientCount": 2
+    },
+    {
+      "province": "MT",
+      "total": 200000,
+      "agreementCount": 2,
+      "recipientCount": 2
+    },
+    {
+      "province": "DE",
+      "total": 198491,
+      "agreementCount": 3,
+      "recipientCount": 2
+    },
+    {
+      "province": "LA",
+      "total": 196667,
+      "agreementCount": 4,
+      "recipientCount": 3
+    },
+    {
+      "province": "UT",
+      "total": 190000,
+      "agreementCount": 3,
+      "recipientCount": 3
+    },
+    {
+      "province": "Z9",
+      "total": 150000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "OK",
+      "total": 140000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "YK",
+      "total": 138900,
+      "agreementCount": 3,
+      "recipientCount": 3
+    },
+    {
+      "province": "EN",
+      "total": 100000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "SD",
+      "total": 90000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "NE",
+      "total": 80000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "KE",
+      "total": 67000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "ID",
+      "total": 50000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "WV",
+      "total": 50000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "IR",
+      "total": 38049,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "AU",
+      "total": 33900,
+      "agreementCount": 2,
+      "recipientCount": 2
+    },
+    {
+      "province": "RM",
+      "total": 20000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "IE",
+      "total": 17916.12,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "WK",
+      "total": 10000,
+      "agreementCount": 1,
+      "recipientCount": 1
+    },
+    {
+      "province": "BE",
+      "total": 4240,
+      "agreementCount": 1,
+      "recipientCount": 1
+    }
+  ],
+  "recentLarge": [
+    {
+      "recordId": "033-2024-2025-Q4-515287",
+      "recipient": "Mitacs Inc.",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "program": "SSF - Talent Development",
+      "value": 218117000,
+      "startDate": "2026-04-01T04:00:00.000Z",
+      "province": "BC"
+    },
+    {
+      "recordId": "003-2025-2026-Q3-00018",
+      "recipient": "European Space Agency|Agence spatiale européenne",
+      "department": "Canadian Space Agency | Agence spatiale canadienne",
+      "program": "Contributions under the Canada/European Space Agency (ESA) Cooperation Agreement",
+      "value": 18094989.45,
+      "startDate": "2026-01-01T05:00:00.000Z",
+      "province": null
+    },
+    {
+      "recordId": "016-2025-2026-Q3-1378459",
+      "recipient": "FATHERS OF CONFEDERATION BUILDINGS TRUST",
+      "department": "Canadian Heritage | Patrimoine canadien",
+      "program": "Canada Cultural Spaces Fund - Canada Cultural Spaces Fund",
+      "value": 5500000,
+      "startDate": "2025-12-23T05:00:00.000Z",
+      "province": "PE"
+    },
+    {
+      "recordId": "115-2025-2026-Q3-17965",
+      "recipient": "EXTERRA CARBON SOLUTIONS INC",
+      "department": "Natural Resources Canada | Ressources naturelles Canada",
+      "program": "Critical Mineral Research, Development and Demonstration Program",
+      "value": 5000000,
+      "startDate": "2025-12-23T05:00:00.000Z",
+      "province": "QC"
+    },
+    {
+      "recordId": "044-2025-2026-Q3-00019",
+      "recipient": "TaiV Inc.",
+      "department": "Prairies Economic Development Canada | Développement économique Canada pour les Prairies",
+      "program": "Regional Economic Growth through Innovation",
+      "value": 5000000,
+      "startDate": "2025-12-22T05:00:00.000Z",
+      "province": "MB"
+    },
+    {
+      "recordId": "278-2025-2026-Q3-00005",
+      "recipient": "City of Greater Sudbury | Ville de Grand Sudbury",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "program": "Canada Housing Infrastructure Fund",
+      "value": 27980000,
+      "startDate": "2025-12-19T05:00:00.000Z",
+      "province": "ON"
+    },
+    {
+      "recordId": "278-2025-2026-Q3-00006",
+      "recipient": "Corporation of the City of Sault Ste. Marie | Corporation de la Ville de Sault Ste. Marie",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "program": "Canada Housing Infrastructure Fund",
+      "value": 22981000,
+      "startDate": "2025-12-18T05:00:00.000Z",
+      "province": "ON"
+    },
+    {
+      "recordId": "064-2025-2026-Q3-0111",
+      "recipient": "Food & Agr Org Of The United Nation",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "program": "Food and Agriculture Organization (FAO)",
+      "value": 18431513,
+      "startDate": "2025-12-17T05:00:00.000Z",
+      "province": null
+    },
+    {
+      "recordId": "064-2025-2026-Q3-0112",
+      "recipient": "WHO - World Health Organization",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "program": "World Health Organization (WHO)",
+      "value": 25797135,
+      "startDate": "2025-12-17T05:00:00.000Z",
+      "province": null
+    },
+    {
+      "recordId": "033-2025-2026-Q3-515675",
+      "recipient": "Kap Paper Inc.",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "program": "Strategic Response Fund",
+      "value": 7500000,
+      "startDate": "2025-12-16T05:00:00.000Z",
+      "province": "ON"
+    },
+    {
+      "recordId": "064-2025-2026-Q3-0108",
+      "recipient": "UNESCO",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "program": "United Nations Educational, Scientific and Cultural (UNESCO)",
+      "value": 12474753,
+      "startDate": "2025-12-16T05:00:00.000Z",
+      "province": null
+    },
+    {
+      "recordId": "064-2025-2026-Q3-0105",
+      "recipient": "Organization of American States",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "program": "Organization of American States",
+      "value": 16935267.94,
+      "startDate": "2025-12-15T05:00:00.000Z",
+      "province": null
+    },
+    {
+      "recordId": "033-2025-2026-Q3-515671",
+      "recipient": "Photonic Inc.",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "program": "Canadian Quantum Champions Program",
+      "value": 23000000,
+      "startDate": "2025-12-12T05:00:00.000Z",
+      "province": "BC"
+    },
+    {
+      "recordId": "064-2025-2026-Q3-0100",
+      "recipient": "OIF - Organisation internationale  De La Francophonie",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "program": "Proj Dev Act Francophone Summit",
+      "value": 5870000,
+      "startDate": "2025-12-12T05:00:00.000Z",
+      "province": null
+    },
+    {
+      "recordId": "217-2025-2026-Q3-18061",
+      "recipient": "Charlottetown Harbour Authority Inc.|Charlottetown Harbour Authority Inc.",
+      "department": "Transport Canada | Transports Canada",
+      "program": "Green Shipping Corridor Program",
+      "value": 14305300,
+      "startDate": "2025-12-12T05:00:00.000Z",
+      "province": "PE"
+    },
+    {
+      "recordId": "018-2025-2026-Q3-09002",
+      "recipient": "The Corporation of the City of North Bay",
+      "department": "National Defence | Défense nationale",
+      "program": "Contributions in Support of the Remediation at North Bay, Jack Garland Airport and Water Treatment Plant",
+      "value": 8001738,
+      "startDate": "2025-12-10T05:00:00.000Z",
+      "province": "ON"
+    },
+    {
+      "recordId": "033-2025-2026-Q3-515672",
+      "recipient": "Xanadu Quantum Technologies Inc.",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "program": "Canadian Quantum Champions Program",
+      "value": 23000000,
+      "startDate": "2025-12-10T05:00:00.000Z",
+      "province": "ON"
+    },
+    {
+      "recordId": "115-2025-2026-Q3-18055",
+      "recipient": "TURNING SUN SOLAR INC",
+      "department": "Natural Resources Canada | Ressources naturelles Canada",
+      "program": "Smart Renewables and Electrification Pathways Program",
+      "value": 15000000,
+      "startDate": "2025-12-10T05:00:00.000Z",
+      "province": "SK"
+    },
+    {
+      "recordId": "033-2025-2026-Q3-515664",
+      "recipient": "Nord Quantique Inc.",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "program": "Canadian Quantum Champions Program",
+      "value": 23000000,
+      "startDate": "2025-12-09T05:00:00.000Z",
+      "province": "QC"
+    },
+    {
+      "recordId": "033-2025-2026-Q3-515670",
+      "recipient": "Anyon Systems Inc.",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "program": "Canadian Quantum Champions Program",
+      "value": 23000000,
+      "startDate": "2025-12-09T05:00:00.000Z",
+      "province": "QC"
+    },
+    {
+      "recordId": "278-2025-2026-Q3-00010",
+      "recipient": "Curve Lake First Nation | Curve Lake First Nation",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "program": "Canada Housing Infrastructure Fund",
+      "value": 8184800,
+      "startDate": "2025-12-08T05:00:00.000Z",
+      "province": "ON"
+    },
+    {
+      "recordId": "278-2025-2026-Q3-00013",
+      "recipient": "Corporation of the City of Mississauga | Corporation of the City of Mississauga",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "program": "Canada Housing Infrastructure Fund",
+      "value": 24247888,
+      "startDate": "2025-12-05T05:00:00.000Z",
+      "province": "ON"
+    },
+    {
+      "recordId": "278-2025-2026-Q3-00012",
+      "recipient": "Town of Torbay | Town of Torbay",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "program": "Canada Housing Infrastructure Fund",
+      "value": 26886875,
+      "startDate": "2025-12-05T05:00:00.000Z",
+      "province": "NL"
+    },
+    {
+      "recordId": "278-2025-2026-Q3-00016",
+      "recipient": "Village of Lytton | Village de Lytton",
+      "department": "Department of Housing, Infrastructure and Communities | Ministère du Logement, de l’Infrastructure et des Collectivités",
+      "program": "Green and Inclusive Community Buildings Program",
+      "value": 23142639.56,
+      "startDate": "2025-12-04T05:00:00.000Z",
+      "province": "BC"
+    },
+    {
+      "recordId": "115-2025-2026-Q3-18273",
+      "recipient": "FOCUS GRAPHITE INC",
+      "department": "Natural Resources Canada | Ressources naturelles Canada",
+      "program": "Grants and Contributions for Critical Minerals Innovation and Global Partnerships",
+      "value": 14062500,
+      "startDate": "2025-12-04T05:00:00.000Z",
+      "province": "ON"
+    },
+    {
+      "recordId": "115-2025-2026-Q3-17885",
+      "recipient": "GFL ENVIRONMENTAL",
+      "department": "Natural Resources Canada | Ressources naturelles Canada",
+      "program": "Green Freight Program",
+      "value": 5000000,
+      "startDate": "2025-12-02T05:00:00.000Z",
+      "province": "ON"
+    },
+    {
+      "recordId": "064-2025-2026-Q3-0096",
+      "recipient": "Internet Society",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "program": "Peace&Stab Ops prog (Election Activit)-C",
+      "value": 5000000,
+      "startDate": "2025-12-02T05:00:00.000Z",
+      "province": null
+    },
+    {
+      "recordId": "276-2025-2026-Q3-00162",
+      "recipient": "Institute for Ocean Research Enterprise",
+      "department": "Atlantic Canada Opportunities Agency | Agence de promotion économique du Canada atlantique",
+      "program": "REGI - Regional Innovation Ecosystem (RIE)",
+      "value": 9619135,
+      "startDate": "2025-12-02T05:00:00.000Z",
+      "province": "NS"
+    },
+    {
+      "recordId": "0420-2025-2026-Qrt3-0000012",
+      "recipient": "COTE FIRST NATION 366",
+      "department": "Crown-Indigenous Relations and Northern Affairs Canada | Relations Couronne-Autochtones et Affaires du Nord Canada",
+      "program": "Treaties and Aboriginal Government",
+      "value": 230518325,
+      "startDate": "2025-12-01T05:00:00.000Z",
+      "province": "SK"
+    },
+    {
+      "recordId": "0420-2025-2026-Qrt3-0000014",
+      "recipient": "FISHING LAKE FIRST NATION BAND",
+      "department": "Crown-Indigenous Relations and Northern Affairs Canada | Relations Couronne-Autochtones et Affaires du Nord Canada",
+      "program": "Treaties and Aboriginal Government",
+      "value": 27802326.35,
+      "startDate": "2025-12-01T05:00:00.000Z",
+      "province": "SK"
+    }
+  ],
+  "amendmentGrowth": [
+    {
+      "refNumber": "141-2018-2019-Q3-00037",
+      "recipient": "Toronto Metropolitan University",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 21098586,
+      "currentValue": 566104695,
+      "growthPercent": 25.831404483693838,
+      "amendmentCount": 6
+    },
+    {
+      "refNumber": "141-2018-2019-Q3-00037",
+      "recipient": "Ryerson  University",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 21098586,
+      "currentValue": 566104695,
+      "growthPercent": 25.831404483693838,
+      "amendmentCount": 6
+    },
+    {
+      "refNumber": "141-2018-2019-Q3-00037",
+      "recipient": "Ryerson University",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 21098586,
+      "currentValue": 566104695,
+      "growthPercent": 25.831404483693838,
+      "amendmentCount": 6
+    },
+    {
+      "refNumber": "033-2018-2019-Q3-511796",
+      "recipient": "Next Generation Manufacturing Canada",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "initialValue": 229765127,
+      "currentValue": 497815000,
+      "growthPercent": 1.1666255732533337,
+      "amendmentCount": 7
+    },
+    {
+      "refNumber": "GC-2018-Q4-00021",
+      "recipient": "Province of Québec|Province de Québec",
+      "department": "Public Safety Canada | Sécurité publique Canada",
+      "initialValue": 1300000,
+      "currentValue": 371530088,
+      "growthPercent": 284.7923753846154,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "GC-2018-Q4-00021",
+      "recipient": "Handicap International Canada",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 1300000,
+      "currentValue": 371530088,
+      "growthPercent": 284.7923753846154,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "GC-2018-Q4-00021",
+      "recipient": "Deh Gah Got'ie First Nation | Deh Gah Got'ie First Nation",
+      "department": "Public Health Agency of Canada | Agence de la santé publique du Canada",
+      "initialValue": 1300000,
+      "currentValue": 371530088,
+      "growthPercent": 284.7923753846154,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "033-2018-2019-Q3-511795",
+      "recipient": "Protein Industries Canada Inc.",
+      "department": "Innovation, Science and Economic Development Canada | Innovation, Sciences et Développement économique Canada",
+      "initialValue": 152843759,
+      "currentValue": 326818343,
+      "growthPercent": 1.1382511470422552,
+      "amendmentCount": 5
+    },
+    {
+      "refNumber": "064-2023-2024-Q1-00016",
+      "recipient": "IBRD Trust Funds - World Bank",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 100000000,
+      "currentValue": 250000000,
+      "growthPercent": 1.5,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "141-2019-2020-Q3-00031",
+      "recipient": "TECHNATION Canada",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 70125542,
+      "currentValue": 214675099,
+      "growthPercent": 2.0612968239161704,
+      "amendmentCount": 5
+    },
+    {
+      "refNumber": "141-2019-2020-Q3-00031",
+      "recipient": "Technation Canada",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 70125542,
+      "currentValue": 214675099,
+      "growthPercent": 2.0612968239161704,
+      "amendmentCount": 5
+    },
+    {
+      "refNumber": "141-2019-2020-Q3-00031",
+      "recipient": "Information Technology Association of Canada",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 70125542,
+      "currentValue": 214675099,
+      "growthPercent": 2.0612968239161704,
+      "amendmentCount": 5
+    },
+    {
+      "refNumber": "003-2019-2020-Q3-00002",
+      "recipient": "European Space Agency|Agence spatiale européenne",
+      "department": "Canadian Space Agency | Agence spatiale canadienne",
+      "initialValue": 19967113,
+      "currentValue": 200875834,
+      "growthPercent": 9.060334410888544,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "003-2019-2020-Q3-00002",
+      "recipient": "European Space Agency |Agence spatiale européenne",
+      "department": "Canadian Space Agency | Agence spatiale canadienne",
+      "initialValue": 19967113,
+      "currentValue": 200875834,
+      "growthPercent": 9.060334410888544,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "003-2019-2020-Q3-00003",
+      "recipient": "European Space Agency |Agence spatiale européenne",
+      "department": "Canadian Space Agency | Agence spatiale canadienne",
+      "initialValue": 37046511,
+      "currentValue": 193687234,
+      "growthPercent": 4.228217955531629,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "003-2019-2020-Q3-00003",
+      "recipient": "European Space Agency|Agence spatiale européenne",
+      "department": "Canadian Space Agency | Agence spatiale canadienne",
+      "initialValue": 37046511,
+      "currentValue": 193687234,
+      "growthPercent": 4.228217955531629,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "050-2023-2024-Q4-00007",
+      "recipient": "The City of Ottawa",
+      "department": "Immigration, Refugees and Citizenship Canada | Immigration, Réfugiés et Citoyenneté Canada",
+      "initialValue": 22700000,
+      "currentValue": 192400000,
+      "growthPercent": 7.475770925110132,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "050-2023-2024-Q4-00007",
+      "recipient": "City of Toronto",
+      "department": "Immigration, Refugees and Citizenship Canada | Immigration, Réfugiés et Citoyenneté Canada",
+      "initialValue": 22700000,
+      "currentValue": 192400000,
+      "growthPercent": 7.475770925110132,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "141-2019-2020-Q3-00030",
+      "recipient": "Information and Communications TechnologyCouncil (ICTC) of Canada Inc.",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 67687500,
+      "currentValue": 188675601,
+      "growthPercent": 1.7874511689750692,
+      "amendmentCount": 6
+    },
+    {
+      "refNumber": "141-2019-2020-Q3-00030",
+      "recipient": "Information and Communications Technology Council (ICTC) of Canada Inc.",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 67687500,
+      "currentValue": 188675601,
+      "growthPercent": 1.7874511689750692,
+      "amendmentCount": 6
+    },
+    {
+      "refNumber": "141-2019-2020-Q3-00030",
+      "recipient": "Information and Communications TechnologyCouncil of Canada Inc.",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 67687500,
+      "currentValue": 188675601,
+      "growthPercent": 1.7874511689750692,
+      "amendmentCount": 6
+    },
+    {
+      "refNumber": "003-2020-2021-Q1-00001",
+      "recipient": "European Space Agency |Agence spatiale européenne",
+      "department": "Canadian Space Agency | Agence spatiale canadienne",
+      "initialValue": 17970302,
+      "currentValue": 182316121,
+      "growthPercent": 9.145412191737234,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "003-2020-2021-Q1-00001",
+      "recipient": "European Space Agency|Agence spatiale européenne",
+      "department": "Canadian Space Agency | Agence spatiale canadienne",
+      "initialValue": 17970302,
+      "currentValue": 182316121,
+      "growthPercent": 9.145412191737234,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "141-2020-2021-Q1-00188",
+      "recipient": "Ryerson University",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 558728,
+      "currentValue": 171000000,
+      "growthPercent": 305.0523188385046,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "141-2020-2021-Q1-00188",
+      "recipient": "Canadian Council for Aviation & Aerospace (CCAA)",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 558728,
+      "currentValue": 171000000,
+      "growthPercent": 305.0523188385046,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "064-2022-2023-Q4-00009",
+      "recipient": "Global Fund to Fight AIDS, Tuberculosis & Malaria",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 25000000,
+      "currentValue": 160000000,
+      "growthPercent": 5.4,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "141-2019-2020-Q3-00029",
+      "recipient": "Ryerson University",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 22500000,
+      "currentValue": 141806117,
+      "growthPercent": 5.3024940888888885,
+      "amendmentCount": 5
+    },
+    {
+      "refNumber": "141-2019-2020-Q3-00029",
+      "recipient": "Toronto Metropolitan University",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 22500000,
+      "currentValue": 141806117,
+      "growthPercent": 5.3024940888888885,
+      "amendmentCount": 5
+    },
+    {
+      "refNumber": "172-2021-2022-Q3-00007",
+      "recipient": "SKA Organization",
+      "department": "National Research Council Canada | Conseil national de recherches Canada",
+      "initialValue": 6230000,
+      "currentValue": 127400324,
+      "growthPercent": 19.449490208667736,
+      "amendmentCount": 4
+    },
+    {
+      "refNumber": "141-2018-2019-Q4-01051",
+      "recipient": "Métis Nation of Ontario Secretariat",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 4787500,
+      "currentValue": 125894317,
+      "growthPercent": 25.296463080939947,
+      "amendmentCount": 5
+    },
+    {
+      "refNumber": "141-2018-2019-Q4-01051",
+      "recipient": "Metis Nation of Ontario Secretariat",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 4787500,
+      "currentValue": 125894317,
+      "growthPercent": 25.296463080939947,
+      "amendmentCount": 5
+    },
+    {
+      "refNumber": "141-2021-2022-Q1-00282",
+      "recipient": "La Fédération des chambres de commerce de la province de Québec",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 7487170,
+      "currentValue": 125760206,
+      "growthPercent": 15.796761126032933,
+      "amendmentCount": 6
+    },
+    {
+      "refNumber": "217-2025-2026-Q1-02177",
+      "recipient": "Arctic Gateway Group Limited Partnership|Arctic Gateway Group Limited Partnership",
+      "department": "Transport Canada | Transports Canada",
+      "initialValue": 43740000,
+      "currentValue": 125000000,
+      "growthPercent": 1.8577960676726109,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "141-2019-2020-Q2-00140",
+      "recipient": "BioTalent Canada",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 19870133,
+      "currentValue": 112824608,
+      "growthPercent": 4.678100292534529,
+      "amendmentCount": 7
+    },
+    {
+      "refNumber": "064-2024-2025-Q2-00506",
+      "recipient": "Coalition for Epidemic Preparedness",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 20000000,
+      "currentValue": 100000000,
+      "growthPercent": 4,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "064-2024-2025-Q2-00506",
+      "recipient": "Coalition for Epidemic Preparedness | Coalition for Epidemic Preparedness",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 20000000,
+      "currentValue": 100000000,
+      "growthPercent": 4,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "001-2023-2024-Q3-00062",
+      "recipient": "Secrétariat à la Condition Féminine Québec",
+      "department": "Women and Gender Equality Canada | Femmes et Égalité des genres Canada",
+      "initialValue": 500000,
+      "currentValue": 97325000,
+      "growthPercent": 193.65,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "001-2023-2024-Q3-00062",
+      "recipient": "New Brunswick Youth Orchestra Inc/Orchestre des jeunes du Nouveau-Brunswick Inc.",
+      "department": "Veterans Affairs Canada | Anciens Combattants Canada",
+      "initialValue": 500000,
+      "currentValue": 97325000,
+      "growthPercent": 193.65,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "064-2024-2025-Q4-00136",
+      "recipient": "WFP - World Food Programme | PAM - Programme alimentaire mondial",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 6000000,
+      "currentValue": 94800000,
+      "growthPercent": 14.8,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "217-2022-2023-Q1-08245",
+      "recipient": "Northumberland Ferries Limited",
+      "department": "Transport Canada | Transports Canada",
+      "initialValue": 8355341,
+      "currentValue": 94132332.65,
+      "growthPercent": 10.266126977941415,
+      "amendmentCount": 8
+    },
+    {
+      "refNumber": "217-2022-2023-Q1-08245",
+      "recipient": "Northumberland Ferries Limited|Northumberland Ferries Limited",
+      "department": "Transport Canada | Transports Canada",
+      "initialValue": 8355341,
+      "currentValue": 94132332.65,
+      "growthPercent": 10.266126977941415,
+      "amendmentCount": 8
+    },
+    {
+      "refNumber": "141-2020-2021-Q4-21828",
+      "recipient": "Riipen Networks Inc.",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 12250000,
+      "currentValue": 91079723,
+      "growthPercent": 6.435079428571429,
+      "amendmentCount": 6
+    },
+    {
+      "refNumber": "141-2020-2021-Q4-21828",
+      "recipient": "RIIPEN NETWORKS INC.",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 12250000,
+      "currentValue": 91079723,
+      "growthPercent": 6.435079428571429,
+      "amendmentCount": 6
+    },
+    {
+      "refNumber": "064-2020-2021-Q2-00039",
+      "recipient": "Coalition for Epidemic Preparedness",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 40000000,
+      "currentValue": 90000000,
+      "growthPercent": 1.25,
+      "amendmentCount": 3
+    },
+    {
+      "refNumber": "141-2020-2021-Q4-21649",
+      "recipient": "Co-operative Education and Work Integrated Learning Canada",
+      "department": "Employment and Social Development Canada | Emploi et Développement social Canada",
+      "initialValue": 16299788,
+      "currentValue": 89041785,
+      "growthPercent": 4.462757245677061,
+      "amendmentCount": 5
+    },
+    {
+      "refNumber": "064-2019-2020-Q4-00075",
+      "recipient": "WFP - World Food Programme",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 5000000,
+      "currentValue": 88700000,
+      "growthPercent": 16.74,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "064-2024-2025-Q4-00326",
+      "recipient": "UNHCR - United Nations High Commissioner for Refugees | HCR - Haut Commissariat des Nations Unies pour les réfugiés",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 12450000,
+      "currentValue": 87500000,
+      "growthPercent": 6.028112449799197,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "GC-WD-DEO-2022-2023-Q4-105",
+      "recipient": "Anaconda Systems Limited",
+      "department": "Pacific Economic Development Canada | Développement économique Canada pour le Pacifique",
+      "initialValue": 2500000,
+      "currentValue": 80514000,
+      "growthPercent": 31.2056,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "GC-WD-DEO-2022-2023-Q4-105",
+      "recipient": "Applied Pharmaceutical Innovation and The Governors of the University of Alberta",
+      "department": "Prairies Economic Development Canada | Développement économique Canada pour les Prairies",
+      "initialValue": 2500000,
+      "currentValue": 80514000,
+      "growthPercent": 31.2056,
+      "amendmentCount": 2
+    },
+    {
+      "refNumber": "064-2024-2025-Q4-00001",
+      "recipient": "WFP - World Food Programme | PAM - Programme alimentaire mondial",
+      "department": "Global Affairs Canada | Affaires mondiales Canada",
+      "initialValue": 7500000,
+      "currentValue": 78597500,
+      "growthPercent": 9.479666666666667,
+      "amendmentCount": 2
+    }
+  ],
+  "temporalSeries": {
+    "bySeries": "Federal spend · all",
+    "points": [
+      {
+        "fy": 2003,
+        "total": 7000,
+        "recipientCount": 1,
+        "programCount": 1,
+        "agreementCount": 1
+      },
+      {
+        "fy": 2005,
+        "total": 385000000,
+        "recipientCount": 1,
+        "programCount": 1,
+        "agreementCount": 1
+      },
+      {
+        "fy": 2006,
+        "total": 1857301322.82,
+        "recipientCount": 1622,
+        "programCount": 88,
+        "agreementCount": 1840
+      },
+      {
+        "fy": 2007,
+        "total": 3774738850.05,
+        "recipientCount": 6024,
+        "programCount": 146,
+        "agreementCount": 8264
+      },
+      {
+        "fy": 2008,
+        "total": 4858226062.09,
+        "recipientCount": 5516,
+        "programCount": 124,
+        "agreementCount": 7925
+      },
+      {
+        "fy": 2009,
+        "total": 5252602207.77,
+        "recipientCount": 5312,
+        "programCount": 119,
+        "agreementCount": 7454
+      },
+      {
+        "fy": 2010,
+        "total": 10065531810.51,
+        "recipientCount": 9755,
+        "programCount": 80,
+        "agreementCount": 14737
+      },
+      {
+        "fy": 2011,
+        "total": 8321516890.34,
+        "recipientCount": 8902,
+        "programCount": 113,
+        "agreementCount": 12768
+      },
+      {
+        "fy": 2012,
+        "total": 7360025589.37,
+        "recipientCount": 8519,
+        "programCount": 229,
+        "agreementCount": 11868
+      },
+      {
+        "fy": 2013,
+        "total": 8017448867.21,
+        "recipientCount": 11571,
+        "programCount": 141,
+        "agreementCount": 14955
+      },
+      {
+        "fy": 2014,
+        "total": 11022622081.59,
+        "recipientCount": 10233,
+        "programCount": 270,
+        "agreementCount": 13747
+      },
+      {
+        "fy": 2015,
+        "total": 14460574806.65,
+        "recipientCount": 10381,
+        "programCount": 438,
+        "agreementCount": 17124
+      },
+      {
+        "fy": 2016,
+        "total": 19477184201.41,
+        "recipientCount": 15840,
+        "programCount": 834,
+        "agreementCount": 26280
+      },
+      {
+        "fy": 2017,
+        "total": 37440156594.75,
+        "recipientCount": 19564,
+        "programCount": 1266,
+        "agreementCount": 40008
+      },
+      {
+        "fy": 2018,
+        "total": 56348553777.79,
+        "recipientCount": 36392,
+        "programCount": 1120,
+        "agreementCount": 52204
+      },
+      {
+        "fy": 2019,
+        "total": 103789628721.4,
+        "recipientCount": 68402,
+        "programCount": 1522,
+        "agreementCount": 95505
+      },
+      {
+        "fy": 2020,
+        "total": 79531945297.89,
+        "recipientCount": 74018,
+        "programCount": 2180,
+        "agreementCount": 118377
+      },
+      {
+        "fy": 2021,
+        "total": 109063923515.57,
+        "recipientCount": 85209,
+        "programCount": 3799,
+        "agreementCount": 174184
+      },
+      {
+        "fy": 2022,
+        "total": 60778292148.47,
+        "recipientCount": 85769,
+        "programCount": 1880,
+        "agreementCount": 130521
+      },
+      {
+        "fy": 2023,
+        "total": 52766636193.69,
+        "recipientCount": 82772,
+        "programCount": 1155,
+        "agreementCount": 112847
+      },
+      {
+        "fy": 2024,
+        "total": 134444197294.95,
+        "recipientCount": 84667,
+        "programCount": 1122,
+        "agreementCount": 117039
+      },
+      {
+        "fy": 2025,
+        "total": 63060314267.95,
+        "recipientCount": 79849,
+        "programCount": 955,
+        "agreementCount": 109076
+      },
+      {
+        "fy": 2026,
+        "total": 29101332588.89,
+        "recipientCount": 56379,
+        "programCount": 916,
+        "agreementCount": 70406
+      },
+      {
+        "fy": 2027,
+        "total": 223278313,
+        "recipientCount": 12,
+        "programCount": 8,
+        "agreementCount": 12
+      }
+    ]
+  },
+  "forecast": {
+    "series": "spend",
+    "historical": [
+      {
+        "fy": 2003,
+        "value": 7000
+      },
+      {
+        "fy": 2005,
+        "value": 385000000
+      },
+      {
+        "fy": 2006,
+        "value": 1857301322.82
+      },
+      {
+        "fy": 2007,
+        "value": 3774738850.05
+      },
+      {
+        "fy": 2008,
+        "value": 4858226062.09
+      },
+      {
+        "fy": 2009,
+        "value": 5252602207.77
+      },
+      {
+        "fy": 2010,
+        "value": 10065531810.51
+      },
+      {
+        "fy": 2011,
+        "value": 8321516890.34
+      },
+      {
+        "fy": 2012,
+        "value": 7360025589.37
+      },
+      {
+        "fy": 2013,
+        "value": 8017448867.21
+      },
+      {
+        "fy": 2014,
+        "value": 11022622081.59
+      },
+      {
+        "fy": 2015,
+        "value": 14460574806.65
+      },
+      {
+        "fy": 2016,
+        "value": 19477184201.41
+      },
+      {
+        "fy": 2017,
+        "value": 37440156594.75
+      },
+      {
+        "fy": 2018,
+        "value": 56348553777.79
+      },
+      {
+        "fy": 2019,
+        "value": 103789628721.4
+      },
+      {
+        "fy": 2020,
+        "value": 79531945297.89
+      },
+      {
+        "fy": 2021,
+        "value": 109063923515.57
+      },
+      {
+        "fy": 2022,
+        "value": 60778292148.47
+      },
+      {
+        "fy": 2023,
+        "value": 52766636193.69
+      },
+      {
+        "fy": 2024,
+        "value": 134444197294.95
+      },
+      {
+        "fy": 2025,
+        "value": 63060314267.95
+      },
+      {
+        "fy": 2026,
+        "value": 29101332588.89
+      },
+      {
+        "fy": 2027,
+        "value": 223278313
+      }
+    ],
+    "forecast": [
+      {
+        "fy": 2028,
+        "predicted": 78197936063.27539,
+        "lowerBound": 17078615617.930283,
+        "upperBound": 139317256508.62048
+      },
+      {
+        "fy": 2029,
+        "predicted": 81704080339.40332,
+        "lowerBound": 19374358817.73429,
+        "upperBound": 144033801861.07236
+      },
+      {
+        "fy": 2030,
+        "predicted": 85210224615.53125,
+        "lowerBound": 21693163614.278664,
+        "upperBound": 148727285616.78384
+      }
+    ],
+    "method": "Linear regression (slope=3506144276, intercept=-7032262655924, n=24). Confidence ±1.96σ over expanding-residual variance.",
+    "rSquared": 0.40196868156748045,
+    "trend": "growing",
+    "trendConfidence": 0.40196868156748045
+  },
+  "notes": []
+}

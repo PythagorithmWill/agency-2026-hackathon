@@ -49,4 +49,55 @@ export async function withSearchPath<T>(
 
 export async function closePool(): Promise<void> {
   await pool.end();
+  if (longPool) {
+    await longPool.end();
+    longPool = null;
+  }
+}
+
+/**
+ * Separate long-running pool for offline precompute pipelines. The fast
+ * pool above has a hard 8s query_timeout to keep request-path code
+ * snappy under conference-WiFi conditions, but full-corpus aggregations
+ * across the F-3 max-amendment CTE on 1.27M rows take 10–30s. The
+ * snapshot pipeline uses this pool instead.
+ *
+ * Single connection, no timeout on the client side. Server-side
+ * statement_timeout is still set per-query.
+ */
+let longPool: Pool | null = null;
+function getLongPool(): Pool {
+  if (longPool) return longPool;
+  longPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl:
+      process.env.DATABASE_URL?.includes("render.com") ||
+      process.env.DATABASE_URL?.includes("sslmode=require")
+        ? { rejectUnauthorized: false }
+        : undefined,
+    max: 2,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
+    // No query_timeout — long aggregations need 10–30s
+  });
+  return longPool;
+}
+
+/**
+ * Long-budget query — uses the separate longPool with no client-side
+ * timeout. Sets a server-side statement_timeout per query as a guard
+ * against runaway statements. Do NOT call this from request-path code.
+ */
+export async function longQuery<T extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params: ReadonlyArray<unknown> = [],
+  timeoutMs = 60_000,
+): Promise<QueryResult<T>> {
+  const client = await getLongPool().connect();
+  try {
+    await client.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
+    return await client.query<T>({ text, values: params as unknown[] });
+  } finally {
+    client.release();
+  }
 }
