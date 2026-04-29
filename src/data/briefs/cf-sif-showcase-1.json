@@ -1,0 +1,101 @@
+{
+  "briefId": "cb-2026-04-29-cf-sif-showcase-1",
+  "briefType": "counterfactual",
+  "subject": {
+    "entityId": "general.entity_golden_records.cf-sif-showcase-1",
+    "canonicalName": "Confidential SIF recipient (showcase)",
+    "bnRoot": "812995041",
+    "datasetCoverage": ["fed"]
+  },
+  "identity": {
+    "canonicalName": "Confidential SIF recipient (showcase)",
+    "bnRoot": "812995041",
+    "addresses": ["Ontario"],
+    "datasetCoverage": ["fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 4200000,
+    "amendmentCount": 0,
+    "dateRangeStart": "2023-04-01",
+    "dateRangeEnd": "2024-03-31",
+    "awardingDepartments": ["Innovation, Science and Economic Development Canada"],
+    "programCodes": ["Strategic Innovation Fund"],
+    "province": "ON"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "What this brief observes",
+      "sentences": [
+        {
+          "text": "The contribution agreement for this $4.2M Strategic Innovation Fund recipient carries a null description in the Open Data extract.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "The Strategic Innovation Fund Departmental Results Report defines the program's expected outcomes around incremental private R&D, commercialization, and export development.",
+          "citations": ["src-002"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "What comparable filings typically state",
+      "sentences": [
+        {
+          "text": "Briefs in the Strategic Innovation Fund corpus typically describe a research-and-development scope, intellectual-property assignment terms, expected milestones, and projected employment outcomes.",
+          "citations": ["src-003"]
+        },
+        {
+          "text": "Comparable filings often reference the program stream — innovation projects, business expansion, or research and development collaboration.",
+          "citations": ["src-003"]
+        },
+        {
+          "text": "The Auditor General has reported on the Strategic Innovation Fund's approach to performance measurement at the program level.",
+          "citations": ["src-004"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Project scope, milestones, or stream",
+      "rationale": "The agreement description is null in the open dataset; comparable filings typically disclose these fields, but they cannot be inferred from the absence."
+    }
+  ],
+  "comparableGrants": [
+    { "grantId": "sif-cmp-001", "description": "Project to expand semiconductor R&D facilities in Ottawa, including up to 175 net new positions and three new product lines.", "amount": 4500000, "departmentCode": "ISED", "fiscalYear": 2024, "similarityTier": 1 },
+    { "grantId": "sif-cmp-002", "description": "Investment in pilot-scale low-carbon hydrogen production technology with milestone-tied payments and IP-retention conditions.", "amount": 4000000, "departmentCode": "ISED", "fiscalYear": 2024, "similarityTier": 1 },
+    { "grantId": "sif-cmp-003", "description": "Contribution to scale up advanced manufacturing of medical devices, with employment commitments at three Ontario sites.", "amount": 3800000, "departmentCode": "ISED", "fiscalYear": 2023, "similarityTier": 1 },
+    { "grantId": "sif-cmp-004", "description": "Research and development collaboration on AI-assisted clinical decision support, with academic partner cost-sharing terms.", "amount": 4200000, "departmentCode": "ISED", "fiscalYear": 2023, "similarityTier": 1 },
+    { "grantId": "sif-cmp-005", "description": "Support for the deployment of automated vehicle test infrastructure, with provincial cost-sharing.", "amount": 4100000, "departmentCode": "ISED", "fiscalYear": 2022, "similarityTier": 2 },
+    { "grantId": "sif-cmp-006", "description": "Expansion of clean-tech battery materials research with five-year project plan and milestone reporting.", "amount": 4500000, "departmentCode": "ISED", "fiscalYear": 2022, "similarityTier": 2 },
+    { "grantId": "sif-cmp-007", "description": "Pilot project for advanced lithium-ion recycling demonstration plant.", "amount": 3700000, "departmentCode": "ISED", "fiscalYear": 2021, "similarityTier": 2 },
+    { "grantId": "sif-cmp-008", "description": "Scale-up of biotechnology manufacturing capacity with co-funding commitment from the Province of Ontario.", "amount": 4400000, "departmentCode": "ISED", "fiscalYear": 2021, "similarityTier": 2 },
+    { "grantId": "sif-cmp-009", "description": "Strategic Innovation Fund — Industrial Research Assistance complementary funding stream, expansion of testbed.", "amount": 3900000, "departmentCode": "ISED", "fiscalYear": 2024, "similarityTier": 3 },
+    { "grantId": "sif-cmp-010", "description": "Federal contribution to specialty agri-food processing capacity expansion with employment milestones.", "amount": 4300000, "departmentCode": "AAFC", "fiscalYear": 2024, "similarityTier": 3 }
+  ],
+  "sources": [
+    { "id": "src-001", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, agreements with description_en is NULL and program SIF, fiscal 2024", "url": "https://search.open.canada.ca/grants/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-002", "kind": "drr", "title": "Innovation, Science and Economic Development Canada — DRR 2023–24 (Strategic Innovation Fund)", "url": "https://www.canada.ca/en/innovation-science-economic-development/corporate/transparency/reporting-results.html", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-003", "kind": "self_report", "title": "Strategic Innovation Fund — public project profiles (canada.ca)", "url": "https://ised-isde.canada.ca/site/strategic-innovation-fund/en/announced-projects", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-004", "kind": "ag_report", "title": "OAG-BVG, Performance Audit — Strategic Innovation Fund (selected reports)", "url": "https://www.oag-bvg.gc.ca/", "year": 2023, "retrievalDate": "2026-04-22", "authorityTier": 1 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-cf-sif-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "outcome_gap", "summary": "A Strategic Innovation Fund agreement of $4.2M (FY2024) carries no description in the public dataset; comparable filings in this program typically describe research milestones and intellectual property assignment.", "subject": { "entityId": "general.entity_golden_records.cf-sif-showcase-1", "canonicalName": "Confidential SIF recipient (showcase)", "bnRoot": "812995041", "datasetCoverage": ["fed"] }, "score": 14, "scoreScale": "0-30", "scoreLabel": "MEDIUM" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["Description-NULL filter", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cf-sif-1-prompt-hash", "promptVersion": "cf-section-v1.0", "temperature": 0.2, "tokensIn": 3712, "tokensOut": 928 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 5, "quoteWordCountMax": 13, "uniqueSourcesQuoted": 4, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cf-sif-1-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cf-sif-1" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "The recipient is rendered as a confidential placeholder for the demo; the live build resolves to the canonical entity",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-cf-sif-001"
+  }
+}

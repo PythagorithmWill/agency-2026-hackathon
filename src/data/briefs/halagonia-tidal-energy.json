@@ -1,0 +1,95 @@
+{
+  "briefId": "ob-2026-04-29-halagonia-tidal-energy",
+  "briefType": "outcome",
+  "subject": {
+    "entityId": "general.entity_golden_records.halagonia-tidal",
+    "canonicalName": "Halagonia Tidal Energy",
+    "bnRoot": "846239155",
+    "datasetCoverage": ["fed"]
+  },
+  "identity": {
+    "canonicalName": "Halagonia Tidal Energy",
+    "bnRoot": "846239155",
+    "addresses": ["Halifax, NS"],
+    "datasetCoverage": ["fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 30000000,
+    "amendmentCount": 4,
+    "dateRangeStart": "2018-04-01",
+    "dateRangeEnd": "2023-03-31",
+    "awardingDepartments": ["Natural Resources Canada"],
+    "programCodes": ["Emerging Renewable Power Program"],
+    "province": "NS"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "Departmental records",
+      "sentences": [
+        {
+          "text": "The dataset records federal contributions of up to $30M to Halagonia Tidal Energy under the Emerging Renewable Power Program.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "The agreement is associated with the Bay of Fundy in-stream tidal demonstration site.",
+          "citations": ["src-002"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Project status",
+      "sentences": [
+        {
+          "text": "The project proponent has published a notice indicating the demonstration project will not proceed to the deployment phase as originally scoped.",
+          "citations": ["src-003"]
+        },
+        {
+          "text": "The Natural Resources Canada Departmental Results Report for fiscal 2023–24 lists the program but does not report performance against the deployment target for this site.",
+          "citations": ["src-004"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Provincial context",
+      "sentences": [
+        {
+          "text": "The Province of Nova Scotia retains its tidal demonstration framework; no provincial contribution to this specific recipient is recorded in the open dataset.",
+          "citations": ["src-005"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Final disposition of federal funds",
+      "rationale": "The open contributions dataset shows agreement-level commitments and amendments but does not reconcile to a final disposition statement; the most recent DRR for the program does not provide a project-level reconciliation."
+    }
+  ],
+  "sources": [
+    { "id": "src-001", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, agreements filtered to recipient_business_number 846239155", "url": "https://search.open.canada.ca/grants/", "year": 2023, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-002", "kind": "self_report", "title": "Natural Resources Canada — Emerging Renewable Power Program, Bay of Fundy site", "url": "https://natural-resources.canada.ca/", "year": 2022, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-003", "kind": "news", "title": "Project proponent notice — discontinuation of in-stream tidal demonstration", "url": "https://www.cbc.ca/news/canada/nova-scotia/", "year": 2023, "retrievalDate": "2026-04-22", "authorityTier": 3 },
+    { "id": "src-004", "kind": "drr", "title": "Natural Resources Canada — Departmental Results Report 2023–24", "url": "https://natural-resources.canada.ca/transparency/reporting-and-accountability/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-005", "kind": "self_report", "title": "Government of Nova Scotia — Marine Renewable Energy Act, current designations", "url": "https://novascotia.ca/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-halagonia-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "outcome_gap", "summary": "A federal contribution of $30M was recorded for Halagonia Tidal Energy; the proponent has since published a project-abandonment notice.", "subject": { "entityId": "general.entity_golden_records.halagonia-tidal", "canonicalName": "Halagonia Tidal Energy", "bnRoot": "846239155", "datasetCoverage": ["fed"] }, "score": 22, "scoreScale": "0-30", "scoreLabel": "HIGH" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["BN normalization", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:hal-brief-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 2671, "tokensOut": 728 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 5, "quoteWordCountMax": 13, "uniqueSourcesQuoted": 5, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:hal-brief-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#hal-brief-001" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-halagonia-001"
+  }
+}

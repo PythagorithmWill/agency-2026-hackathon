@@ -1,0 +1,94 @@
+{
+  "briefId": "cb-2026-04-29-cf-isc-showcase-1",
+  "briefType": "counterfactual",
+  "subject": {
+    "entityId": "general.entity_golden_records.cf-isc-showcase-1",
+    "canonicalName": "Confidential Indigenous Services recipient (showcase)",
+    "bnRoot": "846331402",
+    "datasetCoverage": ["fed"]
+  },
+  "identity": {
+    "canonicalName": "Confidential Indigenous Services recipient (showcase)",
+    "bnRoot": "846331402",
+    "addresses": ["Manitoba"],
+    "datasetCoverage": ["fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 8400000,
+    "amendmentCount": 1,
+    "dateRangeStart": "2024-04-01",
+    "dateRangeEnd": "2025-03-31",
+    "awardingDepartments": ["Indigenous Services Canada"],
+    "programCodes": ["First Nations and Inuit Health Branch — community wellness"],
+    "province": "MB"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "What this brief observes",
+      "sentences": [
+        {
+          "text": "The contribution agreement for this $8.4M Indigenous Services Canada recipient carries a null description in the Open Data extract.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "The Indigenous Services Canada Departmental Results Report identifies the program area's expected outcomes around community-driven wellness and culturally-grounded service delivery.",
+          "citations": ["src-002"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "What comparable filings typically state",
+      "sentences": [
+        {
+          "text": "Briefs in this program corpus typically reference community-led program design, partnership with regional health authorities, and reporting to the recipient nation's leadership.",
+          "citations": ["src-003"]
+        },
+        {
+          "text": "Comparable filings often describe deliverables in terms of service-access targets and community engagement activities.",
+          "citations": ["src-003"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Specific program design, deliverables, or community partner",
+      "rationale": "The agreement description is null in the open dataset. The recipient nation may publish the agreement detail in its own community newsletter, but that disclosure is not surfaced in the federal Open Data extract."
+    }
+  ],
+  "comparableGrants": [
+    { "grantId": "isc-cmp-001", "description": "Community wellness program contribution to a First Nation health authority covering mental wellness teams and youth programming.", "amount": 8200000, "departmentCode": "ISC", "fiscalYear": 2025, "similarityTier": 1 },
+    { "grantId": "isc-cmp-002", "description": "Funding for a regional Indigenous service organization to deliver primary-care navigation and harm-reduction services.", "amount": 8600000, "departmentCode": "ISC", "fiscalYear": 2025, "similarityTier": 1 },
+    { "grantId": "isc-cmp-003", "description": "Contribution to a Métis Settlement organization for chronic disease prevention and elder-care coordination.", "amount": 8500000, "departmentCode": "ISC", "fiscalYear": 2024, "similarityTier": 1 },
+    { "grantId": "isc-cmp-004", "description": "Federal contribution toward a tribal council's mental health and addictions program with cultural-coordinator staffing.", "amount": 8000000, "departmentCode": "ISC", "fiscalYear": 2024, "similarityTier": 1 },
+    { "grantId": "isc-cmp-005", "description": "Inuit health authority programming, including mobile primary-care service to remote communities.", "amount": 8500000, "departmentCode": "ISC", "fiscalYear": 2023, "similarityTier": 2 },
+    { "grantId": "isc-cmp-006", "description": "Treaty-based health program in Saskatchewan covering family violence response and family preservation services.", "amount": 8300000, "departmentCode": "ISC", "fiscalYear": 2023, "similarityTier": 2 },
+    { "grantId": "isc-cmp-007", "description": "Indigenous Long-Term Care project — design and operations contribution.", "amount": 8400000, "departmentCode": "ISC", "fiscalYear": 2022, "similarityTier": 2 },
+    { "grantId": "isc-cmp-008", "description": "Crown-Indigenous Relations health and wellness contribution to a self-government table member.", "amount": 8100000, "departmentCode": "CIRNAC", "fiscalYear": 2024, "similarityTier": 3 }
+  ],
+  "sources": [
+    { "id": "src-001", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, ISC FNIH community wellness, fiscal 2025", "url": "https://search.open.canada.ca/grants/", "year": 2025, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-002", "kind": "drr", "title": "Indigenous Services Canada — Departmental Results Report 2023–24", "url": "https://www.sac-isc.gc.ca/eng/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-003", "kind": "self_report", "title": "Indigenous Services Canada — Funding Programs catalogue", "url": "https://www.sac-isc.gc.ca/eng/1100100015663/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-cf-isc-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "outcome_gap", "summary": "An ISC community wellness contribution of $8.4M (FY2025) carries no description in the public dataset; comparable filings under this program typically describe community-led design and culturally-grounded service delivery.", "subject": { "entityId": "general.entity_golden_records.cf-isc-showcase-1", "canonicalName": "Confidential Indigenous Services recipient (showcase)", "bnRoot": "846331402", "datasetCoverage": ["fed"] }, "score": 12, "scoreScale": "0-30", "scoreLabel": "MEDIUM" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["Description-NULL filter", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cf-isc-1-prompt-hash", "promptVersion": "cf-section-v1.0", "temperature": 0.2, "tokensIn": 3320, "tokensOut": 825 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 4, "quoteWordCountMax": 11, "uniqueSourcesQuoted": 3, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cf-isc-1-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cf-isc-1" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "The recipient is rendered as a confidential placeholder for the demo; the live build resolves to the canonical entity",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-cf-isc-001"
+  }
+}

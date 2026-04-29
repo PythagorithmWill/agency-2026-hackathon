@@ -1,0 +1,15 @@
+.git
+.github
+.next
+node_modules
+docs
+*.docx
+*.zip
+.DS_Store
+.env
+.env.*
+!.env.example
+cache/seed-entities.json
+coverage
+.local-db
+govalta-upstream

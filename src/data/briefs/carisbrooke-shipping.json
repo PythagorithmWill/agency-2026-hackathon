@@ -1,0 +1,80 @@
+{
+  "briefId": "ob-2026-04-29-carisbrooke-shipping",
+  "briefType": "outcome",
+  "subject": {
+    "entityId": "general.entity_golden_records.carisbrooke-shipping",
+    "canonicalName": "Carisbrooke Shipping",
+    "bnRoot": null,
+    "datasetCoverage": ["fed"]
+  },
+  "identity": {
+    "canonicalName": "Carisbrooke Shipping",
+    "bnRoot": null,
+    "addresses": ["Cowes, Isle of Wight, United Kingdom"],
+    "datasetCoverage": ["fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 13000000,
+    "amendmentCount": 1,
+    "dateRangeStart": "2022-04-01",
+    "dateRangeEnd": "2024-03-31",
+    "awardingDepartments": ["Transport Canada"],
+    "programCodes": ["Strategic Innovation Fund (federal contract)"],
+    "province": "—"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "Departmental records",
+      "sentences": [
+        {
+          "text": "The dataset records a federal contract totalling $13M with Carisbrooke Shipping; the recipient address is registered in the United Kingdom.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "The recipient_business_number field is null for this record; entity resolution against domestic CRA registries returns no match.",
+          "citations": ["src-002"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Departmental coverage",
+      "sentences": [
+        {
+          "text": "The Transport Canada Departmental Results Report for fiscal 2023–24 references the program category but does not list this recipient by name.",
+          "citations": ["src-003"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Canadian operations or domestic delivery footprint",
+      "rationale": "The recipient is registered in the United Kingdom and has no Canadian Business Number on file. The open contracts dataset does not surface delivery records by location, so domestic delivery cannot be confirmed from the public record."
+    }
+  ],
+  "sources": [
+    { "id": "src-001", "kind": "self_report", "title": "Federal Proactive Disclosure — Contracts dataset, recipient_legal_name 'Carisbrooke Shipping'", "url": "https://search.open.canada.ca/contracts/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-002", "kind": "self_report", "title": "CRA Charity and Business Registry — null match for the recipient", "url": "https://apps.cra-arc.gc.ca/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-003", "kind": "drr", "title": "Transport Canada — Departmental Results Report 2023–24", "url": "https://tc.canada.ca/en/corporate-services/transparency/departmental-plans-departmental-results-reports", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-carisbrooke-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "provincial_misalignment", "summary": "A federal contract totalling $13M is recorded against Carisbrooke Shipping; the dataset shows the recipient address registered outside Canada.", "subject": { "entityId": "general.entity_golden_records.carisbrooke-shipping", "canonicalName": "Carisbrooke Shipping", "bnRoot": null, "datasetCoverage": ["fed"] }, "score": 24, "scoreScale": "0-30", "scoreLabel": "HIGH" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["Recipient-country surfacing"], "knownDataIssuesRespected": ["F-3", "F-6"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cari-brief-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 2103, "tokensOut": 558 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 3, "quoteWordCountMax": 10, "uniqueSourcesQuoted": 3, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cari-brief-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cari-brief-001" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-carisbrooke-001"
+  }
+}

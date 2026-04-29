@@ -1,0 +1,112 @@
+{
+  "briefId": "ob-2026-04-29-sustainable-development-technology-canada",
+  "briefType": "outcome",
+  "subject": {
+    "entityId": "general.entity_golden_records.sdtc",
+    "canonicalName": "Sustainable Development Technology Canada",
+    "bnRoot": "893408519",
+    "datasetCoverage": ["fed"]
+  },
+  "identity": {
+    "canonicalName": "Sustainable Development Technology Canada",
+    "bnRoot": "893408519",
+    "addresses": ["45 O'Connor Street, Suite 1850, Ottawa, ON K1P 1A4"],
+    "datasetCoverage": ["fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 134000000,
+    "amendmentCount": 31,
+    "dateRangeStart": "2017-04-01",
+    "dateRangeEnd": "2024-03-31",
+    "awardingDepartments": ["Innovation, Science and Economic Development Canada"],
+    "programCodes": ["SDTC contribution agreement"],
+    "province": "ON"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "Auditor General coverage",
+      "sentences": [
+        {
+          "text": "The Auditor General of Canada published a performance audit of Sustainable Development Technology Canada in the 2024 Spring Reports.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "The audit identified ninety conflict-of-interest cases in the foundation's project approval files for the period under review.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "The audit also identified deficiencies in the foundation's documentation of due diligence for project approvals.",
+          "citations": ["src-001"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Departmental records",
+      "sentences": [
+        {
+          "text": "The dataset records federal contributions totalling $134M to Sustainable Development Technology Canada between fiscal 2017 and fiscal 2024.",
+          "citations": ["src-002"]
+        },
+        {
+          "text": "The records show thirty-one amendments to the underlying contribution agreement over that period.",
+          "citations": ["src-002"]
+        },
+        {
+          "text": "The Departmental Results Report for Innovation, Science and Economic Development Canada for fiscal 2023–24 references the foundation under the program category for clean technology.",
+          "citations": ["src-003"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Successor arrangements",
+      "sentences": [
+        {
+          "text": "The Government of Canada announced in June 2024 that the foundation's programming would be transitioned to the National Research Council.",
+          "citations": ["src-004"]
+        },
+        {
+          "text": "Public records indicate the transition was completed during fiscal year 2024–25.",
+          "citations": ["src-005"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Net programmatic outcomes",
+      "rationale": "Project-level outcome data is not present in the open contributions dataset; the Departmental Results Report for the relevant program does not disclose project-level performance against indicators."
+    }
+  ],
+  "pullQuote": {
+    "text": "Records show thirty-one amendments to the underlying contribution agreement.",
+    "attribution": "fed.vw_agreement_current",
+    "sourceId": "src-002"
+  },
+  "sources": [
+    { "id": "src-001", "kind": "ag_report", "title": "OAG-BVG, Reports of the Auditor General of Canada, 2024 — Sustainable Development Technology Canada", "url": "https://www.oag-bvg.gc.ca/internet/English/parl_oag_202406_06_e_44495.html", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 1 },
+    { "id": "src-002", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, agreements filtered to recipient_business_number 893408519", "url": "https://search.open.canada.ca/grants/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-003", "kind": "drr", "title": "Innovation, Science and Economic Development Canada — Departmental Results Report 2023–24", "url": "https://www.canada.ca/en/innovation-science-economic-development/corporate/transparency/reporting-results.html", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-004", "kind": "hansard", "title": "Statement of the Minister of Innovation, Science and Industry, June 2024 — Government action regarding Sustainable Development Technology Canada", "url": "https://www.ourcommons.ca/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-005", "kind": "self_report", "title": "Government of Canada news release — Transition of SDTC programming to the National Research Council", "url": "https://www.canada.ca/en/innovation-science-economic-development/news.html", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-sdtc-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "concentration_risk", "summary": "Federal grants and contributions totalling $134M in current commitments are recorded against Sustainable Development Technology Canada programming between fiscal 2017 and fiscal 2024.", "subject": { "entityId": "general.entity_golden_records.sdtc", "canonicalName": "Sustainable Development Technology Canada", "bnRoot": "893408519", "datasetCoverage": ["fed"] }, "score": 28, "scoreScale": "0-30", "scoreLabel": "CRITICAL" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["BN normalization", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:sdtc-brief-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 3892, "tokensOut": 1041 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 9, "quoteWordCountMax": 14, "uniqueSourcesQuoted": 5, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:sdtc-brief-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#sdtc-brief-001" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-sdtc-001"
+  }
+}

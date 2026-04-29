@@ -1,0 +1,94 @@
+{
+  "briefId": "cb-2026-04-29-cf-housing-showcase-1",
+  "briefType": "counterfactual",
+  "subject": {
+    "entityId": "general.entity_golden_records.cf-housing-showcase-1",
+    "canonicalName": "Confidential CMHC housing recipient (showcase)",
+    "bnRoot": "846441590",
+    "datasetCoverage": ["fed"]
+  },
+  "identity": {
+    "canonicalName": "Confidential CMHC housing recipient (showcase)",
+    "bnRoot": "846441590",
+    "addresses": ["Quebec"],
+    "datasetCoverage": ["fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 5300000,
+    "amendmentCount": 0,
+    "dateRangeStart": "2024-04-01",
+    "dateRangeEnd": "2026-03-31",
+    "awardingDepartments": ["Canada Mortgage and Housing Corporation"],
+    "programCodes": ["National Housing Co-Investment Fund"],
+    "province": "QC"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "What this brief observes",
+      "sentences": [
+        {
+          "text": "The contribution agreement for this $5.3M National Housing Co-Investment Fund recipient carries a null description in the Open Data extract.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "The CMHC Departmental Plan describes the National Housing Co-Investment Fund as supporting new construction and major repair of affordable, accessible, and energy-efficient housing.",
+          "citations": ["src-002"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "What comparable filings typically state",
+      "sentences": [
+        {
+          "text": "Briefs in this program corpus typically state unit count, percentage of below-market units, accessibility provisions, and the energy-performance standard targeted.",
+          "citations": ["src-003"]
+        },
+        {
+          "text": "Comparable filings often reference partnerships with the host municipality and provincial housing authorities.",
+          "citations": ["src-003"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Unit count, project location, accessibility provisions",
+      "rationale": "The agreement description is null. CMHC commitment letters for the program typically disclose these fields, but they are not present in the federal open contributions extract for this row."
+    }
+  ],
+  "comparableGrants": [
+    { "grantId": "housing-cmp-001", "description": "Construction of 142-unit mixed-income building in Halifax, of which 30% are below-market and 100% meet accessibility design standard.", "amount": 5500000, "departmentCode": "CMHC", "fiscalYear": 2025, "similarityTier": 1 },
+    { "grantId": "housing-cmp-002", "description": "Federal contribution to non-profit purpose-built rental development in Ottawa with energy-performance commitment 25% above code.", "amount": 5200000, "departmentCode": "CMHC", "fiscalYear": 2025, "similarityTier": 1 },
+    { "grantId": "housing-cmp-003", "description": "Contribution to Indigenous-led affordable housing project in Vancouver with 60 units, including supportive housing component.", "amount": 5400000, "departmentCode": "CMHC", "fiscalYear": 2024, "similarityTier": 1 },
+    { "grantId": "housing-cmp-004", "description": "Major-repair contribution to legacy social housing portfolio in Calgary, retrofitting 280 units to current accessibility standard.", "amount": 5100000, "departmentCode": "CMHC", "fiscalYear": 2024, "similarityTier": 1 },
+    { "grantId": "housing-cmp-005", "description": "Construction of women's transition housing in Winnipeg with 40 units, supportive services on-site.", "amount": 5300000, "departmentCode": "CMHC", "fiscalYear": 2023, "similarityTier": 2 },
+    { "grantId": "housing-cmp-006", "description": "Federal-provincial partnership project for student housing in Saskatoon with 200-unit purpose-built rental.", "amount": 5500000, "departmentCode": "CMHC", "fiscalYear": 2023, "similarityTier": 2 },
+    { "grantId": "housing-cmp-007", "description": "Co-Investment Fund contribution to seniors' housing project in Halifax with full accessibility design.", "amount": 5600000, "departmentCode": "CMHC", "fiscalYear": 2022, "similarityTier": 2 },
+    { "grantId": "housing-cmp-008", "description": "Rapid Housing Initiative contribution to homelessness-prevention housing project in Toronto.", "amount": 5200000, "departmentCode": "CMHC", "fiscalYear": 2025, "similarityTier": 3 }
+  ],
+  "sources": [
+    { "id": "src-001", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, CMHC NHCF, fiscal 2025", "url": "https://search.open.canada.ca/grants/", "year": 2025, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-002", "kind": "drr", "title": "Canada Mortgage and Housing Corporation — Departmental Plan 2024–25", "url": "https://www.cmhc-schl.gc.ca/professionals/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-003", "kind": "self_report", "title": "CMHC — National Housing Co-Investment Fund: announced projects", "url": "https://www.cmhc-schl.gc.ca/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-cf-housing-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "outcome_gap", "summary": "A CMHC National Housing Co-Investment Fund agreement of $5.3M (FY2024) carries no description in the public dataset; comparable filings in this program typically state unit count, accessibility provisions, and energy-performance commitments.", "subject": { "entityId": "general.entity_golden_records.cf-housing-showcase-1", "canonicalName": "Confidential CMHC housing recipient (showcase)", "bnRoot": "846441590", "datasetCoverage": ["fed"] }, "score": 13, "scoreScale": "0-30", "scoreLabel": "MEDIUM" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["Description-NULL filter", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cf-housing-1-prompt-hash", "promptVersion": "cf-section-v1.0", "temperature": 0.2, "tokensIn": 3411, "tokensOut": 853 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 4, "quoteWordCountMax": 14, "uniqueSourcesQuoted": 3, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cf-housing-1-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cf-housing-1" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "The recipient is rendered as a confidential placeholder for the demo; the live build resolves to the canonical entity",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-cf-housing-001"
+  }
+}

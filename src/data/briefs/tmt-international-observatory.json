@@ -1,0 +1,94 @@
+{
+  "briefId": "ob-2026-04-29-tmt-international-observatory",
+  "briefType": "outcome",
+  "subject": {
+    "entityId": "general.entity_golden_records.tmt-international-observatory",
+    "canonicalName": "TMT International Observatory",
+    "bnRoot": "846124390",
+    "datasetCoverage": ["fed"]
+  },
+  "identity": {
+    "canonicalName": "TMT International Observatory",
+    "bnRoot": "846124390",
+    "addresses": ["Pasadena, CA, USA (international consortium)"],
+    "datasetCoverage": ["fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 214000000,
+    "amendmentCount": 9,
+    "dateRangeStart": "2015-04-01",
+    "dateRangeEnd": "2024-03-31",
+    "awardingDepartments": ["Innovation, Science and Economic Development Canada"],
+    "programCodes": ["Strategic Innovation Fund — Astronomy"],
+    "province": "—"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "Departmental records",
+      "sentences": [
+        {
+          "text": "The dataset records federal commitments totalling $214M to the TMT International Observatory consortium under the Strategic Innovation Fund.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "The records show nine amendments to the underlying contribution arrangement between fiscal 2015 and fiscal 2024.",
+          "citations": ["src-001"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Project status",
+      "sentences": [
+        {
+          "text": "Construction of the telescope's primary site has not commenced under the original siting plan.",
+          "citations": ["src-002"]
+        },
+        {
+          "text": "The international consortium has issued public statements regarding alternative siting arrangements.",
+          "citations": ["src-003"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Departmental coverage",
+      "sentences": [
+        {
+          "text": "The Innovation, Science and Economic Development Canada Departmental Results Report for fiscal 2023–24 lists the Strategic Innovation Fund but does not report site-level performance against the TMT contribution.",
+          "citations": ["src-004"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Construction completion outcome",
+      "rationale": "The open contributions dataset shows committed amounts and amendments only; construction progress and site disposition are tracked by the consortium and the host jurisdiction, not in the federal open dataset."
+    }
+  ],
+  "sources": [
+    { "id": "src-001", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, Strategic Innovation Fund — astronomy stream", "url": "https://search.open.canada.ca/grants/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-002", "kind": "news", "title": "TMT International Observatory, public statement on Maunakea site readiness", "url": "https://www.tmt.org/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 3 },
+    { "id": "src-003", "kind": "news", "title": "Reporting on alternative siting discussions for TMT", "url": "https://www.science.org/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 3 },
+    { "id": "src-004", "kind": "drr", "title": "Innovation, Science and Economic Development Canada — Departmental Results Report 2023–24", "url": "https://www.canada.ca/en/innovation-science-economic-development/corporate/transparency/reporting-results.html", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-tmt-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "outcome_gap", "summary": "Federal grants and contributions totalling $214M in current commitments are recorded against TMT International Observatory; the dataset does not contain a record of project completion.", "subject": { "entityId": "general.entity_golden_records.tmt-international-observatory", "canonicalName": "TMT International Observatory", "bnRoot": "846124390", "datasetCoverage": ["fed"] }, "score": 21, "scoreScale": "0-30", "scoreLabel": "HIGH" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:tmt-brief-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 2459, "tokensOut": 671 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 4, "quoteWordCountMax": 9, "uniqueSourcesQuoted": 4, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:tmt-brief-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#tmt-brief-001" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-tmt-001"
+  }
+}

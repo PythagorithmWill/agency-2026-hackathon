@@ -1,0 +1,120 @@
+{
+  "briefId": "ob-2026-04-29-we-charity-foundation",
+  "briefType": "outcome",
+  "subject": {
+    "entityId": "general.entity_golden_records.we-charity-foundation",
+    "canonicalName": "WE Charity Foundation",
+    "bnRoot": "118810988",
+    "datasetCoverage": ["cra", "fed"]
+  },
+  "identity": {
+    "canonicalName": "WE Charity Foundation",
+    "bnRoot": "118810988",
+    "addresses": ["233 Carlton St, Toronto, ON M5A 2L2"],
+    "datasetCoverage": ["cra", "fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 543000000,
+    "amendmentCount": 2,
+    "dateRangeStart": "2017-04-01",
+    "dateRangeEnd": "2020-09-30",
+    "awardingDepartments": ["Employment and Social Development Canada"],
+    "programCodes": ["Canada Student Service Grant"],
+    "province": "ON"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "Auditor General coverage",
+      "sentences": [
+        {
+          "text": "The Auditor General has not published a stand-alone report on the WE Charity contribution agreement; references to the agreement appear in committee proceedings and proactive disclosure rather than in performance audits.",
+          "citations": ["src-001"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Departmental records",
+      "sentences": [
+        {
+          "text": "The dataset records a single agreement of $543,053,427 between Employment and Social Development Canada and WE Charity Foundation, dated June 23, 2020.",
+          "citations": ["src-002"]
+        },
+        {
+          "text": "The agreement was terminated on July 3, 2020, and the records show two subsequent amendments reducing the value to zero.",
+          "citations": ["src-003"]
+        },
+        {
+          "text": "The Departmental Results Report for ESDC for fiscal year 2020–21 references the Canada Student Service Grant program but does not disclose performance outcomes against the program.",
+          "citations": ["src-004"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Parliamentary record",
+      "sentences": [
+        {
+          "text": "The House of Commons Standing Committee on Finance held hearings on the agreement during July and August 2020.",
+          "citations": ["src-005"]
+        },
+        {
+          "text": "Documents tabled before that committee include the original WE Charity proposal and the contribution agreement itself.",
+          "citations": ["src-006"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Charity registry",
+      "sentences": [
+        {
+          "text": "The CRA charity registry records WE Charity Foundation as a registered public foundation, BN 118810988RR0001, charity status active.",
+          "citations": ["src-007"]
+        },
+        {
+          "text": "The most recent T3010 filing for the foundation reports total revenue of $65.8M for fiscal year 2020.",
+          "citations": ["src-008"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Funded outcomes",
+      "rationale": "The Canada Student Service Grant did not proceed to delivery; outcomes against the program design cannot be assessed from the public record."
+    }
+  ],
+  "pullQuote": {
+    "text": "The dataset records a single agreement reduced to zero by two subsequent amendments.",
+    "attribution": "fed.vw_agreement_current",
+    "sourceId": "src-002"
+  },
+  "sources": [
+    { "id": "src-001", "kind": "ag_report", "title": "OAG-BVG report index, 2017–2024 federal grants and contributions performance audits", "url": "https://www.oag-bvg.gc.ca/internet/English/parl_lpf_e_19.html", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 1 },
+    { "id": "src-002", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, ref_number filtered to ESDC FY2020 CSSG", "url": "https://search.open.canada.ca/grants/", "year": 2020, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-003", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, amendment chain for ref_number associated with the WE agreement", "url": "https://search.open.canada.ca/grants/", "year": 2020, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-004", "kind": "drr", "title": "Employment and Social Development Canada — Departmental Results Report 2020–21", "url": "https://www.canada.ca/en/employment-social-development/corporate/reports/departmental-results.html", "year": 2021, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-005", "kind": "hansard", "title": "House of Commons Standing Committee on Finance, Evidence, July–August 2020", "url": "https://www.ourcommons.ca/Committees/en/FINA", "year": 2020, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-006", "kind": "hansard", "title": "House of Commons Standing Committee on Finance, document collection — WE Charity contribution agreement", "url": "https://www.ourcommons.ca/Committees/en/FINA", "year": 2020, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-007", "kind": "self_report", "title": "CRA Charity Registry — WE Charity Foundation, BN 118810988RR0001", "url": "https://apps.cra-arc.gc.ca/ebci/hacc/srch/pub/dsplyBscSrch?request_locale=en", "year": 2025, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-008", "kind": "self_report", "title": "CRA T3010 filing, WE Charity Foundation, fiscal year ending 2020-08-31", "url": "https://apps.cra-arc.gc.ca/ebci/hacc/srch/pub/dsplyBscSrch?request_locale=en", "year": 2020, "retrievalDate": "2026-04-22", "authorityTier": 2 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-we-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "concentration_risk", "summary": "Federal grants and contributions totalling $543M in current commitments are recorded against WE Charity Foundation and related entities between fiscal 2017 and fiscal 2020.", "subject": { "entityId": "general.entity_golden_records.we-charity-foundation", "canonicalName": "WE Charity Foundation", "bnRoot": "118810988", "datasetCoverage": ["cra", "fed"] }, "score": 26, "scoreScale": "0-30", "scoreLabel": "CRITICAL" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["BN normalization", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-1", "F-3"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:we-brief-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 4127, "tokensOut": 982 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 8, "quoteWordCountMax": 12, "uniqueSourcesQuoted": 8, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:we-brief-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#we-brief-001" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-we-001"
+  }
+}

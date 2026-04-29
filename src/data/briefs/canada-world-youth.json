@@ -1,0 +1,98 @@
+{
+  "briefId": "ob-2026-04-29-canada-world-youth",
+  "briefType": "outcome",
+  "subject": {
+    "entityId": "general.entity_golden_records.canada-world-youth",
+    "canonicalName": "Canada World Youth",
+    "bnRoot": "119262518",
+    "datasetCoverage": ["cra", "fed"]
+  },
+  "identity": {
+    "canonicalName": "Canada World Youth",
+    "bnRoot": "119262518",
+    "addresses": ["1425 René-Lévesque Boulevard West, Montréal, QC H3G 1T7"],
+    "datasetCoverage": ["cra", "fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 37000000,
+    "amendmentCount": 6,
+    "dateRangeStart": "1997-04-01",
+    "dateRangeEnd": "2020-03-31",
+    "awardingDepartments": ["Global Affairs Canada", "Employment and Social Development Canada"],
+    "programCodes": ["International Youth Internship Program", "Canada Service Corps"],
+    "province": "QC"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "Departmental records",
+      "sentences": [
+        {
+          "text": "The dataset records federal contributions totalling $37M to Canada World Youth between fiscal 1997 and fiscal 2020.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "Records show contributions originated under the international youth internship and the Canada Service Corps program lines.",
+          "citations": ["src-001"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Charity registry",
+      "sentences": [
+        {
+          "text": "The CRA charity registry records Canada World Youth's status as revoked, with revocation date 2023-08-12.",
+          "citations": ["src-002"]
+        },
+        {
+          "text": "The final T3010 filing reports the organization wound up its operations during fiscal 2022.",
+          "citations": ["src-003"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "Departmental Results Report coverage",
+      "sentences": [
+        {
+          "text": "Most recent Global Affairs DRRs for fiscal 2021–22 and 2022–23 do not list Canada World Youth as a current implementing partner.",
+          "citations": ["src-004"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Final program-level outcomes",
+      "rationale": "Final program-level performance data was not located in either the open contributions dataset or the most recent Departmental Results Reports of the awarding departments."
+    },
+    {
+      "claim": "Disposition of remaining program assets",
+      "rationale": "The T3010 wind-up filing does not reproduce a full asset disposition schedule in the open extract; the CRA charity registry shows revocation but does not reproduce the wind-up financials."
+    }
+  ],
+  "sources": [
+    { "id": "src-001", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, agreements filtered to recipient_business_number 119262518", "url": "https://search.open.canada.ca/grants/", "year": 2020, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-002", "kind": "self_report", "title": "CRA Charity Registry — Canada World Youth, BN 119262518RR0001", "url": "https://apps.cra-arc.gc.ca/ebci/hacc/srch/pub/dsplyBscSrch?request_locale=en", "year": 2023, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-003", "kind": "self_report", "title": "CRA T3010 filing, Canada World Youth, fiscal year ending 2022-03-31", "url": "https://apps.cra-arc.gc.ca/ebci/hacc/srch/pub/dsplyBscSrch?request_locale=en", "year": 2022, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-004", "kind": "drr", "title": "Global Affairs Canada — Departmental Results Report 2022–23", "url": "https://www.international.gc.ca/transparency-transparence/", "year": 2023, "retrievalDate": "2026-04-22", "authorityTier": 2 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-cwy-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "outcome_gap", "summary": "Federal grants and contributions totalling $37M in current commitments are recorded against Canada World Youth between fiscal 1997 and fiscal 2020; the entity wound down operations in 2022.", "subject": { "entityId": "general.entity_golden_records.canada-world-youth", "canonicalName": "Canada World Youth", "bnRoot": "119262518", "datasetCoverage": ["cra", "fed"] }, "score": 18, "scoreScale": "0-30", "scoreLabel": "HIGH" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["BN normalization", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cwy-brief-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 3018, "tokensOut": 891 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 4, "quoteWordCountMax": 11, "uniqueSourcesQuoted": 4, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cwy-brief-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cwy-brief-001" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-cwy-001"
+  }
+}

@@ -1,0 +1,410 @@
+[
+  {
+    "primaryJurisdiction": "federal",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 19,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-we-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "concentration_risk",
+        "summary": "Federal grants and contributions totalling $543M in current commitments are recorded against WE Charity Foundation and related entities between fiscal 2017 and fiscal 2020.",
+        "subject": {
+          "entityId": "general.entity_golden_records.we-charity-foundation",
+          "canonicalName": "WE Charity Foundation",
+          "bnRoot": "118810988",
+          "datasetCoverage": ["cra", "fed"]
+        },
+        "score": 26,
+        "scoreScale": "0-30",
+        "scoreLabel": "CRITICAL"
+      },
+      "evidence": [
+        { "source": "fed.vw_agreement_current", "rowId": "we-cs-grant-2020", "field": "agreement_value", "value": 543000000, "asOf": "2026-04-22" },
+        { "source": "cra.cra_identification", "rowId": "118810988RR0001", "field": "designation", "value": "Public Foundation" },
+        { "source": "cra.cra_financial_general", "rowId": "118810988-2020", "field": "total_revenue", "value": 65800000 },
+        { "source": "cra.govt_funding_by_charity", "rowId": "118810988", "field": "total_govt_funding", "value": 9100000 }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["BN normalization (general.extract_bn_root)", "Cumulative-sum guard (CTE picks max amendment_number per ref_number)"], "knownDataIssuesRespected": ["F-1", "F-3"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:a1b2c3d4e5f6", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 4127, "tokensOut": 982 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 7, "quoteWordCountMax": 12, "uniqueSourcesQuoted": 7, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:we-001-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#we-001" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+        "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-we-001"
+    }
+  },
+  {
+    "primaryJurisdiction": "federal",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 17,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-sdtc-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "concentration_risk",
+        "summary": "Federal grants and contributions totalling $134M in current commitments are recorded against Sustainable Development Technology Canada programming between fiscal 2017 and fiscal 2024.",
+        "subject": {
+          "entityId": "general.entity_golden_records.sdtc",
+          "canonicalName": "Sustainable Development Technology Canada",
+          "bnRoot": "893408519",
+          "datasetCoverage": ["fed"]
+        },
+        "score": 28,
+        "scoreScale": "0-30",
+        "scoreLabel": "CRITICAL"
+      },
+      "evidence": [
+        { "source": "fed.vw_agreement_current", "rowId": "sdtc-current-commitment", "field": "agreement_value", "value": 134000000, "asOf": "2026-04-22" },
+        { "source": "fed.grants_contributions", "rowId": "sdtc-amendment-count", "field": "amendment_count", "value": 31 },
+        { "source": "AG report ref", "rowId": "OAG-2024-Spring-Report-6", "field": "scope", "value": "SDTC governance" }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["BN normalization", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:sdtc-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 3892, "tokensOut": 1041 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 6, "quoteWordCountMax": 14, "uniqueSourcesQuoted": 6, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:sdtc-001-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#sdtc-001" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+        "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-sdtc-001"
+    }
+  },
+  {
+    "primaryJurisdiction": "federal",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 11,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-cwy-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "outcome_gap",
+        "summary": "Federal grants and contributions totalling $37M in current commitments are recorded against Canada World Youth between fiscal 1997 and fiscal 2020; the entity wound down operations in 2022.",
+        "subject": {
+          "entityId": "general.entity_golden_records.canada-world-youth",
+          "canonicalName": "Canada World Youth",
+          "bnRoot": "119262518",
+          "datasetCoverage": ["cra", "fed"]
+        },
+        "score": 18,
+        "scoreScale": "0-30",
+        "scoreLabel": "HIGH"
+      },
+      "evidence": [
+        { "source": "fed.vw_agreement_current", "rowId": "cwy-cumulative", "field": "agreement_value", "value": 37000000, "asOf": "2026-04-22" },
+        { "source": "cra.cra_identification", "rowId": "119262518RR0001", "field": "status", "value": "Revoked 2023-08-12" }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["BN normalization", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cwy-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 3018, "tokensOut": 891 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 5, "quoteWordCountMax": 11, "uniqueSourcesQuoted": 5, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cwy-001-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cwy-001" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+        "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-cwy-001"
+    }
+  },
+  {
+    "primaryJurisdiction": "federal",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 14,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-halagonia-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "outcome_gap",
+        "summary": "A federal contribution of $30M was recorded for Halagonia Tidal Energy; the proponent has since published a project-abandonment notice.",
+        "subject": {
+          "entityId": "general.entity_golden_records.halagonia-tidal",
+          "canonicalName": "Halagonia Tidal Energy",
+          "bnRoot": "846239155",
+          "datasetCoverage": ["fed"]
+        },
+        "score": 22,
+        "scoreScale": "0-30",
+        "scoreLabel": "HIGH"
+      },
+      "evidence": [
+        { "source": "fed.vw_agreement_current", "rowId": "halagonia-tidal-2018", "field": "agreement_value", "value": 30000000, "asOf": "2026-04-22" },
+        { "source": "fed.grants_contributions", "rowId": "halagonia-tidal-amendments", "field": "amendment_count", "value": 4 }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["BN normalization", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:hal-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 2671, "tokensOut": 728 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 4, "quoteWordCountMax": 13, "uniqueSourcesQuoted": 4, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:hal-001-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#hal-001" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+        "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-halagonia-001"
+    }
+  },
+  {
+    "primaryJurisdiction": "federal",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 13,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-tmt-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "outcome_gap",
+        "summary": "Federal grants and contributions totalling $214M in current commitments are recorded against TMT International Observatory; the dataset does not contain a record of project completion.",
+        "subject": {
+          "entityId": "general.entity_golden_records.tmt-international-observatory",
+          "canonicalName": "TMT International Observatory",
+          "bnRoot": "846124390",
+          "datasetCoverage": ["fed"]
+        },
+        "score": 21,
+        "scoreScale": "0-30",
+        "scoreLabel": "HIGH"
+      },
+      "evidence": [
+        { "source": "fed.vw_agreement_current", "rowId": "tmt-cumulative", "field": "agreement_value", "value": 214000000, "asOf": "2026-04-22" },
+        { "source": "fed.grants_contributions", "rowId": "tmt-program", "field": "program", "value": "Strategic Innovation Fund / Astronomy" }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["BN normalization", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:tmt-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 2459, "tokensOut": 671 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 3, "quoteWordCountMax": 9, "uniqueSourcesQuoted": 3, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:tmt-001-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#tmt-001" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+        "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-tmt-001"
+    }
+  },
+  {
+    "primaryJurisdiction": "federal",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 16,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-carisbrooke-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "provincial_misalignment",
+        "summary": "A federal contract totalling $13M is recorded against Carisbrooke Shipping; the dataset shows the recipient address registered outside Canada.",
+        "subject": {
+          "entityId": "general.entity_golden_records.carisbrooke-shipping",
+          "canonicalName": "Carisbrooke Shipping",
+          "bnRoot": null,
+          "datasetCoverage": ["fed"]
+        },
+        "score": 24,
+        "scoreScale": "0-30",
+        "scoreLabel": "HIGH"
+      },
+      "evidence": [
+        { "source": "fed.vw_agreement_current", "rowId": "carisbrooke-shipping", "field": "agreement_value", "value": 13000000, "asOf": "2026-04-22" },
+        { "source": "fed.grants_contributions", "rowId": "carisbrooke-shipping", "field": "recipient_country", "value": "GB" }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["Cumulative-sum guard", "Recipient-country surfacing"], "knownDataIssuesRespected": ["F-3", "F-6"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cari-prompt-hash", "promptVersion": "ob-section-v1.2", "temperature": 0.2, "tokensIn": 2103, "tokensOut": 558 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 3, "quoteWordCountMax": 10, "uniqueSourcesQuoted": 3, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cari-001-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cari-001" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+        "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-carisbrooke-001"
+    }
+  },
+  {
+    "primaryJurisdiction": "cra",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 23,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-canadagives-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "loop_participation",
+        "summary": "Canada Gives Foundation appears in the highest-scored loop pattern in the CRA loop universe (23/23 indicators), routing qualified-donee gifts across affiliated charities.",
+        "subject": {
+          "entityId": "general.entity_golden_records.canada-gives-foundation",
+          "canonicalName": "Canada Gives Foundation",
+          "bnRoot": "856585140",
+          "datasetCoverage": ["cra"]
+        },
+        "score": 23,
+        "scoreScale": "0-30",
+        "scoreLabel": "HIGH"
+      },
+      "evidence": [
+        { "source": "cra.loop_universe", "rowId": "loop-canada-gives-1", "field": "score", "value": 23 },
+        { "source": "cra.loops", "rowId": "loop-canada-gives-1", "field": "hops", "value": 4 },
+        { "source": "cra.loop_financials", "rowId": "loop-canada-gives-1", "field": "total_flow", "value": 142500000 }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["Loop pre-scoring", "BN root extraction"], "knownDataIssuesRespected": ["C-3", "C-7"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cg-prompt-hash", "promptVersion": "loop-finding-v1.0", "temperature": 0.2, "tokensIn": 2884, "tokensOut": 712 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 4, "quoteWordCountMax": 0, "uniqueSourcesQuoted": 4, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cg-001-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cg-001" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (CRA T3010 corpus snapshot)",
+        "Most loops are structurally normal — denominational hierarchies, federated charities, donation platforms",
+        "A loop is a pattern until paired with purpose. The pattern is shown; the purpose is not asserted.",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-canadagives-001"
+    }
+  },
+  {
+    "primaryJurisdiction": "federal",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 8,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-cf-sif-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "outcome_gap",
+        "summary": "A Strategic Innovation Fund agreement of $4.2M (FY2024) carries no description in the public dataset; comparable filings in this program typically describe research milestones and intellectual property assignment.",
+        "subject": {
+          "entityId": "general.entity_golden_records.cf-sif-showcase-1",
+          "canonicalName": "Confidential SIF recipient (showcase)",
+          "bnRoot": "812995041",
+          "datasetCoverage": ["fed"]
+        },
+        "score": 14,
+        "scoreScale": "0-30",
+        "scoreLabel": "MEDIUM"
+      },
+      "evidence": [
+        { "source": "fed.vw_agreement_current", "rowId": "cf-sif-1", "field": "description_en", "value": null },
+        { "source": "fed.vw_agreement_current", "rowId": "cf-sif-1", "field": "agreement_value", "value": 4200000 },
+        { "source": "fed.vw_agreement_current", "rowId": "cf-sif-1", "field": "prog_name_en", "value": "Strategic Innovation Fund" }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["Description-NULL filter", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cf-sif-prompt-hash", "promptVersion": "cf-section-v1.0", "temperature": 0.2, "tokensIn": 3712, "tokensOut": 928 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 8, "quoteWordCountMax": 13, "uniqueSourcesQuoted": 6, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cf-sif-1-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cf-sif-1" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+        "The recipient is rendered as a confidential placeholder for the demo; the live build resolves to the canonical entity",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-cf-sif-001"
+    }
+  },
+  {
+    "primaryJurisdiction": "federal",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 9,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-cf-nrcan-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "outcome_gap",
+        "summary": "An NRCan clean-energy contribution of $6.8M (FY2025) carries no description in the public dataset; comparable filings under the Smart Renewables and Electrification Pathways program typically state grid-integration outcomes and emissions targets.",
+        "subject": {
+          "entityId": "general.entity_golden_records.cf-nrcan-showcase-1",
+          "canonicalName": "Confidential NRCan recipient (showcase)",
+          "bnRoot": "846228301",
+          "datasetCoverage": ["fed"]
+        },
+        "score": 16,
+        "scoreScale": "0-30",
+        "scoreLabel": "MEDIUM"
+      },
+      "evidence": [
+        { "source": "fed.vw_agreement_current", "rowId": "cf-nrcan-1", "field": "description_en", "value": null },
+        { "source": "fed.vw_agreement_current", "rowId": "cf-nrcan-1", "field": "agreement_value", "value": 6800000 },
+        { "source": "fed.vw_agreement_current", "rowId": "cf-nrcan-1", "field": "prog_name_en", "value": "Smart Renewables and Electrification Pathways Program" }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["Description-NULL filter", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cf-nrcan-prompt-hash", "promptVersion": "cf-section-v1.0", "temperature": 0.2, "tokensIn": 3540, "tokensOut": 901 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 7, "quoteWordCountMax": 12, "uniqueSourcesQuoted": 5, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cf-nrcan-1-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cf-nrcan-1" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+        "The recipient is rendered as a confidential placeholder for the demo; the live build resolves to the canonical entity",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-cf-nrcan-001"
+    }
+  },
+  {
+    "primaryJurisdiction": "cross",
+    "lastUpdated": "2026-04-22T00:00:00Z",
+    "indicatorCount": 4,
+    "proofToken": {
+      "proofId": "ppm-2026-04-29T00:00:00.000Z-clear-uni-001",
+      "version": "1.0",
+      "issuedAt": "2026-04-29T00:00:00.000Z",
+      "issuedBy": "PYTH-LEAD",
+      "finding": {
+        "type": "concentration_risk",
+        "summary": "A Canadian U15 research university shows $284M in current federal commitments across 312 active agreements; concentration scores high but all four governance gates pass — included as a calibration anchor for the false-positive case.",
+        "subject": {
+          "entityId": "general.entity_golden_records.clear-university",
+          "canonicalName": "U15 research university (cleared anchor)",
+          "bnRoot": "108162205",
+          "datasetCoverage": ["fed", "cra"]
+        },
+        "score": 11,
+        "scoreScale": "0-30",
+        "scoreLabel": "LOW"
+      },
+      "evidence": [
+        { "source": "fed.vw_agreement_current", "rowId": "clear-uni-portfolio", "field": "agreement_value", "value": 284000000, "asOf": "2026-04-22" },
+        { "source": "fed.vw_agreement_current", "rowId": "clear-uni-agreement-count", "field": "count", "value": 312 },
+        { "source": "cra.cra_identification", "rowId": "108162205RR0001", "field": "designation", "value": "Charitable Organization" }
+      ],
+      "tiers": {
+        "input": { "passed": true, "tier": 1, "filtersApplied": ["Cumulative-sum guard", "Sector-context filter (research universities)"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+        "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:clear-uni-prompt-hash", "promptVersion": "concentration-v1.0", "temperature": 0.2, "tokensIn": 1812, "tokensOut": 412 },
+        "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 3, "quoteWordCountMax": 0, "uniqueSourcesQuoted": 3, "languageViolations": [] },
+        "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:clear-uni-001-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#clear-uni-001" }
+      },
+      "disclaimers": [
+        "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+        "High portfolio concentration in a research-university context is a structural feature of federal Tri-Agency funding, not a finding",
+        "These are observations from public records. They are not findings of misconduct."
+      ],
+      "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-clear-uni-001"
+    }
+  }
+]

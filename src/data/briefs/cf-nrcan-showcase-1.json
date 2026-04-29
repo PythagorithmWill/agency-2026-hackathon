@@ -1,0 +1,94 @@
+{
+  "briefId": "cb-2026-04-29-cf-nrcan-showcase-1",
+  "briefType": "counterfactual",
+  "subject": {
+    "entityId": "general.entity_golden_records.cf-nrcan-showcase-1",
+    "canonicalName": "Confidential NRCan recipient (showcase)",
+    "bnRoot": "846228301",
+    "datasetCoverage": ["fed"]
+  },
+  "identity": {
+    "canonicalName": "Confidential NRCan recipient (showcase)",
+    "bnRoot": "846228301",
+    "addresses": ["British Columbia"],
+    "datasetCoverage": ["fed"]
+  },
+  "governmentRecords": {
+    "totalAgreementValue": 6800000,
+    "amendmentCount": 0,
+    "dateRangeStart": "2024-04-01",
+    "dateRangeEnd": "2025-03-31",
+    "awardingDepartments": ["Natural Resources Canada"],
+    "programCodes": ["Smart Renewables and Electrification Pathways Program"],
+    "province": "BC"
+  },
+  "publicSources": [
+    {
+      "sectionHeading": "What this brief observes",
+      "sentences": [
+        {
+          "text": "The contribution agreement for this $6.8M Smart Renewables and Electrification Pathways recipient carries a null description in the Open Data extract.",
+          "citations": ["src-001"]
+        },
+        {
+          "text": "The program's most recent Departmental Results Report describes its purpose as enabling renewable electricity capacity additions and supporting clean grid integration.",
+          "citations": ["src-002"]
+        }
+      ]
+    },
+    {
+      "sectionHeading": "What comparable filings typically state",
+      "sentences": [
+        {
+          "text": "Briefs in the SREPs program corpus typically state grid-integration outcomes, megawatt capacity additions, project location, and Indigenous-equity participation.",
+          "citations": ["src-003"]
+        },
+        {
+          "text": "Comparable filings reference Greenhouse Gas Reductions targets in tonnes of CO2-equivalent over the life of the project.",
+          "citations": ["src-003"]
+        }
+      ]
+    }
+  ],
+  "unverifiable": [
+    {
+      "claim": "Capacity, location, and emissions outcomes",
+      "rationale": "The agreement description is null in the open dataset; comparable filings disclose these fields, but they cannot be inferred from the absence."
+    }
+  ],
+  "comparableGrants": [
+    { "grantId": "nrcan-cmp-001", "description": "Investment in 50MW solar-plus-storage project in Saskatchewan with First Nation equity participation.", "amount": 7200000, "departmentCode": "NRCan", "fiscalYear": 2025, "similarityTier": 1 },
+    { "grantId": "nrcan-cmp-002", "description": "Federal contribution toward hydroelectric grid-integration upgrades in Northwestern Ontario.", "amount": 6500000, "departmentCode": "NRCan", "fiscalYear": 2025, "similarityTier": 1 },
+    { "grantId": "nrcan-cmp-003", "description": "Wind-power capacity addition in Alberta, 150MW with battery-storage component.", "amount": 6900000, "departmentCode": "NRCan", "fiscalYear": 2024, "similarityTier": 1 },
+    { "grantId": "nrcan-cmp-004", "description": "Indigenous-led renewables expansion combining solar, wind, and grid-storage components.", "amount": 7100000, "departmentCode": "NRCan", "fiscalYear": 2024, "similarityTier": 1 },
+    { "grantId": "nrcan-cmp-005", "description": "Smart Grid Program demonstration of distributed energy resources management system.", "amount": 6700000, "departmentCode": "NRCan", "fiscalYear": 2023, "similarityTier": 2 },
+    { "grantId": "nrcan-cmp-006", "description": "Federal contribution toward retrofitting an existing biomass facility for biogas co-firing.", "amount": 6300000, "departmentCode": "NRCan", "fiscalYear": 2023, "similarityTier": 2 },
+    { "grantId": "nrcan-cmp-007", "description": "Pilot project for floating offshore wind site characterization off the Atlantic coast.", "amount": 6900000, "departmentCode": "NRCan", "fiscalYear": 2022, "similarityTier": 2 },
+    { "grantId": "nrcan-cmp-008", "description": "Federal Energy Efficient Retrofit program contribution to municipal building portfolio.", "amount": 6600000, "departmentCode": "NRCan", "fiscalYear": 2024, "similarityTier": 3 }
+  ],
+  "sources": [
+    { "id": "src-001", "kind": "self_report", "title": "Federal Grants and Contributions Open Data, NRCan SREPs program, fiscal 2025", "url": "https://search.open.canada.ca/grants/", "year": 2025, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-002", "kind": "drr", "title": "Natural Resources Canada — Departmental Results Report 2023–24", "url": "https://natural-resources.canada.ca/transparency/reporting-and-accountability/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 },
+    { "id": "src-003", "kind": "self_report", "title": "NRCan SREPs Program — public project profiles", "url": "https://natural-resources.canada.ca/", "year": 2024, "retrievalDate": "2026-04-22", "authorityTier": 2 }
+  ],
+  "proofToken": {
+    "proofId": "ppm-2026-04-29T00:00:00.000Z-cf-nrcan-001",
+    "version": "1.0",
+    "issuedAt": "2026-04-29T00:00:00.000Z",
+    "issuedBy": "PYTH-LEAD",
+    "finding": { "type": "outcome_gap", "summary": "An NRCan clean-energy contribution of $6.8M (FY2025) carries no description in the public dataset; comparable filings under the Smart Renewables and Electrification Pathways program typically state grid-integration outcomes and emissions targets.", "subject": { "entityId": "general.entity_golden_records.cf-nrcan-showcase-1", "canonicalName": "Confidential NRCan recipient (showcase)", "bnRoot": "846228301", "datasetCoverage": ["fed"] }, "score": 16, "scoreScale": "0-30", "scoreLabel": "MEDIUM" },
+    "evidence": [],
+    "tiers": {
+      "input": { "passed": true, "tier": 1, "filtersApplied": ["Description-NULL filter", "Cumulative-sum guard"], "knownDataIssuesRespected": ["F-3"], "rejected": [] },
+      "contextual": { "passed": true, "tier": 2, "model": "claude-opus-4-7", "promptHash": "sha256:cf-nrcan-1-prompt-hash", "promptVersion": "cf-section-v1.0", "temperature": 0.2, "tokensIn": 3540, "tokensOut": 901 },
+      "output": { "passed": true, "tier": 3, "calibrationCheck": "passed", "citationCount": 4, "quoteWordCountMax": 12, "uniqueSourcesQuoted": 3, "languageViolations": [] },
+      "audit": { "passed": true, "tier": 4, "tokenHash": "sha256:cf-nrcan-1-sealed", "previousTokenHash": null, "humanReviewed": false, "humanReviewer": null, "operatorAgent": "PYTH-LEAD", "logRef": "decisions.md#cf-nrcan-1" }
+    },
+    "disclaimers": [
+      "Data current as of 2026-04-22 (federal Open Data API snapshot)",
+      "The recipient is rendered as a confidential placeholder for the demo; the live build resolves to the canonical entity",
+      "These are observations from public records. They are not findings of misconduct."
+    ],
+    "rerunUrl": "/proof/rerun/ppm-2026-04-29T00:00:00.000Z-cf-nrcan-001"
+  }
+}
