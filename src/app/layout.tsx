@@ -16,6 +16,10 @@ const jbMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  // metadataBase resolves relative image URLs (like "/og.png") to absolute
+  // URLs in og:image and twitter:image meta tags. Without this, Next.js
+  // defaults to localhost:3000 which breaks every social-media unfurl.
+  metadataBase: new URL("https://glassbox.pythagorithm.ai"),
   title: "Glassbox — See through the spend.",
   description:
     "Glassbox surfaces duplication, recipient concentration, and language-calibration issues during drafting — not after audit. Federal grants and contributions. Alberta provincial spending. One transparent view, before the money goes out.",
