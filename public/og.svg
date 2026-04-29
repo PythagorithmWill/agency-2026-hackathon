@@ -31,23 +31,37 @@
     <circle cx="28" cy="28" r="2.6" fill="#5EEAD4" />
   </g>
 
-  <!-- "glassbox" wordmark next to mark -->
+  <!-- "glassbox" wordmark next to mark — the "o" in "box" is rendered
+       as a 3D wireframe cube to signal transparency. -->
   <text
     x="148"
-    y="113"
+    y="118"
     fill="#FAFAFA"
     font-family="Inter, ui-sans-serif, system-ui, sans-serif"
-    font-size="36"
+    font-size="42"
     font-weight="600"
     letter-spacing="-0.02em"
   >glassb</text>
-  <circle cx="287" cy="100" r="11" fill="none" stroke="#5EEAD4" stroke-width="2.5" />
+  <!-- 3D wireframe cube replacing the "o" in "box" -->
+  <g transform="translate(285, 76) scale(0.42)" stroke="#FAFAFA" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Front face -->
+    <path d="M 18 38 L 18 88 L 68 88 L 68 38 Z" />
+    <!-- Top face -->
+    <path d="M 18 38 L 38 18 L 88 18 L 68 38" />
+    <!-- Right face -->
+    <path d="M 68 38 L 88 18 L 88 68 L 68 88" />
+    <!-- Hidden edges -->
+    <g stroke-width="4" opacity="0.35">
+      <path d="M 38 18 L 38 68 L 18 88" stroke-dasharray="3 4" />
+      <path d="M 38 68 L 88 68" stroke-dasharray="3 4" />
+    </g>
+  </g>
   <text
-    x="304"
-    y="113"
+    x="335"
+    y="118"
     fill="#FAFAFA"
     font-family="Inter, ui-sans-serif, system-ui, sans-serif"
-    font-size="36"
+    font-size="42"
     font-weight="600"
     letter-spacing="-0.02em"
   >x</text>

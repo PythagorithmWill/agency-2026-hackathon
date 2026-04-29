@@ -11,8 +11,8 @@ export function HomepageFooter() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div>
             <div className="flex items-center gap-3">
-              <GlassboxMark size={24} className="text-[var(--color-fg)]" />
-              <GlassboxWordmark size={18} className="text-[var(--color-fg)]" />
+              <GlassboxMark size={36} className="text-[var(--color-fg)]" />
+              <GlassboxWordmark size={27} className="text-[var(--color-fg)]" />
             </div>
             <div className="mt-4 text-[14px] leading-[20px] text-[var(--color-fg-muted)] max-w-[260px]">
               See through the spend.

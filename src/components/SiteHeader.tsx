@@ -40,10 +40,10 @@ export function SiteHeader() {
       }
       className="fixed top-0 left-0 right-0 z-30 border-b no-print"
     >
-      <div className="mx-auto max-w-[1440px] h-16 px-6 md:px-8 flex items-center justify-between">
-        <Link href={"/" as never} className="flex items-center gap-3 group">
-          <GlassboxMark size={28} className="text-[var(--color-fg)]" />
-          <GlassboxWordmark size={20} className="text-[var(--color-fg)] group-hover:opacity-90 transition-opacity" />
+      <div className="mx-auto max-w-[1440px] h-20 px-6 md:px-8 flex items-center justify-between">
+        <Link href={"/" as never} className="flex items-center gap-4 group">
+          <GlassboxMark size={42} className="text-[var(--color-fg)]" />
+          <GlassboxWordmark size={30} className="text-[var(--color-fg)] group-hover:opacity-90 transition-opacity" />
         </Link>
         <nav className="flex items-center gap-6 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] text-[var(--color-fg-muted)]">
           <Link href={"/methodology" as never} className="hover:text-[var(--color-fg)] transition-colors">
