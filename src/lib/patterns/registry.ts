@@ -88,11 +88,11 @@ export const PATTERNS: PatternDef[] = [
     name: "Vendor Concentration",
     challenge: 5,
     definition:
-      "The dataset shows categories of government spending where a single supplier or small group receives a disproportionate share — incumbency replacing competition.",
+      "The dataset shows departments where a single supplier or small group receives a disproportionate share of contract spend — incumbency replacing competition.",
     signal:
-      "HHI ≥ 2500 over a category × FY window, or single-recipient share ≥ 50% over 3+ consecutive FYs in a single program",
+      "HHI ≥ 1500 (Σ recipient share² × 100²) over departmental spend with ≥ $100M total. Bands: ≥5000 extreme, ≥2500 highly concentrated, ≥1500 moderately concentrated.",
     attribution: "BOTH",
-    status: "beta",
+    status: "live",
     order: 5,
   },
   {
