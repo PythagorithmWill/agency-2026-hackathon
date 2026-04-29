@@ -1,8 +1,73 @@
 import Link from "next/link";
 import { FORBIDDEN_ABSOLUTE, FORBIDDEN_CAUSAL } from "@/lib/gov/validators";
 import { MethodologyTryItYourself } from "@/components/MethodologyTryItYourself";
+import { MethodologyHero } from "@/components/methodology/MethodologyHero";
+import { RevealSection } from "@/components/methodology/RevealSection";
+import { JsonTypewriter } from "@/components/methodology/JsonTypewriter";
+import { AnimatedAiaTable } from "@/components/methodology/AnimatedAiaTable";
+import { AgentsDiagram } from "@/components/methodology/AgentsDiagram";
+import { RegexCard } from "@/components/methodology/RegexCard";
+import { PythagorithmMark } from "@/components/glyphs/PythagorithmMark";
 
 export const metadata = { title: "Methodology — Pythagorithm" };
+
+const REGEX_DESCRIPTIONS: { pattern: string; description: string }[] = [
+  {
+    pattern: FORBIDDEN_ABSOLUTE[0].pattern.toString(),
+    description:
+      "Catches editorial verdicts (fraud, corruption, criminal). The dataset cannot prove these; PYTH-GOV strips them or asks PYTH-SYN to point to the source making the claim.",
+  },
+  {
+    pattern: FORBIDDEN_ABSOLUTE[1].pattern.toString(),
+    description:
+      "Prescriptive language ('should have', 'ought to'). Forbidden because it directs the reader rather than describing what the records show.",
+  },
+  {
+    pattern: FORBIDDEN_ABSOLUTE[2].pattern.toString(),
+    description:
+      "Absolute claims ('clearly shows', 'proven', 'definitely'). Replaced with 'records indicate' or 'the dataset shows'.",
+  },
+  {
+    pattern: FORBIDDEN_ABSOLUTE[3].pattern.toString(),
+    description:
+      "Imputed-intent verbs ('failed to', 'deliberately', 'knowingly'). Replaced with 'does not show' or 'public records do not contain'.",
+  },
+  {
+    pattern: FORBIDDEN_ABSOLUTE[4].pattern.toString(),
+    description:
+      "Editorial framings ('coverup', 'scheme', 'scam'). Stripped — describe the documented pattern instead.",
+  },
+  {
+    pattern: FORBIDDEN_ABSOLUTE[5].pattern.toString(),
+    description:
+      "Superlatives ('stunning', 'shocking', 'egregious'). Stripped — let the number speak.",
+  },
+  {
+    pattern: FORBIDDEN_ABSOLUTE[6].pattern.toString(),
+    description:
+      "Anonymous-source hedges ('allegedly', 'sources say', 'many believe'). Replaced with the cited source by name.",
+  },
+  {
+    pattern: FORBIDDEN_CAUSAL[0].pattern.toString(),
+    description:
+      "Causal phrasing ('because of [grant/funding]'). Replaced with temporal: 'X occurred N days before Y'.",
+  },
+  {
+    pattern: FORBIDDEN_CAUSAL[1].pattern.toString(),
+    description:
+      "Causal verbs ('caused', 'led to', 'resulted in'). Replaced with 'preceded' / 'followed' or cite the source asserting the causation.",
+  },
+  {
+    pattern: FORBIDDEN_CAUSAL[2].pattern.toString(),
+    description:
+      "Quid-pro-quo language ('in exchange for', 'in return for'). Always stripped — unsupported by the dataset.",
+  },
+  {
+    pattern: FORBIDDEN_CAUSAL[3].pattern.toString(),
+    description:
+      "Reader-direction ('warrants investigation', 'public deserves answers'). Stripped — that's the reader's call.",
+  },
+];
 
 const REJECTED: { phrase: string; rewrite: string }[] = [
   { phrase: "The government failed to deliver the program.", rewrite: "The dataset does not show recorded outcomes for this program." },
@@ -20,7 +85,7 @@ const ACCEPTED = [
   "Public records do not contain a final disposition statement for this contribution.",
 ];
 
-const AIA_TABLE: { tier: string; pythagorithm: string; aia: string }[] = [
+const AIA_TABLE = [
   { tier: "Tier 1 (Input)", pythagorithm: "Filters applied + landmines respected (F-3, A-13, A-10)", aia: "Project Description + scope of automated decisions" },
   { tier: "Tier 2 (Context)", pythagorithm: "Embedding model + synthesis prompt version + temperature", aia: "Risk Assessment — algorithm class, training data, error modes" },
   { tier: "Tier 3 (Output)", pythagorithm: "Citation count, max-quote length, calibration verdict", aia: "Mitigation Measures — peer review, monitoring, recourse" },
@@ -35,7 +100,7 @@ const LANDMINES: { id: string; what: string; guard: string }[] = [
   { id: "C-7", what: "CRA name history is mostly missing (1.4% of BNs)", guard: "Treat cra.cra_identification.legal_name as current-state, not historical" },
 ];
 
-const AGENTS: { id: string; stratum: string; role: string }[] = [
+const AGENTS = [
   { id: "PYTH-LEAD", stratum: "Task agent (descends along provenance strands)", role: "Orchestrator, schedule, scope cuts" },
   { id: "PYTH-DATA", stratum: "S4 source-linked", role: "Canonical SQL, landmine guards, hybrid retrieval, embedding job" },
   { id: "PYTH-SYN", stratum: "S3 semantic", role: "Similarity scoring, awardee patterns, calibrated recommendation text" },
@@ -45,8 +110,8 @@ const AGENTS: { id: string; stratum: string; role: string }[] = [
 
 export default function MethodologyPage() {
   return (
-    <main className="atmosphere-mesh min-h-screen">
-      <header className="mx-auto max-w-[1440px] px-8 pt-8 flex items-baseline justify-between font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+    <main className="min-h-screen">
+      <header className="absolute top-0 left-0 right-0 z-20 mx-auto max-w-[1440px] px-8 pt-8 flex items-baseline justify-between font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
         <Link href={"/" as never} className="hover:text-[var(--color-fg)]">
           ← Pythagorithm
         </Link>
@@ -55,70 +120,69 @@ export default function MethodologyPage() {
         </Link>
       </header>
 
+      <MethodologyHero />
+
       <article className="mx-auto max-w-[760px] px-6 py-24">
-        <div className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-          Methodology
-        </div>
-        <h1 className="mt-6 text-[var(--text-display-lg)] tracking-[var(--tracking-display-lg)] font-semibold leading-[68px]">
-          The substance behind the surface.
-        </h1>
-        <p className="mt-8 text-[var(--text-body-lg)] leading-[28px] text-[var(--color-fg)]">
-          Every score in this product, every comparable record, every
-          recommendation is produced under five rules. None are secret;
-          all are demonstrable; each can be verified against the source
-          data on demand.
-        </p>
+        <RevealSection>
+          <h2 className="text-[clamp(40px,5vw,56px)] tracking-[-0.025em] font-semibold leading-[1.1]">
+            The substance behind the surface.
+          </h2>
+          <p className="mt-8 text-[18px] leading-[28px] text-[var(--color-fg)]">
+            Every score in this product, every comparable record, every
+            recommendation is produced under five rules. None are secret;
+            all are demonstrable; each can be verified against the source
+            data on demand.
+          </p>
+        </RevealSection>
 
         <Section number="01" heading="Calibrated language">
-          <p className="text-[var(--text-body)] leading-[24px] text-[var(--color-fg-muted)]">
+          <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
             Output describes what the data shows. It does not assign verdicts.
             It does not aggregate intent. It does not direct the reader.
           </p>
 
-          <h3 className="mt-12 text-[var(--text-heading)] font-semibold tracking-[var(--tracking-heading)]">
+          <h3 className="mt-12 text-[20px] font-semibold tracking-[-0.01em]">
             Forbidden patterns
           </h3>
+          <p className="mt-3 text-[14px] text-[var(--color-fg-subtle)]">
+            Hover any line for a description of what the pattern catches.
+          </p>
           <div className="mt-4 space-y-2">
-            {[...FORBIDDEN_ABSOLUTE, ...FORBIDDEN_CAUSAL].map((p, i) => (
-              <code
-                key={i}
-                className="block font-[var(--font-mono)] text-[var(--text-mono)] text-[var(--color-fg)] bg-[var(--color-bg-elev-1)] border border-[var(--color-border)] rounded-[8px] px-4 py-2 break-all"
-              >
-                {p.pattern.toString()}
-              </code>
+            {REGEX_DESCRIPTIONS.map((r, i) => (
+              <RegexCard key={i} pattern={r.pattern} description={r.description} />
             ))}
           </div>
 
-          <h3 className="mt-12 text-[var(--text-heading)] font-semibold tracking-[var(--tracking-heading)]">
+          <h3 className="mt-12 text-[20px] font-semibold tracking-[-0.01em]">
             Rejected → calibrated
           </h3>
           <ul className="mt-4 space-y-4">
             {REJECTED.map((r, i) => (
               <li key={i} className="border-l-2 border-[var(--color-accent-warn)] pl-4">
-                <div className="font-[var(--font-mono)] text-[var(--text-body-sm)] text-[var(--color-accent-warn)]">
+                <div className="font-[var(--font-mono)] text-[14px] text-[var(--color-accent-warn)]">
                   ✗ {r.phrase}
                 </div>
-                <div className="mt-1 font-[var(--font-mono)] text-[var(--text-body-sm)] text-[var(--color-accent)]">
+                <div className="mt-1 font-[var(--font-mono)] text-[14px] text-[var(--color-accent)]">
                   ✓ {r.rewrite}
                 </div>
               </li>
             ))}
           </ul>
 
-          <h3 className="mt-12 text-[var(--text-heading)] font-semibold tracking-[var(--tracking-heading)]">
+          <h3 className="mt-12 text-[20px] font-semibold tracking-[-0.01em]">
             Try it yourself
           </h3>
-          <p className="mt-2 text-[var(--text-body-sm)] text-[var(--color-fg-muted)] leading-[20px]">
+          <p className="mt-2 text-[14px] text-[var(--color-fg-muted)] leading-[20px]">
             Type any sentence below. PYTH-GOV runs the calibration sweep
             against it in real time, the same way every output is gated
             before it ships.
           </p>
           <MethodologyTryItYourself />
 
-          <h3 className="mt-12 text-[var(--text-heading)] font-semibold tracking-[var(--tracking-heading)]">
+          <h3 className="mt-12 text-[20px] font-semibold tracking-[-0.01em]">
             Accepted phrasings
           </h3>
-          <ul className="mt-4 space-y-2 text-[var(--text-body-sm)] leading-[20px]">
+          <ul className="mt-4 space-y-2 text-[14px] leading-[20px]">
             {ACCEPTED.map((s, i) => (
               <li key={i} className="text-[var(--color-fg)]">· {s}</li>
             ))}
@@ -126,12 +190,12 @@ export default function MethodologyPage() {
         </Section>
 
         <Section number="02" heading="Citation discipline">
-          <p className="text-[var(--text-body)] leading-[24px] text-[var(--color-fg-muted)]">
+          <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
             Every prose claim ships with at least one source pointer.
             No quote may exceed 15 words. No source may be quoted
             directly more than once.
           </p>
-          <ul className="mt-6 space-y-3 text-[var(--text-body-sm)] leading-[20px] text-[var(--color-fg)]">
+          <ul className="mt-6 space-y-3 text-[14px] leading-[20px] text-[var(--color-fg)]">
             <li><strong>Tier 1</strong> — Auditor General reports. Highest authority.</li>
             <li><strong>Tier 2</strong> — Departmental Results Reports, Hansard, parliamentary committee evidence.</li>
             <li><strong>Tier 3</strong> — Major-outlet news with editorial review (Globe, La Presse, CBC investigative).</li>
@@ -140,62 +204,25 @@ export default function MethodologyPage() {
         </Section>
 
         <Section number="03" heading="The Proof token">
-          <p className="text-[var(--text-body)] leading-[24px] text-[var(--color-fg-muted)]">
+          <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
             Every output of an accountability AI must itself be accountable.
             The token records what evaluated the input, what model produced
             the analysis, what gates passed, and what audit was issued.
           </p>
-          <pre className="mt-6 overflow-x-auto rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4 font-[var(--font-mono)] text-[var(--text-mono)] leading-relaxed text-[var(--color-fg)]">
-{`{
-  "proofId":   "ppm-2026-04-29T...-abc123",
-  "version":   "1.0",
-  "issuedAt":  "...",
-  "issuedBy":  "PYTH-LEAD",
-  "finding":   { type, summary, subject, score, scoreLabel },
-  "evidence":  [{ source, rowId, field, value, asOf }, ...],
-  "tiers": {
-    "input":     { passed, filtersApplied, knownDataIssuesRespected },
-    "contextual":{ passed, model, promptHash, promptVersion, temperature },
-    "output":    { passed, calibrationCheck, citationCount, quoteWordCountMax },
-    "audit":     { passed, tokenHash, previousTokenHash, operatorAgent, logRef }
-  },
-  "disclaimers": [
-    "Data current as of ...",
-    "Entity resolution is probabilistic for cross-dataset matches without BN anchor",
-    "These are observations from public records. They are not findings of misconduct."
-  ]
-}`}
-          </pre>
+          <JsonTypewriter />
         </Section>
 
         <Section number="04" heading="Structural correspondence with the federal AIA">
-          <p className="text-[var(--text-body)] leading-[24px] text-[var(--color-fg-muted)]">
+          <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
             The Pythagorithm Proof token is structurally equivalent to a
             Treasury Board Algorithmic Impact Assessment, applied at every
             output rather than once at deployment.
           </p>
-          <table className="mt-6 w-full border-collapse text-[var(--text-body-sm)]">
-            <thead>
-              <tr className="border-b border-[var(--color-border)]">
-                <th className="py-3 text-left font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">Tier</th>
-                <th className="py-3 text-left font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">Pythagorithm Proof</th>
-                <th className="py-3 text-left font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">Federal AIA</th>
-              </tr>
-            </thead>
-            <tbody>
-              {AIA_TABLE.map((r) => (
-                <tr key={r.tier} className="border-b border-[var(--color-border)]">
-                  <td className="py-3 font-[var(--font-mono)] text-[var(--text-mono)] text-[var(--color-fg-muted)]">{r.tier}</td>
-                  <td className="py-3 text-[var(--color-fg)] leading-[20px]">{r.pythagorithm}</td>
-                  <td className="py-3 text-[var(--color-fg)] leading-[20px]">{r.aia}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <AnimatedAiaTable rows={AIA_TABLE} />
         </Section>
 
         <Section number="05" heading="Data landmines">
-          <p className="text-[var(--text-body)] leading-[24px] text-[var(--color-fg-muted)]">
+          <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
             The corpus carries documented defects. Every canonical query
             guards against them explicitly. The Proof token's Tier 1
             records which guards applied.
@@ -203,11 +230,11 @@ export default function MethodologyPage() {
           <ul className="mt-6 space-y-4">
             {LANDMINES.map((l) => (
               <li key={l.id} className="border-l border-[var(--color-border)] pl-4">
-                <div className="font-[var(--font-mono)] text-[var(--text-mono)] text-[var(--color-accent-warn)]">
+                <div className="font-[var(--font-mono)] text-[13px] text-[var(--color-accent-warn)]">
                   {l.id}
                 </div>
-                <div className="mt-1 text-[var(--text-body-sm)] text-[var(--color-fg)]">{l.what}</div>
-                <div className="mt-2 font-[var(--font-mono)] text-[var(--text-mono)] text-[var(--color-fg-muted)] leading-[20px]">
+                <div className="mt-1 text-[14px] text-[var(--color-fg)]">{l.what}</div>
+                <div className="mt-2 font-[var(--font-mono)] text-[13px] text-[var(--color-fg-muted)] leading-[20px]">
                   Guard: {l.guard}
                 </div>
               </li>
@@ -216,17 +243,18 @@ export default function MethodologyPage() {
         </Section>
 
         <Section number="06" heading="The five agents">
-          <p className="text-[var(--text-body)] leading-[24px] text-[var(--color-fg-muted)]">
+          <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
             Each agent operates within bounded perception. The strata are
             not decorative — they are how the architecture is scoped.
           </p>
-          <ul className="mt-6 space-y-4">
+          <AgentsDiagram />
+          <ul className="mt-12 space-y-4">
             {AGENTS.map((a) => (
               <li key={a.id}>
-                <div className="font-[var(--font-mono)] text-[var(--text-mono)] text-[var(--color-fg)]">
+                <div className="font-[var(--font-mono)] text-[13px] text-[var(--color-fg)]">
                   {a.id} · {a.stratum}
                 </div>
-                <div className="mt-1 text-[var(--text-body-sm)] text-[var(--color-fg-muted)] leading-[20px]">
+                <div className="mt-1 text-[14px] text-[var(--color-fg-muted)] leading-[20px]">
                   {a.role}
                 </div>
               </li>
@@ -234,9 +262,14 @@ export default function MethodologyPage() {
           </ul>
         </Section>
 
-        <footer className="mt-24 border-t border-[var(--color-border)] pt-8 font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-          Cite as: Pythagorithm Proof Methodology v1.0, retrieved {new Date().toISOString().slice(0, 10)}.
-        </footer>
+        <RevealSection>
+          <footer className="mt-32 border-t border-[var(--color-border-strong)] pt-12 text-center">
+            <PythagorithmMark className="w-8 h-8 mx-auto text-[var(--color-accent)]" />
+            <p className="mt-6 font-[var(--font-mono)] italic text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+              Cite as: Pythagorithm Proof Methodology v1.0, retrieved {new Date().toISOString().slice(0, 10)}.
+            </p>
+          </footer>
+        </RevealSection>
       </article>
     </main>
   );
@@ -252,14 +285,16 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-24">
-      <div className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-        Section {number}
-      </div>
-      <h2 className="mt-3 text-[var(--text-display-md)] tracking-[var(--tracking-display-md)] font-semibold leading-[52px]">
-        {heading}
-      </h2>
-      <div className="mt-6">{children}</div>
-    </section>
+    <RevealSection>
+      <section className="mt-32">
+        <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+          Section {number}
+        </div>
+        <h2 className="mt-3 text-[clamp(32px,4vw,48px)] tracking-[-0.025em] font-semibold leading-[1.1]">
+          {heading}
+        </h2>
+        <div className="mt-6">{children}</div>
+      </section>
+    </RevealSection>
   );
 }

@@ -2,7 +2,7 @@
  * Pythagorithm signature mark — geometric construction. A right triangle
  * inscribed in a circle (the Pythagorean reference), with a small filled
  * dot at the right angle indicating the operating point. Used in the
- * Manifold center, Brief Proof token strip, and as the favicon.
+ * homepage footer, methodology footer, Proof token strip, and as the favicon.
  */
 export function PythagorithmMark({
   className,
