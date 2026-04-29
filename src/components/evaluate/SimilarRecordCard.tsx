@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ComparableRecord } from "@/lib/types";
 
 const cad = new Intl.NumberFormat("en-CA", {
@@ -18,14 +19,15 @@ export function SimilarRecordCard({
 }) {
   const [open, setOpen] = useState(false);
   const sim = Math.round(record.similarity * 100);
+  const reduce = useReducedMotion();
+  const ease = [0.16, 1, 0.3, 1] as const;
 
   return (
-    <article
-      style={{
-        opacity: 0,
-        transform: "translateY(4px)",
-        animation: `record-enter 350ms cubic-bezier(0.16, 1, 0.3, 1) ${index * 40}ms forwards`,
-      }}
+    <motion.article
+      initial={reduce ? false : { opacity: 0, y: 16 }}
+      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ delay: index * 0.04, duration: 0.5, ease }}
       className="rounded-[16px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-6 transition-colors hover:bg-[var(--color-bg-elev-2)]"
     >
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-start">
@@ -74,12 +76,7 @@ export function SimilarRecordCard({
         </div>
       )}
 
-      <style>{`
-        @keyframes record-enter {
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-    </article>
+    </motion.article>
   );
 }
 

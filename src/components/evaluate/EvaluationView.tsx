@@ -1,9 +1,13 @@
+"use client";
+
 import type { EvaluationResult } from "@/lib/types";
 import { SuitabilityScoreCircle } from "./SuitabilityScoreCircle";
 import { SimilarRecordCard } from "./SimilarRecordCard";
 import { RecipientConcentrationBar } from "./RecipientConcentrationBar";
 import { LanguageAuditView } from "./LanguageAuditView";
 import { ProofTokenStrip } from "./ProofTokenStrip";
+import { CharStaggerHeadline } from "../motion/CharStaggerHeadline";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 
 const cad = new Intl.NumberFormat("en-CA", {
@@ -13,7 +17,17 @@ const cad = new Intl.NumberFormat("en-CA", {
 });
 
 export function EvaluationView({ result }: { result: EvaluationResult }) {
-  const { suitability, recommendation, comparables, awardeeConcentration, calibrationFlags, submission, proofToken } = result;
+  const {
+    suitability,
+    recommendation,
+    comparables,
+    awardeeConcentration,
+    calibrationFlags,
+    submission,
+    proofToken,
+  } = result;
+  const reduce = useReducedMotion();
+  const ease = [0.16, 1, 0.3, 1] as const;
 
   const verdictColor =
     suitability.verdict === "PROCEED"
@@ -24,27 +38,54 @@ export function EvaluationView({ result }: { result: EvaluationResult }) {
 
   return (
     <article className="min-h-screen">
-      {/* Header strip */}
-      <header className="atmosphere-mesh border-b border-[var(--color-border-strong)]">
-        <div className="mx-auto max-w-[1200px] px-8 pt-24 pb-16">
-          <div className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+      {/* Header strip — atmospheric mesh + char-stagger title + ember rule */}
+      <header className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
+        <div className="atmosphere-drift" aria-hidden />
+        <div className="relative z-10 mx-auto max-w-[1200px] px-8 pt-24 pb-16">
+          <motion.div
+            initial={reduce ? false : { opacity: 0 }}
+            animate={reduce ? undefined : { opacity: 1 }}
+            transition={{ duration: 0.4, ease }}
+            className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]"
+          >
             Draft evaluation · {result.evaluationId}
+          </motion.div>
+
+          <div className="mt-6">
+            <CharStaggerHeadline
+              text={submission.workingTitle}
+              className="text-[clamp(40px,5vw,64px)] tracking-[-0.03em] font-semibold leading-[1.05]"
+              staggerMs={28}
+              charDurationMs={500}
+              initialDelayMs={120}
+            />
           </div>
-          <h1 className="mt-4 text-[var(--text-display-lg)] tracking-[var(--tracking-display-lg)] font-semibold leading-[68px]">
-            {submission.workingTitle}
-          </h1>
-          <div className="mt-4 font-[var(--font-mono)] text-[var(--text-mono)] text-[var(--color-fg-muted)]">
+
+          {/* Accent rule under title */}
+          <motion.div
+            initial={reduce ? false : { width: 0 }}
+            animate={reduce ? undefined : { width: 80 }}
+            transition={{ delay: 0.9, duration: 0.6, ease }}
+            className="mt-6 h-px bg-[var(--color-accent)]"
+          />
+
+          <motion.div
+            initial={reduce ? false : { opacity: 0, y: 4 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            transition={{ delay: 1.1, duration: 0.5, ease }}
+            className="mt-6 font-[var(--font-mono)] text-[13px] text-[var(--color-fg-muted)]"
+          >
             {submission.awardingDepartment} ·{" "}
-            {cad.format(submission.anticipatedAmount)} ·{" "}
-            FY{submission.anticipatedFiscalYear} ·{" "}
-            submitted {result.createdAt.slice(0, 10)}
-          </div>
+            {cad.format(submission.anticipatedAmount)} · FY
+            {submission.anticipatedFiscalYear} · submitted{" "}
+            {result.createdAt.slice(0, 10)}
+          </motion.div>
         </div>
       </header>
 
       <div className="mx-auto max-w-[1080px] px-8 space-y-32 py-32">
         {/* Section 1 — Suitability score */}
-        <section>
+        <Reveal>
           <SectionLabel number="01">Suitability score</SectionLabel>
           <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <SuitabilityScoreCircle
@@ -52,8 +93,12 @@ export function EvaluationView({ result }: { result: EvaluationResult }) {
               explanation={suitability.perComponentExplanation}
             />
             <div>
-              <div
-                className="inline-block px-4 py-2 rounded-[8px] font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em]"
+              <motion.div
+                initial={reduce ? false : { opacity: 0, x: -8 }}
+                whileInView={reduce ? undefined : { opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ delay: 1.2, duration: 0.5, ease }}
+                className="inline-block px-4 py-2 rounded-[8px] font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em]"
                 style={{
                   backgroundColor: `${verdictColor}1a`,
                   color: verdictColor,
@@ -61,16 +106,22 @@ export function EvaluationView({ result }: { result: EvaluationResult }) {
                 }}
               >
                 {suitability.verdict}
-              </div>
-              <p className="mt-6 text-[var(--text-body-lg)] italic leading-[28px] text-[var(--color-fg)]">
+              </motion.div>
+              <motion.p
+                initial={reduce ? false : { opacity: 0, y: 8 }}
+                whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ delay: 1.4, duration: 0.5, ease }}
+                className="mt-6 text-[18px] italic leading-[28px] text-[var(--color-fg)]"
+              >
                 {recommendation.text}
-              </p>
+              </motion.p>
             </div>
           </div>
-        </section>
+        </Reveal>
 
         {/* Section 2 — Similar records */}
-        <section>
+        <Reveal>
           <SectionLabel number="02">
             Comparable records found · {comparables.length}
           </SectionLabel>
@@ -79,18 +130,18 @@ export function EvaluationView({ result }: { result: EvaluationResult }) {
               <SimilarRecordCard key={c.recordId} record={c} index={i} />
             ))}
           </div>
-        </section>
+        </Reveal>
 
         {/* Section 3 — Recipient concentration */}
-        <section>
+        <Reveal>
           <SectionLabel number="03">Recipient pool dynamics</SectionLabel>
           <div className="mt-8 max-w-[840px]">
             <RecipientConcentrationBar concentration={awardeeConcentration} />
           </div>
-        </section>
+        </Reveal>
 
         {/* Section 4 — Language audit */}
-        <section>
+        <Reveal>
           <SectionLabel number="04">Calibrated language review</SectionLabel>
           <div className="mt-8 max-w-[840px]">
             <LanguageAuditView
@@ -98,42 +149,96 @@ export function EvaluationView({ result }: { result: EvaluationResult }) {
               flags={calibrationFlags}
             />
           </div>
-        </section>
+        </Reveal>
 
         {/* Section 5 — Proof token */}
-        <section>
+        <Reveal>
           <SectionLabel number="05">Audit trail</SectionLabel>
           <div className="mt-8">
             <ProofTokenStrip token={proofToken} />
           </div>
-        </section>
+        </Reveal>
 
-        {/* Section 6 — Methodology footer */}
-        <section className="border-t border-[var(--color-border)] pt-16">
-          <SectionLabel number="06">Methodology</SectionLabel>
-          <p className="mt-6 max-w-[760px] text-[var(--text-body)] leading-[24px] text-[var(--color-fg-muted)]">
-            This evaluation was generated under the Pythagorithm Proof
-            Methodology v{proofToken.version}. Hybrid retrieval combines
-            BM25 with cosine similarity over a curated corpus that
-            applies the F-3 amendment-current CTE pattern, A-13 reversal-pair
-            dedupe, and A-10 roll-up exclusion. Every comparable record
-            traces to its source dataset row; every score component carries
-            a calibrated explanation; every prose claim is gated by the
-            calibrated-language regex set before publishing. See{" "}
-            <Link href={"/methodology" as never} className="text-[var(--color-accent)] hover:underline-offset-2 hover:underline">
-              the methodology page
-            </Link>
-            {" "}for the canonical schema, the validator, and the AIA
-            structural correspondence.
-          </p>
-          <p className="mt-8 font-[var(--font-mono)] italic text-[var(--text-mono)] text-[var(--color-fg-subtle)]">
-            Cite as: Pythagorithm Proof Methodology v{proofToken.version},
-            evaluation {result.evaluationId}, retrieved{" "}
-            {result.createdAt.slice(0, 10)}.
-          </p>
-        </section>
+        {/* Section 6 — Methodology */}
+        <Reveal>
+          <section className="border-t border-[var(--color-border)] pt-16">
+            <SectionLabel number="06">Methodology</SectionLabel>
+            <p className="mt-6 max-w-[760px] text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
+              This evaluation was generated under the Pythagorithm Proof
+              Methodology v{proofToken.version}. Hybrid retrieval combines
+              BM25 with cosine similarity over a curated corpus that
+              applies the F-3 amendment-current CTE pattern, A-13
+              reversal-pair dedupe, and A-10 roll-up exclusion. Every
+              comparable record traces to its source dataset row; every
+              score component carries a calibrated explanation; every
+              prose claim is gated by the calibrated-language regex set
+              before publishing.
+            </p>
+            <p className="mt-8 font-[var(--font-mono)] italic text-[13px] text-[var(--color-fg-subtle)]">
+              Cite as: Pythagorithm Proof Methodology v{proofToken.version},
+              evaluation {result.evaluationId}, retrieved{" "}
+              {result.createdAt.slice(0, 10)}.
+            </p>
+          </section>
+        </Reveal>
+
+        {/* Methodology footer CTA — new */}
+        <Reveal>
+          <section className="border-t border-[var(--color-border-strong)] pt-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+              <div>
+                <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+                  See how this scoring works
+                </div>
+                <h3 className="mt-4 text-[22px] leading-[30px] tracking-[-0.01em] font-medium">
+                  Want to see how this scoring works?
+                </h3>
+              </div>
+              <Link
+                href={"/methodology" as never}
+                className="group block rounded-[16px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] hover:bg-[var(--color-bg-elev-2)] p-6 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <ShieldCheckGlyph />
+                    <div>
+                      <div className="text-[var(--text-heading)] font-medium">
+                        Read the full methodology
+                      </div>
+                      <div className="mt-1 text-[14px] text-[var(--color-fg-muted)]">
+                        Regex set, citation discipline, AIA correspondence,
+                        landmine guards, the agents.
+                      </div>
+                    </div>
+                  </div>
+                  <span
+                    aria-hidden
+                    className="text-[var(--color-accent)] transition-transform group-hover:translate-x-1"
+                  >
+                    →
+                  </span>
+                </div>
+              </Link>
+            </div>
+          </section>
+        </Reveal>
       </div>
     </article>
+  );
+}
+
+function Reveal({ children }: { children: React.ReactNode }) {
+  const reduce = useReducedMotion();
+  const ease = [0.16, 1, 0.3, 1] as const;
+  return (
+    <motion.section
+      initial={reduce ? false : { opacity: 0, y: 16 }}
+      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6, ease }}
+    >
+      {children}
+    </motion.section>
   );
 }
 
@@ -146,12 +251,31 @@ function SectionLabel({
 }) {
   return (
     <div>
-      <div className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+      <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
         Section {number}
       </div>
-      <h2 className="mt-3 text-[var(--text-display-sm)] tracking-[var(--tracking-display-sm)] font-semibold leading-[36px]">
+      <h2 className="mt-3 text-[clamp(28px,3.5vw,40px)] tracking-[-0.02em] font-semibold leading-[1.1]">
         {children}
       </h2>
     </div>
+  );
+}
+
+function ShieldCheckGlyph() {
+  return (
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="var(--color-accent)"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3l8 3v7c0 4.418-3.582 7-8 8-4.418-1-8-3.582-8-8V6l8-3Z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
   );
 }

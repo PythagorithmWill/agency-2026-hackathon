@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
+import { CountUp } from "../motion/CountUp";
 import type { SuitabilityScore } from "@/lib/types";
 
 /**
@@ -60,9 +62,23 @@ export function SuitabilityScoreCircle({
     [score],
   );
 
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-100px" });
+  const reduce = useReducedMotion();
+
   return (
-    <div className="relative w-full max-w-[480px] mx-auto">
-      <svg viewBox="-120 -120 240 240" width="100%" height="auto">
+    <div ref={ref} className="relative w-full max-w-[480px] mx-auto">
+      <motion.svg
+        viewBox="-120 -120 240 240"
+        width="100%"
+        height="auto"
+        animate={
+          reduce
+            ? undefined
+            : inView
+              ? { scale: [1, 1.02, 1], transition: { delay: 1.2, duration: 0.4, ease: [0.16, 1, 0.3, 1] } }
+              : { scale: 1 }
+        }>
         {/* Background ring */}
         <circle cx="0" cy="0" r="100" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
 
@@ -77,6 +93,7 @@ export function SuitabilityScoreCircle({
           const path = `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`;
           const fullPath = `M ${polar(r, arc.startDeg + 4).x} ${polar(r, arc.startDeg + 4).y} A ${r} ${r} 0 0 1 ${polar(r, arc.endDeg - 4).x} ${polar(r, arc.endDeg - 4).y}`;
           const animationLength = 220;
+          const targetOffset = animationLength * (1 - fraction);
           return (
             <g key={arc.id} onMouseEnter={() => setHover(arc.id)} onMouseLeave={() => setHover(null)}>
               {/* Track */}
@@ -90,7 +107,11 @@ export function SuitabilityScoreCircle({
                 strokeLinecap="round"
                 style={{
                   strokeDasharray: animationLength,
-                  strokeDashoffset: animationLength * (1 - fraction),
+                  strokeDashoffset: reduce
+                    ? targetOffset
+                    : inView
+                      ? targetOffset
+                      : animationLength,
                   transition: `stroke-dashoffset 1200ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 80}ms`,
                 }}
               />
@@ -120,12 +141,13 @@ export function SuitabilityScoreCircle({
           fontSize="60"
           fill={verdictColor}
         >
-          {hover
-            ? (() => {
-                const arc = arcs.find((a) => a.id === hover)!;
-                return arc.display.toFixed(0);
-              })()
-            : composite}
+          {hover ? (
+            arcs.find((a) => a.id === hover)!.display.toFixed(0)
+          ) : (
+            <tspan>
+              <CountUp to={composite} durationMs={1500} startOnView />
+            </tspan>
+          )}
         </text>
         <text
           x="0"
@@ -137,7 +159,7 @@ export function SuitabilityScoreCircle({
         >
           {hover ? "/ 10" : "/ 30"}
         </text>
-      </svg>
+      </motion.svg>
 
       {/* Legend */}
       <ul className="mt-8 space-y-2 font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.08em]">
