@@ -57,9 +57,11 @@ import {
   type AnalyticsSnapshot,
   type DepartmentProfileSnapshot,
 } from "../src/lib/analytics/snapshot";
+import { listLiveDetectors } from "../src/lib/patterns/detectors";
 import { closePool } from "../src/lib/db/pool";
 
 const TOP_DEPT_PROFILE_COUNT = 15;
+const PATTERN_MATCH_LIMIT = 50;
 
 interface RunResult<T> {
   name: string;
@@ -183,6 +185,24 @@ async function main() {
       ? series.value.points[series.value.points.length - 1].fy
       : new Date().getFullYear();
 
+  // Pattern detector run — sequential to avoid long-pool contention.
+  console.log(`\nRunning pattern detectors sequentially...`);
+  const patternMatches: Record<string, unknown[]> = {};
+  const patternMatchErrors: Record<string, string> = {};
+  for (const det of listLiveDetectors()) {
+    const slug = det.pattern.id;
+    const r = await timed(`  detect:${slug.padEnd(28)}`, () =>
+      det.detect({ limit: PATTERN_MATCH_LIMIT }),
+    );
+    if (r.ok) {
+      patternMatches[slug] = (r.value as unknown[]) ?? [];
+    } else {
+      patternMatchErrors[slug] = r.error ?? "unknown";
+      patternMatches[slug] = [];
+      notes.push(`Pattern detector "${slug}" failed: ${r.error}`);
+    }
+  }
+
   const snap: AnalyticsSnapshot = {
     version: SNAPSHOT_VERSION,
     generatedAt: new Date().toISOString(),
@@ -200,6 +220,9 @@ async function main() {
     forecast: forecast.value ?? null,
 
     departmentProfiles,
+
+    patternMatches,
+    patternMatchErrors,
 
     notes,
   };

@@ -26,7 +26,7 @@ import type {
  * Schema is versioned. Breaking changes increment SNAPSHOT_VERSION;
  * the dashboard refuses to render against a mismatched snapshot.
  */
-export const SNAPSHOT_VERSION = 2;
+export const SNAPSHOT_VERSION = 3;
 
 export interface DepartmentProfileSnapshot {
   department: string;
@@ -70,6 +70,16 @@ export interface AnalyticsSnapshot {
    * Keyed by exact department name (matches owner_org_title).
    */
   departmentProfiles: Record<string, DepartmentProfileSnapshot>;
+
+  /**
+   * Precomputed pattern-match output, keyed by pattern slug. Built
+   * by scripts/build-snapshot.ts running each live detector
+   * sequentially under the long pool. /follow/[slug] and
+   * /recommendations read from here so the request path doesn't hit
+   * the DB at all.
+   */
+  patternMatches: Record<string, unknown[]>;
+  patternMatchErrors: Record<string, string>;
 
   /**
    * Notes from the precompute run — partial failures, count anomalies,

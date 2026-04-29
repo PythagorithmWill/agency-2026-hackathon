@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listLiveDetectors } from "@/lib/patterns/detectors";
+import { loadSnapshot } from "@/lib/analytics/snapshot";
 import {
   buildRecommendations,
   CATEGORY_LABELS,
@@ -42,8 +43,31 @@ interface DetectorResult {
   error?: string;
 }
 
-async function runAllDetectors(): Promise<DetectorResult[]> {
+/**
+ * Load detector matches. Tries the snapshot first (instant, no DB);
+ * falls back to live detection only if the snapshot doesn't have
+ * cached results. The build-snapshot.ts pipeline runs every detector
+ * sequentially under the long pool — much more reliable than running
+ * 6 detectors in parallel at request time.
+ */
+async function loadDetectorResults(): Promise<DetectorResult[]> {
+  const snap = await loadSnapshot();
   const detectors = listLiveDetectors();
+
+  if (snap?.patternMatches && Object.keys(snap.patternMatches).length > 0) {
+    return detectors.map((d) => {
+      const slug = d.pattern.id;
+      const cached = snap.patternMatches[slug] as PatternMatch[] | undefined;
+      const error = snap.patternMatchErrors?.[slug];
+      return {
+        patternId: slug,
+        matches: cached ?? [],
+        error,
+      };
+    });
+  }
+
+  // Live fallback — only when the snapshot is missing or stale.
   const settled = await Promise.allSettled(
     detectors.map(async (d) => ({
       patternId: d.pattern.id,
@@ -61,7 +85,7 @@ async function runAllDetectors(): Promise<DetectorResult[]> {
 }
 
 export default async function RecommendationsPage() {
-  const detectorResults = await runAllDetectors();
+  const detectorResults = await loadDetectorResults();
 
   const matchesByPattern = Object.fromEntries(
     detectorResults.map((r) => [r.patternId, r.matches]),

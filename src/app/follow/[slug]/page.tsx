@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPattern, TRACE_ATTRIBUTION_LINE } from "@/lib/patterns/registry";
 import { getDetector } from "@/lib/patterns/detectors";
+import { loadSnapshot } from "@/lib/analytics/snapshot";
 import type { PatternMatch, SignalStrength } from "@/lib/patterns/types";
 import { PatternStatusPill } from "@/components/follow/PatternStatusPill";
 
@@ -30,10 +31,22 @@ export default async function PatternDetail({
   let matches: PatternMatch[] = [];
   let detectorError: string | null = null;
   if (detector) {
-    try {
-      matches = await detector.detect({ limit: 25 });
-    } catch (e) {
-      detectorError = (e as Error).message;
+    // Snapshot-first: read precomputed matches when available.
+    // Falls back to live detection only when the snapshot is missing
+    // or empty for this pattern.
+    const snap = await loadSnapshot();
+    const cached = snap?.patternMatches?.[slug] as PatternMatch[] | undefined;
+    const cachedError = snap?.patternMatchErrors?.[slug];
+    if (cached && cached.length > 0) {
+      matches = cached.slice(0, 25);
+    } else if (cachedError) {
+      detectorError = cachedError;
+    } else {
+      try {
+        matches = await detector.detect({ limit: 25 });
+      } catch (e) {
+        detectorError = (e as Error).message;
+      }
     }
   }
 
