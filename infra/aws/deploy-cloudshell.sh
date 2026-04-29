@@ -36,7 +36,11 @@ git clone --depth 1 --branch rebuild-suitability \
   "$WORKDIR/repo"
 cd "$WORKDIR/repo"
 
-# 2. ECR login
+# 2. ECR login (self-create the repo if missing — idempotent)
+if ! aws ecr describe-repositories --repository-names glassbox --region "$REGION" >/dev/null 2>&1; then
+  echo "▶ Creating ECR repository 'glassbox' in ${REGION}..."
+  aws ecr create-repository --repository-name glassbox --region "$REGION" >/dev/null
+fi
 aws ecr get-login-password --region "$REGION" |
   docker login --username AWS --password-stdin "$REPO_URI"
 
