@@ -1,0 +1,78 @@
+name: Deploy Glassbox
+
+on:
+  push:
+    branches: [main, rebuild-suitability]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Build & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: TypeScript strict
+        run: npx tsc --noEmit
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          BUILD_COMMIT: ${{ github.sha }}
+          BUILD_TIMESTAMP: ${{ github.event.head_commit.timestamp }}
+
+  deploy:
+    name: Deploy to ECS
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: ECR login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Run deploy.sh
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
+          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME }}
+          ECS_SERVICE_NAME: ${{ secrets.ECS_SERVICE_NAME }}
+        run: |
+          chmod +x infra/aws/deploy.sh
+          ./infra/aws/deploy.sh
+
+      - name: Notify on success
+        if: success()
+        run: echo "Deploy successful — commit ${{ github.sha }}"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "Deploy FAILED — commit ${{ github.sha }}. Check CloudWatch logs and the ALB target group health."

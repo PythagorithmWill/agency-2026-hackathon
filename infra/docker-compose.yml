@@ -1,0 +1,28 @@
+# Local prod-mode test of the Glassbox container.
+#
+#   cd infra
+#   docker compose up --build
+#   open http://localhost:3000
+#
+# The container reads DATABASE_URL etc. from the parent .env.local file.
+services:
+  glassbox-app:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      args:
+        BUILD_COMMIT: ${BUILD_COMMIT:-local}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-}
+    image: glassbox:local
+    container_name: glassbox-app
+    restart: unless-stopped
+    env_file:
+      - ../.env.local
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s

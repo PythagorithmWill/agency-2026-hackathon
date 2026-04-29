@@ -1,0 +1,70 @@
+{
+  "_comment": "CloudFront distribution config for the Glassbox ALB origin. Render with: aws cloudfront create-distribution --distribution-config file://cloudfront-config.json",
+  "CallerReference": "glassbox-prod-2026-04-29",
+  "Comment": "Glassbox — federal & Alberta provincial spending evaluation",
+  "Enabled": true,
+  "PriceClass": "PriceClass_100",
+  "HttpVersion": "http2and3",
+  "IsIPV6Enabled": true,
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Id": "glassbox-alb",
+        "DomainName": "__ALB_DNS__",
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "https-only",
+          "OriginSslProtocols": { "Quantity": 1, "Items": ["TLSv1.2"] },
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        }
+      }
+    ]
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "glassbox-alb",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": {
+      "Quantity": 7,
+      "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+      "CachedMethods": { "Quantity": 2, "Items": ["GET", "HEAD"] }
+    },
+    "Compress": true,
+    "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+    "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3"
+  },
+  "CacheBehaviors": {
+    "Quantity": 2,
+    "Items": [
+      {
+        "PathPattern": "/_next/static/*",
+        "TargetOriginId": "glassbox-alb",
+        "ViewerProtocolPolicy": "https-only",
+        "AllowedMethods": { "Quantity": 2, "Items": ["GET", "HEAD"], "CachedMethods": { "Quantity": 2, "Items": ["GET", "HEAD"] } },
+        "Compress": true,
+        "_comment": "Static Next.js chunks — cache for 1 year, content-addressed",
+        "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6"
+      },
+      {
+        "PathPattern": "/api/*",
+        "TargetOriginId": "glassbox-alb",
+        "ViewerProtocolPolicy": "https-only",
+        "AllowedMethods": { "Quantity": 7, "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"], "CachedMethods": { "Quantity": 2, "Items": ["GET", "HEAD"] } },
+        "Compress": true,
+        "_comment": "API routes — pass-through, never cache",
+        "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+      }
+    ]
+  },
+  "ViewerCertificate": {
+    "ACMCertificateArn": "arn:aws:acm:us-east-1:__AWS_ACCOUNT_ID__:certificate/__ACM_CERT_ID__",
+    "SSLSupportMethod": "sni-only",
+    "MinimumProtocolVersion": "TLSv1.2_2021"
+  },
+  "Aliases": {
+    "Quantity": 1,
+    "Items": ["__DOMAIN_NAME__"]
+  }
+}

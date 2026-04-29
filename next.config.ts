@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  output: "standalone",
   experimental: { typedRoutes: true },
   env: {
     BUILD_COMMIT: process.env.BUILD_COMMIT ?? "dev",

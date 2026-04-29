@@ -1,0 +1,65 @@
+{
+  "family": "glassbox-prod",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::__AWS_ACCOUNT_ID__:role/glassbox-ecs-execution",
+  "taskRoleArn": "arn:aws:iam::__AWS_ACCOUNT_ID__:role/glassbox-ecs-task",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "containerDefinitions": [
+    {
+      "name": "glassbox-app",
+      "image": "__ECR_REPO_URL__:__IMAGE_TAG__",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp",
+          "name": "http"
+        }
+      ],
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "PORT", "value": "3000" },
+        { "name": "AWS_REGION", "value": "ca-central-1" },
+        { "name": "PROOF_TOKEN_VERSION", "value": "1.0" },
+        { "name": "NEXT_PUBLIC_BUILD_VERSION", "value": "0.3.0" }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:ca-central-1:__AWS_ACCOUNT_ID__:secret:glassbox/database-url"
+        },
+        {
+          "name": "BUILD_COMMIT",
+          "valueFrom": "arn:aws:ssm:ca-central-1:__AWS_ACCOUNT_ID__:parameter/glassbox/build-commit"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/glassbox-prod",
+          "awslogs-region": "ca-central-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 30
+      },
+      "stopTimeout": 30
+    }
+  ]
+}
