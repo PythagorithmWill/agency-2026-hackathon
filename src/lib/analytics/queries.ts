@@ -830,14 +830,63 @@ export async function loadGoldenRecord(
  * publisher reformatting). We accept both: if the input parses as a
  * BN we filter on BN, otherwise we filter on the legal name.
  */
+/**
+ * Recipient lookup. Filters BY recipient FIRST, then applies the F-3
+ * max-amendment dedup on the small filtered set. This way we don't
+ * dedup the entire 1.27M-row corpus just to look up one entity.
+ *
+ * Switched to longQuery: even with the filter-first optimization,
+ * recipients with hundreds of agreements (universities, large NGOs)
+ * can take 5–10s. Acceptable for an interactive detail page.
+ */
+function recipientFilterClause(identifier: string): {
+  clause: string;
+  params: unknown[];
+} {
+  const isBn = /^\d{9,}/.test(identifier);
+  return {
+    clause: isBn
+      ? "recipient_business_number = $1"
+      : "recipient_legal_name = $1",
+    params: [identifier],
+  };
+}
+
+const RECIPIENT_FILTERED_CTE = (filterClause: string) => `
+  WITH recipient_rows AS (
+    SELECT *
+      FROM fed.grants_contributions
+     WHERE ${filterClause}
+       AND agreement_value > 0
+  ),
+  agreement_current AS (
+    SELECT DISTINCT ON (
+      ref_number,
+      COALESCE(recipient_business_number, recipient_legal_name, _id::text)
+    )
+      ref_number,
+      recipient_legal_name,
+      recipient_business_number,
+      recipient_province,
+      owner_org_title,
+      prog_name_en,
+      agreement_value,
+      agreement_start_date,
+      description_en
+    FROM recipient_rows
+    ORDER BY
+      ref_number,
+      COALESCE(recipient_business_number, recipient_legal_name, _id::text),
+      NULLIF(amendment_number, '')::int DESC NULLS LAST,
+      _id DESC
+  )
+`;
+
 export async function loadRecipientProfile(
   identifier: string,
-  budget: Budget = "fast",
+  budget: Budget = "long",
 ): Promise<RecipientProfileRow | null> {
-  const isBn = /^\d{9,}/.test(identifier);
-  const filterClause = isBn
-    ? "recipient_business_number = $1"
-    : "recipient_legal_name = $1";
+  const { clause, params } = recipientFilterClause(identifier);
   const r = await run(budget)<{
     legal_name: string | null;
     bn: string | null;
@@ -849,7 +898,7 @@ export async function loadRecipientProfile(
     fy_min: string | number | null;
     fy_max: string | number | null;
   }>(
-    `${FED_CURRENT_CTE}
+    `${RECIPIENT_FILTERED_CTE(clause)}
      SELECT
        MAX(recipient_legal_name) AS legal_name,
        MAX(recipient_business_number) AS bn,
@@ -860,9 +909,8 @@ export async function loadRecipientProfile(
        COUNT(DISTINCT prog_name_en) AS program_count,
        MIN(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_min,
        MAX(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_max
-     FROM agreement_current
-     WHERE ${filterClause}`,
-    [identifier],
+     FROM agreement_current`,
+    params,
   );
   const row = r.rows[0];
   if (!row || !row.agreement_count || Number(row.agreement_count) === 0) return null;
@@ -883,28 +931,24 @@ export async function loadRecipientProfile(
 
 export async function loadRecipientByDepartment(
   identifier: string,
-  budget: Budget = "fast",
+  budget: Budget = "long",
 ): Promise<{ department: string; total: number; agreementCount: number }[]> {
-  const isBn = /^\d{9,}/.test(identifier);
-  const filterClause = isBn
-    ? "recipient_business_number = $1"
-    : "recipient_legal_name = $1";
+  const { clause, params } = recipientFilterClause(identifier);
   const r = await run(budget)<{
     department: string | null;
     total: string | number | null;
     agreement_count: string | number | null;
   }>(
-    `${FED_CURRENT_CTE}
+    `${RECIPIENT_FILTERED_CTE(clause)}
      SELECT
        owner_org_title AS department,
        SUM(agreement_value)::numeric AS total,
        COUNT(*) AS agreement_count
      FROM agreement_current
-     WHERE ${filterClause}
-       AND owner_org_title IS NOT NULL
+     WHERE owner_org_title IS NOT NULL
      GROUP BY owner_org_title
      ORDER BY total DESC`,
-    [identifier],
+    params,
   );
   return r.rows.map((row) => ({
     department: row.department ?? "—",
@@ -916,12 +960,9 @@ export async function loadRecipientByDepartment(
 export async function loadRecipientAgreements(
   identifier: string,
   limit = 50,
-  budget: Budget = "fast",
+  budget: Budget = "long",
 ): Promise<RecentAgreement[]> {
-  const isBn = /^\d{9,}/.test(identifier);
-  const filterClause = isBn
-    ? "recipient_business_number = $1"
-    : "recipient_legal_name = $1";
+  const { clause, params } = recipientFilterClause(identifier);
   const r = await run(budget)<{
     ref_number: string | null;
     recipient_legal_name: string | null;
@@ -931,15 +972,14 @@ export async function loadRecipientAgreements(
     agreement_start_date: string | null;
     recipient_province: string | null;
   }>(
-    `${FED_CURRENT_CTE}
+    `${RECIPIENT_FILTERED_CTE(clause)}
      SELECT
        ref_number, recipient_legal_name, owner_org_title, prog_name_en,
        agreement_value, agreement_start_date, recipient_province
      FROM agreement_current
-     WHERE ${filterClause}
      ORDER BY agreement_value DESC
      LIMIT $2`,
-    [identifier, limit],
+    [...params, limit],
   );
   return r.rows.map((row) => ({
     recordId: row.ref_number ?? "",
