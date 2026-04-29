@@ -9,25 +9,37 @@ import { Pool, type QueryResult, type QueryResultRow } from "pg";
  * or bounded to a single entity. Aggressive timeouts so we fall back to local DB
  * fast under conference-WiFi conditions.
  */
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl:
-    process.env.DATABASE_URL?.includes("render.com") ||
-    process.env.DATABASE_URL?.includes("sslmode=require")
-      ? { rejectUnauthorized: false }
-      : undefined,
-  max: 10,
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 5_000,
-  query_timeout: 8_000,
-});
+/**
+ * Pools are created lazily on first use. ES module imports are hoisted,
+ * so the offline scripts/* runners that loadEnvLocal() before importing
+ * this module would otherwise see DATABASE_URL = undefined at pool-init
+ * time and fall back to a local postgres connection. Lazy init means
+ * the env is read at first query, after the runner has populated it.
+ */
+let pool: Pool | null = null;
+function getPool(): Pool {
+  if (pool) return pool;
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl:
+      process.env.DATABASE_URL?.includes("render.com") ||
+      process.env.DATABASE_URL?.includes("sslmode=require")
+        ? { rejectUnauthorized: false }
+        : undefined,
+    max: 10,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+    query_timeout: 8_000,
+  });
+  return pool;
+}
 
 export async function query<T extends QueryResultRow = QueryResultRow>(
   text: string,
   params: ReadonlyArray<unknown> = [],
 ): Promise<QueryResult<T>> {
   try {
-    return await pool.query<T>({
+    return await getPool().query<T>({
       text,
       values: params as unknown[],
     });
@@ -54,12 +66,15 @@ export async function withSearchPath<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   const ordered = [...schemas, "public"].join(", ");
-  await pool.query(`SET search_path TO ${ordered}`);
+  await getPool().query(`SET search_path TO ${ordered}`);
   return fn();
 }
 
 export async function closePool(): Promise<void> {
-  await pool.end();
+  if (pool) {
+    await pool.end();
+    pool = null;
+  }
   if (longPool) {
     await longPool.end();
     longPool = null;

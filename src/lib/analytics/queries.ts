@@ -852,35 +852,14 @@ function recipientFilterClause(identifier: string): {
   };
 }
 
-const RECIPIENT_FILTERED_CTE = (filterClause: string) => `
-  WITH recipient_rows AS (
-    SELECT *
-      FROM fed.grants_contributions
-     WHERE ${filterClause}
-       AND agreement_value > 0
-  ),
-  agreement_current AS (
-    SELECT DISTINCT ON (
-      ref_number,
-      COALESCE(recipient_business_number, recipient_legal_name, _id::text)
-    )
-      ref_number,
-      recipient_legal_name,
-      recipient_business_number,
-      recipient_province,
-      owner_org_title,
-      prog_name_en,
-      agreement_value,
-      agreement_start_date,
-      description_en
-    FROM recipient_rows
-    ORDER BY
-      ref_number,
-      COALESCE(recipient_business_number, recipient_legal_name, _id::text),
-      NULLIF(amendment_number, '')::int DESC NULLS LAST,
-      _id DESC
-  )
-`;
+/**
+ * Recipient queries hit `is_amendment = false` rows directly. The F-3
+ * max-amendment dedup CTE is unnecessary here: each ref_number's original
+ * row(s) carry the canonical agreement totals, and the amendment delta
+ * rows would only inflate the sum if included. Dropping the CTE turns
+ * three 30s+ queries into three sub-second sequential scans on the
+ * BN-filtered slice (~hundreds of rows for even the biggest recipients).
+ */
 
 export async function loadRecipientProfile(
   identifier: string,
@@ -898,18 +877,20 @@ export async function loadRecipientProfile(
     fy_min: string | number | null;
     fy_max: string | number | null;
   }>(
-    `${RECIPIENT_FILTERED_CTE(clause)}
-     SELECT
+    `SELECT
        MAX(recipient_legal_name) AS legal_name,
        MAX(recipient_business_number) AS bn,
        MAX(recipient_province) AS province,
        SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count,
+       COUNT(DISTINCT ref_number) AS agreement_count,
        COUNT(DISTINCT owner_org_title) AS department_count,
        COUNT(DISTINCT prog_name_en) AS program_count,
        MIN(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_min,
        MAX(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_max
-     FROM agreement_current`,
+     FROM fed.grants_contributions
+     WHERE ${clause}
+       AND is_amendment = false
+       AND agreement_value > 0`,
     params,
   );
   const row = r.rows[0];
@@ -939,13 +920,15 @@ export async function loadRecipientByDepartment(
     total: string | number | null;
     agreement_count: string | number | null;
   }>(
-    `${RECIPIENT_FILTERED_CTE(clause)}
-     SELECT
+    `SELECT
        owner_org_title AS department,
        SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count
-     FROM agreement_current
-     WHERE owner_org_title IS NOT NULL
+       COUNT(DISTINCT ref_number) AS agreement_count
+     FROM fed.grants_contributions
+     WHERE ${clause}
+       AND is_amendment = false
+       AND agreement_value > 0
+       AND owner_org_title IS NOT NULL
      GROUP BY owner_org_title
      ORDER BY total DESC`,
     params,
@@ -972,12 +955,14 @@ export async function loadRecipientAgreements(
     agreement_start_date: string | null;
     recipient_province: string | null;
   }>(
-    `${RECIPIENT_FILTERED_CTE(clause)}
-     SELECT
+    `SELECT DISTINCT ON (ref_number)
        ref_number, recipient_legal_name, owner_org_title, prog_name_en,
        agreement_value, agreement_start_date, recipient_province
-     FROM agreement_current
-     ORDER BY agreement_value DESC
+     FROM fed.grants_contributions
+     WHERE ${clause}
+       AND is_amendment = false
+       AND agreement_value > 0
+     ORDER BY ref_number, agreement_value DESC
      LIMIT $2`,
     [...params, limit],
   );

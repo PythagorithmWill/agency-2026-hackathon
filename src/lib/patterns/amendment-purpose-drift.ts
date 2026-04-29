@@ -1,4 +1,4 @@
-import { query } from "../db/pool";
+import { longQuery } from "../db/pool";
 import { jaccard } from "../analytics/amendments";
 import { getPattern } from "./registry";
 import {
@@ -60,7 +60,7 @@ export const amendmentPurposeDriftDetector: PatternDetector = {
     // Get the first and last (current) description per ref_number from
     // the federal corpus, restricted to chains with ≥3 amendments and
     // both ends present + non-trivially long.
-    const r = await query<DriftRow>(
+    const r = await longQuery<DriftRow>(
       `WITH ranked AS (
          SELECT
            ref_number,
@@ -111,6 +111,7 @@ export const amendmentPurposeDriftDetector: PatternDetector = {
         ORDER BY i.amendment_count DESC
         LIMIT $${params.length}`,
       params,
+      60_000,
     );
 
     const matches: PatternMatch[] = [];

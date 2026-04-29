@@ -10,6 +10,7 @@ import {
   type RecommendationCategory,
 } from "@/lib/recommendations/build";
 import type { PatternMatch } from "@/lib/patterns/types";
+import { RecommendationGantt } from "@/components/recommendations/RecommendationGantt";
 
 export const metadata = { title: "Recommendations — Glassbox" };
 
@@ -157,6 +158,11 @@ export default async function RecommendationsPage() {
         )}
       </section>
 
+      {/* Capital-planning Gantt */}
+      <section className="mx-auto max-w-[1280px] px-6 pt-12">
+        <RecommendationGantt recommendations={recommendations} />
+      </section>
+
       {/* Priority sections */}
       <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-12">
         <PrioritySection
@@ -268,7 +274,7 @@ function PrioritySection({
 function RecommendationCard({ rec, index }: { rec: Recommendation; index: number }) {
   const patterns = patternsBehind(rec.patternIds);
   return (
-    <li className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6">
+    <li className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 hover:border-[var(--color-border-strong)] transition-colors">
       <div className="flex flex-wrap items-baseline justify-between gap-4 mb-2">
         <div className="flex items-baseline gap-4">
           <span className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] tabular-nums">
@@ -283,6 +289,9 @@ function RecommendationCard({ rec, index }: { rec: Recommendation; index: number
           <span className="font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
             {CATEGORY_LABELS[rec.category as RecommendationCategory]}
           </span>
+          <span className="font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
+            · Confidence {(rec.confidence.score * 100).toFixed(0)}%
+          </span>
         </div>
         <div className="flex items-baseline gap-3">
           <span className="font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
@@ -294,12 +303,20 @@ function RecommendationCard({ rec, index }: { rec: Recommendation; index: number
         </div>
       </div>
 
-      <h3 className="mt-3 text-[20px] leading-[1.3] tracking-tight">
-        {rec.title}
-      </h3>
-      <p className="mt-3 text-[14px] leading-[1.6] text-[var(--color-fg-muted)] max-w-[920px]">
-        {rec.body}
-      </p>
+      <Link
+        href={`/recommendations/${encodeURIComponent(rec.id)}` as never}
+        className="block group"
+      >
+        <h3 className="mt-3 text-[20px] leading-[1.3] tracking-tight group-hover:text-[var(--color-accent)] transition-colors">
+          {rec.title}
+        </h3>
+        <p className="mt-3 text-[14px] leading-[1.6] text-[var(--color-fg-muted)] max-w-[920px]">
+          {rec.body}
+        </p>
+        <div className="mt-3 font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.06em] text-[var(--color-accent)] group-hover:underline underline-offset-4">
+          View full recommendation · monetary impact, risk, audit trail →
+        </div>
+      </Link>
 
       {rec.actions.length > 0 && (
         <div className="mt-5">

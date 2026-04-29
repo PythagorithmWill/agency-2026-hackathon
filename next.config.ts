@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
+  /**
+   * Disabled because React 19 strict mode double-mounts every component,
+   * and Turbopack's reconciler hits a "removeChild on a detached node"
+   * race during route transitions when that doubling coincides with a
+   * streamed server-component update. Re-enable only after upgrading
+   * past the Next 15.5.x + React 19.0 regression.
+   */
+  reactStrictMode: false,
   poweredByHeader: false,
   output: "standalone",
   experimental: { typedRoutes: true },

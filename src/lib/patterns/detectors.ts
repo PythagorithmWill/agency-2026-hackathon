@@ -4,6 +4,9 @@ import { soleSourceCreepDetector } from "./sole-source-creep";
 import { zombieRecipientsDetector } from "./zombie-recipients";
 import { vendorConcentrationDetector } from "./vendor-concentration";
 import { ghostCapacityDetector } from "./ghost-capacity";
+import { relatedPartiesDetector } from "./related-parties";
+import { duplicativeFundingDetector } from "./duplicative-funding";
+import { policyMisalignmentDetector } from "./policy-misalignment";
 import { PATTERNS } from "./registry";
 import type { PatternDetector } from "./types";
 
@@ -20,6 +23,9 @@ const REGISTRY: Record<string, PatternDetector> = {
   "zombie-recipients": zombieRecipientsDetector,
   "vendor-concentration": vendorConcentrationDetector,
   "ghost-capacity": ghostCapacityDetector,
+  "related-parties": relatedPartiesDetector,
+  "duplicative-funding": duplicativeFundingDetector,
+  "policy-misalignment": policyMisalignmentDetector,
 };
 
 export function getDetector(patternId: string): PatternDetector | null {

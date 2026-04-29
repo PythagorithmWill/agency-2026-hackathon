@@ -100,11 +100,11 @@ export const PATTERNS: PatternDef[] = [
     name: "Related Parties & Governance Networks",
     challenge: 6,
     definition:
-      "The dataset shows individuals who sit on multiple boards of entities that fund each other, or principals of companies receiving contracts who also direct charities receiving grants.",
+      "The dataset shows entities that appear simultaneously across multiple federal, provincial, and CRA charity datasets — sitting at governance crossroads where related-party relationships are more likely to materialise.",
     signal:
-      "graph join across CRA t3010 directors × federal recipient_legal_name × Alberta procurement vendor names",
+      "general.entity_golden_records with array_length(dataset_sources, 1) ≥ 2, source_link_count ≥ 50, confidence ≥ 0.7. Severity scales with cumulative source-record volume across datasets.",
     attribution: "GLASSBOX",
-    status: "coming",
+    status: "live",
     order: 6,
   },
   {
@@ -114,9 +114,9 @@ export const PATTERNS: PatternDef[] = [
     definition:
       "The dataset shows the gap between named policy priorities (emissions, housing, reconciliation, healthcare) and the actual flow of funds — concrete spend versus stated plan.",
     signal:
-      "policy keyword filter on prog_purpose_en × spending_total grouped by FY, vs. published target text",
+      "ILIKE keyword match on prog_purpose_en / prog_name_en, summed across the most recent 5 fiscal years, compared to a calibrated stated annual commitment per priority. Severity scales by gap percentage.",
     attribution: "GLASSBOX",
-    status: "coming",
+    status: "live",
     order: 7,
   },
   {
@@ -124,11 +124,11 @@ export const PATTERNS: PatternDef[] = [
     name: "Duplicative Funding & Gaps",
     challenge: 8,
     definition:
-      "The dataset shows recipients receiving similar agreements from multiple levels of government simultaneously, and policy areas where every level claims priority but none funds.",
+      "The dataset shows recipients receiving funding from both the federal grants & contributions stream and Alberta provincial grants — entities sitting at the intersection of two funder pools where program duplication is a real risk that funders can verify against.",
     signal:
-      "fuzzy-name matched recipient appearing in fed.grants_contributions and ab.ab_grants within ±90 days for similar prog_purpose; complement: program category in named priority with < threshold spend",
+      "general.entity_golden_records with both 'fed' and 'ab' in dataset_sources, ≥5 federal records and ≥5 Alberta records, confidence ≥ 0.7. Cross-dataset fuzzy-name match handled by golden-record entity layer.",
     attribution: "GLASSBOX",
-    status: "coming",
+    status: "live",
     order: 8,
   },
   // Glassbox extras (not in the 8 challenges, but shipped detectors)

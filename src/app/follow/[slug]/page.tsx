@@ -5,6 +5,7 @@ import { getDetector } from "@/lib/patterns/detectors";
 import { loadSnapshot } from "@/lib/analytics/snapshot";
 import type { PatternMatch, SignalStrength } from "@/lib/patterns/types";
 import { PatternStatusPill } from "@/components/follow/PatternStatusPill";
+import { MatchDashboard } from "@/components/follow/MatchDashboard";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -20,10 +21,17 @@ const SEV_COLOR: Record<SignalStrength, string> = {
 
 export default async function PatternDetail({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ severity?: string }>;
 }) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const severityFilter =
+    sp.severity === "flag" || sp.severity === "attention" || sp.severity === "observation"
+      ? sp.severity
+      : null;
   const pattern = getPattern(slug);
   if (!pattern) notFound();
 
@@ -38,12 +46,12 @@ export default async function PatternDetail({
     const cached = snap?.patternMatches?.[slug] as PatternMatch[] | undefined;
     const cachedError = snap?.patternMatchErrors?.[slug];
     if (cached && cached.length > 0) {
-      matches = cached.slice(0, 25);
+      matches = cached.slice(0, 50);
     } else if (cachedError) {
       detectorError = cachedError;
     } else {
       try {
-        matches = await detector.detect({ limit: 25 });
+        matches = await detector.detect({ limit: 50 });
       } catch (e) {
         detectorError = (e as Error).message;
       }
@@ -89,12 +97,28 @@ export default async function PatternDetail({
       </section>
 
       <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-8">
+        {detector && matches.length > 0 && (
+          <MatchDashboard
+            patternId={pattern.id}
+            matches={matches}
+            slug={slug}
+            severityFilter={severityFilter}
+          />
+        )}
         {detector && matches.length > 0 && <SeverityLegend pattern={pattern} />}
         {detector ? (
           detectorError ? (
             <DetectorErrorPanel error={detectorError} />
           ) : matches.length > 0 ? (
-            <MatchList matches={matches} />
+            <MatchList
+              matches={
+                severityFilter
+                  ? matches.filter((m) => m.signalStrength === severityFilter)
+                  : matches
+              }
+              severityFilter={severityFilter}
+              slug={slug}
+            />
           ) : (
             <NoMatchesPanel />
           )
@@ -121,12 +145,43 @@ export default async function PatternDetail({
   );
 }
 
-function MatchList({ matches }: { matches: PatternMatch[] }) {
+function MatchList({
+  matches,
+  severityFilter,
+  slug,
+}: {
+  matches: PatternMatch[];
+  severityFilter: SignalStrength | null;
+  slug: string;
+}) {
+  if (matches.length === 0) {
+    return (
+      <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-10 text-center">
+        <h3 className="text-[15px] tracking-tight">
+          No {severityFilter ?? ""} matches in this view.
+        </h3>
+        <p className="mt-3 max-w-[520px] mx-auto text-[14px] text-[var(--color-fg-muted)] leading-[1.55]">
+          The severity filter you selected has no matches in this snapshot.{" "}
+          <Link
+            href={`/follow/${slug}` as never}
+            className="text-[var(--color-accent)] underline-offset-4 hover:underline"
+          >
+            Clear the filter →
+          </Link>
+        </p>
+      </div>
+    );
+  }
   return (
     <div>
-      <div className="mb-6 flex items-baseline justify-between">
+      <div className="mb-6 flex items-baseline justify-between flex-wrap gap-3">
         <h2 className="text-[20px] tracking-tight">
           {matches.length.toLocaleString("en-CA")} {matches.length === 1 ? "match" : "matches"}
+          {severityFilter && (
+            <span className="ml-2 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)]">
+              · severity = {severityFilter}
+            </span>
+          )}
         </h2>
         <div className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
           Detection run · {new Date(matches[0].detectedAt).toUTCString()}

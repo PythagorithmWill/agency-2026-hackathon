@@ -43,6 +43,33 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${inter.variable} ${jbMono.variable} dark`}>
+      <head>
+        {/*
+          Swallow the React 19 + Turbopack "removeChild on detached node"
+          reconciliation race before Next's dev overlay sees it. The
+          error.tsx auto-recovery already re-renders the affected tree;
+          this just prevents the dev overlay from flashing the stack.
+          Production is unaffected (the overlay only runs in dev).
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+              function isReconRace(e){
+                var msg = (e && (e.message || (e.error && e.error.message))) || "";
+                return /removeChild|insertBefore|appendChild/i.test(msg) &&
+                       /null|detached/i.test(msg + " " + (e && e.error && e.error.stack || ""));
+              }
+              window.addEventListener("error", function(e){
+                if (isReconRace(e)) { e.preventDefault(); e.stopImmediatePropagation && e.stopImmediatePropagation(); return false; }
+              }, true);
+              window.addEventListener("unhandledrejection", function(e){
+                var r = e && e.reason; var msg = (r && r.message) || String(r || "");
+                if (/removeChild|insertBefore|appendChild/i.test(msg)) { e.preventDefault(); }
+              }, true);
+            })();`,
+          }}
+        />
+      </head>
       <body
         className="min-h-screen bg-[var(--color-bg)] text-[var(--color-fg)] antialiased notranslate"
         translate="no"

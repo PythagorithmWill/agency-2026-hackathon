@@ -44,7 +44,7 @@ export default async function RiskTab() {
           </div>
           {growth.length > 0 ? (
             <ul className="divide-y divide-[var(--color-border)]">
-              {growth.map((g) => {
+              {growth.map((g, idx) => {
                 const sev =
                   g.growthPercent >= 5
                     ? "flag"
@@ -58,7 +58,7 @@ export default async function RiskTab() {
                       ? "var(--color-accent-warn)"
                       : "var(--color-fg-muted)";
                 return (
-                  <li key={g.refNumber}>
+                  <li key={`${g.refNumber}#${idx}`}>
                     <Link
                       href={`/record/fed/${encodeURIComponent(g.refNumber)}` as never}
                       className="block px-6 py-4 hover:bg-[var(--color-bg-elev-2)]/40 transition-colors"

@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   loadRecipientProfile,
@@ -33,6 +32,19 @@ export async function generateMetadata({ params }: { params: Promise<{ bn: strin
   return { title: golden ? `${golden.canonicalName} — Glassbox` : "Recipient — Glassbox" };
 }
 
+// Strings that look like recipient identifiers in pattern matches but
+// won't ever resolve to a real corpus row. The federal corpus stores
+// "None" and "0" as literal text in recipient_business_number for some
+// publisher-aggregated rows; the zombie/ghost detectors carry those
+// through into match.subject.id. Short-circuit them upfront so the
+// page degrades to NoProfilePanel in milliseconds instead of waiting
+// for three full corpus scans to come back empty.
+const NULL_LIKE_IDS = new Set(["", "none", "null", "0", "undefined"]);
+
+function isUnresolvableIdentifier(id: string): boolean {
+  return NULL_LIKE_IDS.has(id.trim().toLowerCase());
+}
+
 export default async function RecipientPage({
   params,
 }: {
@@ -40,13 +52,29 @@ export default async function RecipientPage({
 }) {
   const { bn } = await params;
   const identifier = decodeURIComponent(bn);
+  const isBn = /^\d{9,}/.test(identifier);
 
-  // Try federal-corpus lookup first.
+  // Short-circuit on identifiers that can't possibly match a corpus row.
+  // Saves three sequential scans and renders the graceful panel in <50ms.
+  if (isUnresolvableIdentifier(identifier)) {
+    return <NoProfilePanel identifier={identifier} contended={false} unresolvable />;
+  }
+
+  // Federal-corpus reads: every query gets its own try/catch so a single
+  // pool timeout under detector-build contention can't escape past the
+  // Promise.allSettled boundary and crash the page render.
+  // Use the LONG pool for everything — name-based lookups are sequential
+  // scans over 1.27M rows and the 8s fast-pool budget is too tight,
+  // especially for publisher-aggregated rows like "Government of X" that
+  // have hundreds of agreements. The long pool's 30s server timeout is
+  // sufficient. The page renders whatever queries succeed.
   const [profileR, byDeptR, agreementsR, seriesR] = await Promise.allSettled([
-    loadRecipientProfile(identifier),
-    loadRecipientByDepartment(identifier),
-    loadRecipientAgreements(identifier, 50),
-    loadTemporalSeriesFed({ recipientBn: /^\d{9,}/.test(identifier) ? identifier : null }),
+    loadRecipientProfile(identifier, "long"),
+    loadRecipientByDepartment(identifier, "long"),
+    loadRecipientAgreements(identifier, 50, "long"),
+    isBn
+      ? loadTemporalSeriesFed({ recipientBn: identifier, budget: "long" })
+      : Promise.resolve(null),
   ]);
 
   const profile = profileR.status === "fulfilled" ? profileR.value : null;
@@ -54,10 +82,17 @@ export default async function RecipientPage({
   const agreements = agreementsR.status === "fulfilled" ? agreementsR.value : [];
   const series = seriesR.status === "fulfilled" ? seriesR.value : null;
 
-  if (profile) {
+  // If any of profile / byDept / agreements succeeded, render the federal
+  // view with whatever we have — partial data is far more useful than a
+  // "limited information" panel. Synthesise a minimal profile from the
+  // partial data when the dedicated profile query failed.
+  if (profile || byDept.length > 0 || agreements.length > 0) {
+    const synthesizedProfile =
+      profile ??
+      synthesiseProfile(identifier, byDept, agreements);
     return (
       <FederalRecipientView
-        profile={profile}
+        profile={synthesizedProfile}
         byDept={byDept}
         agreements={agreements}
         series={series}
@@ -68,9 +103,64 @@ export default async function RecipientPage({
   // Federal lookup empty — fall back to the cross-dataset canonical record.
   // Surfaces CRA-only (charity) and AB-only entities reached via funding-loop
   // matches, ghost-capacity matches, etc.
-  const golden = await loadGoldenRecord(identifier).catch(() => null);
-  if (!golden) notFound();
-  return <GoldenRecordView golden={golden} identifier={identifier} />;
+  let golden: GoldenRecordSummary | null = null;
+  try {
+    golden = await loadGoldenRecord(identifier, "long");
+  } catch {
+    golden = null;
+  }
+  if (golden) {
+    return <GoldenRecordView golden={golden} identifier={identifier} />;
+  }
+
+  // Federal returned no rows AND golden lookup was empty/failed. Render
+  // an inline calibrated panel rather than throwing notFound() (which the
+  // dev overlay will sometimes surface as a crash) or letting an exception
+  // escape to error.tsx. The user always lands on a usable page.
+  const anyQueryRejected =
+    profileR.status === "rejected" ||
+    byDeptR.status === "rejected" ||
+    agreementsR.status === "rejected" ||
+    seriesR.status === "rejected";
+  return <NoProfilePanel identifier={identifier} contended={anyQueryRejected} />;
+}
+
+/**
+ * Build a minimal profile from byDept + agreements rows when the
+ * dedicated profile aggregation timed out. Lets the page still render
+ * the per-department breakdown and agreement table even when the
+ * single-row profile aggregate query was the slow one.
+ */
+function synthesiseProfile(
+  identifier: string,
+  byDept: Awaited<ReturnType<typeof loadRecipientByDepartment>>,
+  agreements: Awaited<ReturnType<typeof loadRecipientAgreements>>,
+): NonNullable<Awaited<ReturnType<typeof loadRecipientProfile>>> {
+  const totalFromDept = byDept.reduce((s, d) => s + d.total, 0);
+  const totalFromAgreements = agreements.reduce((s, a) => s + a.value, 0);
+  const total = Math.max(totalFromDept, totalFromAgreements);
+  const agreementCount =
+    byDept.reduce((s, d) => s + d.agreementCount, 0) || agreements.length;
+  const isBn = /^\d{9,}/.test(identifier);
+  const fyValues = agreements
+    .map((a) => (a.startDate ? new Date(a.startDate).getUTCFullYear() : 0))
+    .filter((y) => y > 0);
+  return {
+    legalName:
+      agreements.find((a) => a.recipient && a.recipient !== "—")?.recipient ??
+      identifier,
+    bn: isBn ? identifier : null,
+    province:
+      agreements.find((a) => a.province)?.province ?? null,
+    totalReceived: total,
+    agreementCount,
+    departmentCount: byDept.length,
+    programCount: 0,
+    fyRange: {
+      start: fyValues.length > 0 ? Math.min(...fyValues) : 0,
+      end: fyValues.length > 0 ? Math.max(...fyValues) : 0,
+    },
+  };
 }
 
 /* ─── Federal-corpus view (existing behaviour) ───────────────────── */
@@ -350,6 +440,60 @@ function PreJson({ value }: { value: Record<string, unknown> }) {
         </div>
       ))}
     </div>
+  );
+}
+
+function NoProfilePanel({
+  identifier,
+  contended,
+  unresolvable = false,
+}: {
+  identifier: string;
+  contended: boolean;
+  unresolvable?: boolean;
+}) {
+  return (
+    <main className="min-h-screen pt-32">
+      <div className="mx-auto max-w-[820px] px-6 py-16">
+        <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+          Glassbox · recipient profile
+        </div>
+        <h1 className="mt-4 text-[var(--text-display-md)] tracking-[var(--tracking-display-md)] leading-[0.95]">
+          {unresolvable ? "Aggregated identifier — no profile." : "Limited information available."}
+        </h1>
+        <p className="mt-6 text-[var(--text-body-lg)] text-[var(--color-fg-muted)] leading-[1.5]">
+          {unresolvable
+            ? "This pattern match cites a publisher-aggregated row where the federal corpus stores a placeholder identifier (None / 0) instead of a real business number or legal name. Glassbox surfaces these matches because the dollar flows are real, but a per-recipient profile cannot be built from a placeholder. Use the search or pattern catalog to investigate the underlying agreement records."
+            : contended
+              ? "The dataset query for this recipient timed out — the database is currently busy precomputing pattern detectors. Try again in a moment, or follow the links below to navigate the corpus another way."
+              : "The dataset shows no current-agreement rows in the federal corpus or cross-dataset golden record for this identifier. The match may have come from a non-federal source, or the identifier may be a name variant we have not yet linked."}
+        </p>
+        <div className="mt-6 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] leading-relaxed">
+          Identifier looked up:{" "}
+          <code className="text-[var(--color-accent)] normal-case">{identifier}</code>
+        </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link
+            href={"/transparency/recipients" as never}
+            className="px-4 py-2 rounded-full border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors text-[13px]"
+          >
+            All recipients
+          </Link>
+          <Link
+            href={`/search?q=${encodeURIComponent(identifier)}` as never}
+            className="px-4 py-2 rounded-full border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors text-[13px]"
+          >
+            Search corpus
+          </Link>
+          <Link
+            href={"/follow" as never}
+            className="px-4 py-2 rounded-full border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors text-[13px]"
+          >
+            Pattern catalog
+          </Link>
+        </div>
+      </div>
+    </main>
   );
 }
 

@@ -33,11 +33,17 @@ export default async function TransparencyOverview() {
           Snapshot pending
         </h1>
         <p className="mt-4 text-[var(--color-fg-muted)]">
-          The analytics snapshot has not been generated yet. Run{" "}
+          The analytics snapshot is being regenerated. The fast-path build
+          augments the existing snapshot with the latest pattern-detector
+          output without rerunning the heavy aggregations:
+        </p>
+        <p className="mt-3">
           <code className="font-[var(--font-mono)] text-[13px] text-[var(--color-accent)]">
-            npx tsx scripts/build-snapshot.ts
-          </code>{" "}
-          to populate <code>data/analytics-snapshot.json</code>.
+            npx tsx scripts/augment-snapshot.ts
+          </code>
+        </p>
+        <p className="mt-4 text-[var(--color-fg-muted)] text-[14px]">
+          Once it finishes (~3–5 min), reload this page.
         </p>
       </main>
     );
@@ -208,9 +214,9 @@ export default async function TransparencyOverview() {
           >
             {snap.amendmentGrowth.length > 0 ? (
               <ul className="space-y-3">
-                {snap.amendmentGrowth.slice(0, 6).map((g) => (
+                {snap.amendmentGrowth.slice(0, 6).map((g, idx) => (
                   <li
-                    key={g.refNumber}
+                    key={`${g.refNumber}#${idx}`}
                     className="border-b border-[var(--color-border)] pb-3 last:border-0 last:pb-0"
                   >
                     <Link
@@ -262,9 +268,9 @@ export default async function TransparencyOverview() {
                     </tr>
                   </thead>
                   <tbody>
-                    {snap.recentLarge.slice(0, 12).map((r) => (
+                    {snap.recentLarge.slice(0, 12).map((r, idx) => (
                       <tr
-                        key={r.recordId}
+                        key={`${r.recordId}#${idx}`}
                         className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-elev-2)]/40"
                       >
                         <td className="py-2 pr-4 max-w-[260px] truncate">
