@@ -1,4 +1,4 @@
-import { query } from "../db/pool";
+import { query, longQuery } from "../db/pool";
 import type { ComparableRecord, DatasetSource } from "../types";
 import { generateMockComparables } from "./mockComparables";
 
@@ -42,7 +42,9 @@ function extractKeywords(text: string, maxN: number): string[] {
   const seen = new Set<string>();
   for (const m of text.toLowerCase().matchAll(KEYWORD_RE)) {
     const t = m[0];
-    if (t.length < 4 || EN_STOPWORDS.has(t)) continue;
+    // 2-char floor (was 4) so short acronyms like "AI", "ML", "QA"
+    // pass through. Stopword filter still drops noise tokens.
+    if (t.length < 2 || EN_STOPWORDS.has(t)) continue;
     if (seen.has(t)) continue;
     seen.add(t);
     out.push(t);
@@ -51,14 +53,52 @@ function extractKeywords(text: string, maxN: number): string[] {
   return out;
 }
 
+/**
+ * Acronym → expansion map. PostgreSQL's English stemmer treats short
+ * acronyms as opaque tokens (so `to_tsquery('english', 'ai')` matches
+ * literal "ai" but NOT "artificial intelligence"). For known acronyms
+ * we OR the expansion into the tsquery so the search returns what the
+ * user expected.
+ *
+ * Casing is normalized to lower-case; expansions go through the same
+ * stemmer at query time.
+ */
+const ACRONYM_EXPANSIONS: Record<string, string[]> = {
+  ai: ["artificial", "intelligence"],
+  ml: ["machine", "learning"],
+  ev: ["electric", "vehicle"],
+  it: ["information", "technology"],
+  hr: ["human", "resources"],
+  rd: ["research", "development"],
+  nlp: ["natural", "language", "processing"],
+  iot: ["internet", "things"],
+  api: ["application", "programming"],
+  qa: ["quality", "assurance"],
+  ux: ["user", "experience"],
+  vr: ["virtual", "reality"],
+  ar: ["augmented", "reality"],
+  esg: ["environmental", "social", "governance"],
+  csr: ["corporate", "social", "responsibility"],
+  ngo: ["non", "governmental", "organization"],
+};
+
 function tsqueryFor(draftText: string, workingTitle: string): string {
   const titleKw = extractKeywords(workingTitle, 4);
   const draftKw = extractKeywords(draftText, 10);
   const dedup = Array.from(new Set([...titleKw, ...draftKw])).slice(0, 12);
   const safe = dedup
     .map((k) => k.replace(/[^a-z0-9]/g, ""))
-    .filter((k) => k.length >= 3);
-  return safe.join(" | ");
+    .filter((k) => k.length >= 2);
+
+  // Expand known acronyms into their long forms so users searching
+  // "AI" actually find "artificial intelligence" agreements.
+  const expanded = new Set<string>(safe);
+  for (const k of safe) {
+    const expansion = ACRONYM_EXPANSIONS[k];
+    if (expansion) for (const e of expansion) expanded.add(e);
+  }
+
+  return Array.from(expanded).join(" | ");
 }
 
 function fiscalYearOf(d: Date | string | null): number {
@@ -130,7 +170,24 @@ interface AbContractsRow {
   rank: string | number;
 }
 
-/** Fed search SQL — F-3 max-amendment CTE. */
+/** Fed search SQL.
+ *
+ * Two-stage candidate / dedup pattern:
+ *
+ *   1. `candidates` ranks rows by ts_rank_cd over the WHOLE corpus
+ *      (every is_amendment value), capped to top N by rank. This stays
+ *      fast on common short queries because PostgreSQL only sorts the
+ *      top-K rows by rank — not the whole match set.
+ *
+ *   2. The F-3 max-amendment DISTINCT ON is then applied to those
+ *      candidates only — picking the latest amendment per ref_number
+ *      so users see the current state of each agreement.
+ *
+ * Net result: searches like "ai" or "research" return current-state
+ * agreement records in <2s instead of timing out. The candidate cap is
+ * deliberately wider than the requested limit so dedup doesn't starve
+ * the result set.
+ */
 function fedSearchSql({
   withAmountRange,
   withDept,
@@ -140,7 +197,6 @@ function fedSearchSql({
   withDept: boolean;
   limit: number;
 }): string {
-  // tsq = $1; minAmount = $2 (only when withAmountRange); maxAmount = $3; dept = $4
   const amountClause = withAmountRange
     ? "agreement_value BETWEEN $2 AND $3"
     : "agreement_value >= 250000";
@@ -152,15 +208,16 @@ function fedSearchSql({
           OR owner_org_title ILIKE $${deptParamIdx} || '%'
         )`
     : "";
+  // Cap candidates at 6× the requested limit so the dedup pass has
+  // headroom but we never sort more than ~few hundred rows by rank.
+  const candidateCap = Math.max(limit * 6, 60);
   return `
-    WITH agreement_current AS (
-      SELECT DISTINCT ON (
-        ref_number,
-        COALESCE(recipient_business_number, recipient_legal_name, _id::text)
-      )
+    WITH candidates AS (
+      SELECT
         ref_number, recipient_legal_name, recipient_business_number,
         recipient_province, owner_org_title, prog_name_en,
         agreement_value, agreement_start_date, description_en,
+        amendment_number, _id,
         ts_rank_cd(
           to_tsvector('english', description_en),
           to_tsquery('english', $1),
@@ -172,6 +229,19 @@ function fedSearchSql({
         AND length(description_en) >= 80
         AND to_tsvector('english', description_en) @@ to_tsquery('english', $1)
         ${deptClause}
+      ORDER BY rank DESC
+      LIMIT ${candidateCap}
+    ),
+    agreement_current AS (
+      SELECT DISTINCT ON (
+        ref_number,
+        COALESCE(recipient_business_number, recipient_legal_name, _id::text)
+      )
+        ref_number, recipient_legal_name, recipient_business_number,
+        recipient_province, owner_org_title, prog_name_en,
+        agreement_value, agreement_start_date, description_en,
+        rank
+      FROM candidates
       ORDER BY
         ref_number,
         COALESCE(recipient_business_number, recipient_legal_name, _id::text),
@@ -374,18 +444,27 @@ export async function searchCorpus(
   const abGrantsLimit = Math.ceil(limit * 0.3);
   const abContractsLimit = Math.ceil(limit * 0.2);
 
+  // Search uses longQuery (30s server-side statement_timeout, dedicated
+  // long pool) instead of the 8s fast pool. Common short queries like
+  // "ai" or "research" can hit tens of thousands of FTS-matching rows
+  // and the candidate-rank-then-dedup pattern routinely needs 5–15s.
+  // Acceptable for an interactive search page; not acceptable in any
+  // request that has a tighter SLA.
   const [fedR, abGrantsR, abContractsR] = await Promise.allSettled([
-    query<FedRow>(
+    longQuery<FedRow>(
       fedSearchSql({ withAmountRange: false, withDept: !!dept, limit: fedLimit }),
       dept ? [tsq, dept] : [tsq],
+      30_000,
     ),
-    query<AbGrantsRow>(
+    longQuery<AbGrantsRow>(
       abGrantsSearchSql(100_000, false, !!dept, abGrantsLimit),
       dept ? [tsq, dept] : [tsq],
+      30_000,
     ),
-    query<AbContractsRow>(
+    longQuery<AbContractsRow>(
       abContractsSearchSql(100_000, false, !!dept, abContractsLimit),
       dept ? [tsq, dept] : [tsq],
+      30_000,
     ),
   ]);
 

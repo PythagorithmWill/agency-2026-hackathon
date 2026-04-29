@@ -106,17 +106,17 @@ export function Hero() {
       <div
         aria-hidden
         className="absolute z-[2] inset-y-0 right-0 hidden md:flex items-center pointer-events-none"
-        style={{ width: "min(46vw, 620px)" }}
+        style={{ width: "min(40vw, 540px)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/maple-leaf.webp"
+          src="/maple-leaf.png"
           alt=""
-          className="w-full h-auto max-h-[68vh] mr-[-6vw]"
+          className="w-full h-auto max-h-[58vh] mr-[-8vw]"
           style={{
             filter:
-              "brightness(0) drop-shadow(0 0 8px #D52B1E) drop-shadow(0 0 24px #D52B1E) drop-shadow(0 0 60px rgba(213,43,30,0.55)) drop-shadow(0 0 120px rgba(213,43,30,0.35))",
-            opacity: 0.95,
+              "brightness(0) drop-shadow(0 0 4px rgba(213,43,30,0.55)) drop-shadow(0 0 18px rgba(213,43,30,0.40)) drop-shadow(0 0 60px rgba(213,43,30,0.20))",
+            opacity: 0.55,
           }}
         />
       </div>

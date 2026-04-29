@@ -10,21 +10,21 @@ export default function FollowLanding() {
   return (
     <main className="min-h-screen pt-16">
       {/* Hero */}
-      <section className="relative border-b border-[var(--color-border)] overflow-hidden">
+      <section className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-24 pb-16 text-center">
+        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-32 pb-20 text-center">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · pattern catalog
           </div>
-          <h1 className="mt-4 text-[var(--text-display-lg)] leading-[0.95] tracking-[var(--tracking-display-lg)]">
+          <h1 className="mt-6 text-[clamp(72px,11vw,160px)] leading-[0.92] tracking-[-0.045em] font-medium">
             Follow the money<span className="text-[var(--color-accent)]">.</span>
           </h1>
-          <p className="mt-6 mx-auto max-w-[760px] text-[var(--text-body-lg)] italic text-[var(--color-fg-muted)] leading-[1.45]">
+          <p className="mt-8 mx-auto max-w-[820px] text-[clamp(20px,2vw,26px)] italic text-[var(--color-fg-muted)] leading-[1.4]">
             Twelve named patterns across federal and Alberta provincial spending. Each surfaces
             specific records that match. Each output cites every source row.
           </p>
-          <p className="mt-4 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
-            {traceCount} TRACE-derived · {PATTERNS.length - traceCount} Glassbox-native
+          <p className="mt-6 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+            {traceCount} TRACE-derived <span className="opacity-50">·</span> {PATTERNS.length - traceCount} Glassbox-native
           </p>
         </div>
       </section>

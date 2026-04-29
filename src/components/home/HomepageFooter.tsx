@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GlassboxMark, GlassboxWordmark } from "../brand/GlassboxMark";
+import { GlassboxWordmark } from "../brand/GlassboxMark";
 import { DataSourceStatusPill } from "../DataSourceStatusPill";
 
 const isProd = process.env.NODE_ENV === "production";
@@ -10,8 +10,7 @@ export function HomepageFooter() {
       <div className="mx-auto max-w-[1200px] px-6 md:px-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div>
-            <div className="flex items-center gap-3">
-              <GlassboxMark size={36} className="text-[var(--color-fg)]" />
+            <div className="flex items-center">
               <GlassboxWordmark size={27} className="text-[var(--color-fg)]" />
             </div>
             <div className="mt-4 text-[14px] leading-[20px] text-[var(--color-fg-muted)] max-w-[260px]">
@@ -52,8 +51,6 @@ export function HomepageFooter() {
 
         <div className="mt-12 pt-8 border-t border-[var(--color-border)] flex flex-col items-center gap-2">
           <div className="flex items-center justify-center gap-3 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
-            <GlassboxMark size={12} className="text-[var(--color-fg-subtle)]" />
-            <span>·</span>
             <span className="normal-case tracking-normal italic text-[var(--color-fg-muted)]">
               Glassbox — observations from public records. They are not findings of misconduct.
             </span>

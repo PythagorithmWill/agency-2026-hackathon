@@ -125,21 +125,11 @@ html, body {
   .scroll-arrow { animation: none; }
 }
 
-/* Search input — animated border draw on focus (M2) */
+/* Search input wrapper — kept as a relative positioning anchor for any
+   future overlays. The previous focus-within accent border was removed
+   per design feedback; the input's own border-strong is sufficient. */
 .search-input-wrap {
   position: relative;
-}
-.search-input-wrap::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  pointer-events: none;
-  transition: border-color 300ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.search-input-wrap:focus-within::after {
-  border-color: var(--color-accent);
 }
 
 /* Skeleton / progress bar */

@@ -79,9 +79,13 @@ function getLongPool(): Pool {
       process.env.DATABASE_URL?.includes("sslmode=require")
         ? { rejectUnauthorized: false }
         : undefined,
-    max: 2,
+    // 6 connections so the search path (3 parallel queries) and
+    // detector workloads don't starve each other. Render's shared
+    // replica gives us ~20-30 conns total; 10 fast + 6 long leaves
+    // headroom for snapshot-build runs.
+    max: 6,
     idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 15_000,
     // No query_timeout — long aggregations need 10–30s
   });
   return longPool;
