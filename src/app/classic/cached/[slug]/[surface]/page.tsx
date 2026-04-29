@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Nav } from "@/components/Nav";
+import { ClassicNav } from "@/components/ClassicNav";
 import { Brief } from "@/components/Brief";
 import { loadBrief } from "@/lib/briefs";
 
@@ -24,7 +24,7 @@ export default async function CachedSurface({
   if (!brief) notFound();
   return (
     <>
-      <Nav />
+      <ClassicNav />
       <main>
         <div className="mx-auto max-w-[952px] px-8 pt-8">
           <div className="font-[var(--font-mono)] text-[var(--text-micro)] uppercase tracking-[var(--tracking-wide)] text-[var(--color-ember)]">

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Nav } from "@/components/Nav";
+import { ClassicNav } from "@/components/ClassicNav";
 import { Brief } from "@/components/Brief";
 import { loadBrief } from "@/lib/briefs";
 
@@ -13,7 +13,7 @@ export default async function OutcomeBriefPage({
   if (!brief || brief.briefType !== "outcome") notFound();
   return (
     <>
-      <Nav />
+      <ClassicNav />
       <main>
         <Brief brief={brief} />
       </main>

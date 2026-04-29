@@ -157,15 +157,30 @@ export function ProofDrawer({
           >
             Re-run with adjusted weights
           </a>
-          <a
-            href={`/api/proof/${token.proofId}.json`}
-            className="text-[var(--text-small)] text-[var(--color-muted)] hover:text-[var(--color-paper)]"
-          >
-            Download token (JSON)
-          </a>
+          <DownloadTokenLink token={token} />
         </footer>
       </div>
     </aside>
+  );
+}
+
+function DownloadTokenLink({ token }: { token: ProofToken }) {
+  const onClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const el = e.currentTarget;
+    el.classList.add("animate-token-pulse");
+    setTimeout(() => el.classList.remove("animate-token-pulse"), 220);
+  };
+  return (
+    <>
+      <a
+        href={`/api/proof/${token.proofId}/download`}
+        onClick={onClick}
+        className="text-[var(--text-small)] text-[var(--color-muted)] hover:text-[var(--color-paper)] transition-colors"
+        download
+      >
+        Download token (JSON)
+      </a>
+    </>
   );
 }
 

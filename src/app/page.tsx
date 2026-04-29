@@ -1,15 +1,11 @@
-import { Nav } from "@/components/Nav";
-import { GlassBox } from "@/components/GlassBox";
-import { getCachedFindings } from "@/lib/findings";
+import { ManifoldLanding } from "@/components/ManifoldLanding";
+import { ClassicViewLink } from "@/components/ClassicViewLink";
 
-export default async function Home() {
-  const findings = await getCachedFindings();
+export default function ManifoldRoot() {
   return (
     <>
-      <Nav />
-      <main className="mx-auto max-w-[1440px] px-8 py-12">
-        <GlassBox findings={findings} />
-      </main>
+      <ManifoldLanding />
+      <ClassicViewLink />
     </>
   );
 }
