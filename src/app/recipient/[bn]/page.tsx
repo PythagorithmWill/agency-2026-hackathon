@@ -275,7 +275,7 @@ function FederalRecipientView({
                         {dollar.format(a.value)}
                       </td>
                       <td className="py-2 pl-4 font-[var(--font-mono)] text-[var(--color-fg-muted)]">
-                        {a.startDate?.slice(0, 10) ?? "—"}
+                        {a.startDate ? String(a.startDate).slice(0, 10) : "—"}
                       </td>
                       <td className="py-2 pl-4 font-[var(--font-mono)] text-[11px]">
                         <Link

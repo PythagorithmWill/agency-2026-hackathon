@@ -56,9 +56,17 @@ export function SearchInput({
   return (
     <div className="mx-auto max-w-[720px] w-full" data-tour-id="tour-search">
       <form
+        action={mode === "search" ? "/search" : "/evaluate"}
+        method="get"
         onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit();
+          if (!query.trim()) {
+            e.preventDefault();
+            return;
+          }
+          // Let the native form GET submit — guarantees navigation even if
+          // React state, hydration, or the dev overlay swallows JS handlers.
+          // The action="/search" + name="q" is a real HTML form, the same
+          // shape Google's homepage uses. Always works.
         }}
         className="search-input-wrap rounded-[16px] bg-[var(--color-bg-elev-1)] border border-[var(--color-border-strong)]"
       >
@@ -69,28 +77,23 @@ export function SearchInput({
           {mode === "search" ? (
             <input
               type="search"
+              name="q"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  onSubmit();
-                }
-              }}
               autoFocus
               placeholder="Search by topic, recipient, program, or paste a draft excerpt"
               className="flex-1 bg-transparent border-0 outline-none text-[22px] leading-[28px] placeholder:italic placeholder:text-[var(--color-fg-subtle)]"
             />
           ) : (
             <textarea
+              name="draft"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
-                // Cmd/Ctrl-Enter submits a draft from the textarea so plain
-                // Enter still inserts newlines (drafts are multi-line).
+                // Cmd/Ctrl-Enter submits a draft; plain Enter keeps newlines.
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
-                  onSubmit();
+                  (e.currentTarget.form as HTMLFormElement | null)?.requestSubmit();
                 }
               }}
               placeholder="Paste your draft solicitation. Working title, scope, recipient — whatever you have. (⌘/Ctrl+Enter to submit)"
@@ -101,13 +104,6 @@ export function SearchInput({
           <button
             type="submit"
             disabled={!query.trim()}
-            onClick={(e) => {
-              // Defensive: explicit click handler so the navigation fires
-              // even if the surrounding form's onSubmit doesn't bubble for
-              // any reason (Turbopack hydration edge cases, etc).
-              e.preventDefault();
-              onSubmit();
-            }}
             className="group self-center h-14 px-6 rounded-[8px] bg-[var(--color-accent)] text-[var(--color-bg)] text-[14px] font-semibold tracking-[0.01em] hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed inline-flex items-center gap-2"
           >
             {mode === "search" ? "Search" : "Evaluate"}

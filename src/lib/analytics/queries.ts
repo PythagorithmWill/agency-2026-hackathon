@@ -12,6 +12,23 @@ type Budget = "fast" | "long";
 const run = (b: Budget) => (b === "long" ? longQuery : query);
 
 /**
+ * Normalise a possibly-Date pg value to an ISO string. The pg driver
+ * returns DATE columns as JS Date instances by default; some downstream
+ * UI code assumes string and calls .slice() on it. Coerce here so every
+ * caller gets a consistent shape.
+ */
+function toIsoOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  if (typeof v === "string") return v;
+  if (v instanceof Date) return v.toISOString();
+  try {
+    return new Date(v as string | number).toISOString();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * DB-touching aggregation helpers. These produce inputs for the pure
  * analytics modules — they do NOT compute concentration/HHI/forecast
  * themselves (those live in concentration.ts / temporal.ts and are
@@ -431,7 +448,7 @@ export async function loadRecentLargeFed(
     department: row.owner_org_title ?? "—",
     program: row.prog_name_en ?? null,
     value: Number(row.agreement_value) || 0,
-    startDate: row.agreement_start_date,
+    startDate: toIsoOrNull(row.agreement_start_date),
     province: row.recipient_province,
   }));
 }
@@ -972,7 +989,7 @@ export async function loadRecipientAgreements(
     department: row.owner_org_title ?? "—",
     program: row.prog_name_en ?? null,
     value: Number(row.agreement_value) || 0,
-    startDate: row.agreement_start_date,
+    startDate: toIsoOrNull(row.agreement_start_date),
     province: row.recipient_province,
   }));
 }
