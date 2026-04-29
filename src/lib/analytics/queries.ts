@@ -520,6 +520,99 @@ export async function scanAmendmentGrowthFed(
   });
 }
 
+/* ─── department × recipient flows for the Sankey ───────────────── */
+
+export interface DeptRecipientFlow {
+  department: string;
+  recipient: string;
+  bn: string | null;
+  total: number;
+  agreementCount: number;
+}
+
+/**
+ * Top dept × recipient flows. Used by the Sankey visualization. Limits
+ * to the top N departments AND top M recipients per department. Cheap
+ * thanks to a one-shot lateral join — the per-department subquery
+ * pulls only its top-M recipients, so total rows ≤ N × M.
+ *
+ * Without the top-N constraint this query would aggregate the full
+ * 1.27M-row corpus; with the constraint it scans only the matching
+ * groups via the deptList CTE.
+ */
+export async function loadDeptRecipientFlows(
+  topDepartments = 8,
+  topRecipientsPerDept = 5,
+  budget: Budget = "long",
+): Promise<DeptRecipientFlow[]> {
+  // F-3 max-amendment current set, then top departments, then top
+  // recipients per department. Two-pass aggregation avoids scanning
+  // the corpus twice — top_depts identifies the candidate set; the
+  // window function picks top-M recipients per department.
+  const r = await run(budget)<{
+    department: string | null;
+    recipient: string | null;
+    bn: string | null;
+    total: string | number | null;
+    agreement_count: string | number | null;
+  }>(
+    `WITH agreement_current AS (
+       SELECT DISTINCT ON (
+         ref_number,
+         COALESCE(recipient_business_number, recipient_legal_name, _id::text)
+       )
+         ref_number,
+         recipient_legal_name,
+         recipient_business_number,
+         owner_org_title,
+         agreement_value
+       FROM fed.grants_contributions
+       WHERE agreement_value > 0
+         AND recipient_legal_name IS NOT NULL
+         AND owner_org_title IS NOT NULL
+       ORDER BY
+         ref_number,
+         COALESCE(recipient_business_number, recipient_legal_name, _id::text),
+         NULLIF(amendment_number, '')::int DESC NULLS LAST,
+         _id DESC
+     ),
+     top_depts AS (
+       SELECT owner_org_title AS department,
+              SUM(agreement_value)::numeric AS total
+         FROM agreement_current
+        GROUP BY owner_org_title
+        ORDER BY total DESC
+        LIMIT $1
+     ),
+     dept_recip AS (
+       SELECT ac.owner_org_title AS department,
+              ac.recipient_legal_name AS recipient,
+              ac.recipient_business_number AS bn,
+              SUM(ac.agreement_value)::numeric AS total,
+              COUNT(*) AS agreement_count,
+              ROW_NUMBER() OVER (
+                PARTITION BY ac.owner_org_title
+                ORDER BY SUM(ac.agreement_value) DESC
+              ) AS rn
+         FROM agreement_current ac
+         JOIN top_depts td ON td.department = ac.owner_org_title
+        GROUP BY ac.owner_org_title, ac.recipient_legal_name, ac.recipient_business_number
+     )
+     SELECT department, recipient, bn, total, agreement_count
+       FROM dept_recip
+      WHERE rn <= $2
+      ORDER BY department, total DESC`,
+    [topDepartments, topRecipientsPerDept],
+  );
+  return r.rows.map((row) => ({
+    department: row.department ?? "—",
+    recipient: row.recipient ?? "—",
+    bn: row.bn ?? null,
+    total: Number(row.total) || 0,
+    agreementCount: Number(row.agreement_count) || 0,
+  }));
+}
+
 /* ─── single-entity profile queries (department / recipient) ───── */
 
 export interface DepartmentProfileRow {
