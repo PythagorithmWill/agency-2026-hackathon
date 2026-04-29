@@ -93,6 +93,18 @@ html, body {
   animation: skeleton-shimmer 1.4s linear infinite;
 }
 
+/* Brief drop cap — Fraunces 700, drops 3 lines on the first paragraph
+   of every section that opts in via .brief-section first-of-type p */
+.brief-body p.has-drop-cap::first-letter {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 5.25rem;
+  line-height: 0.85;
+  float: left;
+  margin: 0.1em 0.5rem 0 0;
+  color: var(--color-paper);
+}
+
 /* Token download flash — 200ms ember pulse on click */
 @keyframes token-pulse {
   0%   { color: var(--color-muted); text-shadow: none; }

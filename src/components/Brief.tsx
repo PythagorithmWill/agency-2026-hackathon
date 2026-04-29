@@ -59,10 +59,15 @@ export function Brief({ brief }: { brief: OutcomeBrief }) {
             </h2>
             <div className="mt-6 space-y-5 text-[var(--text-body)] leading-[1.55]">
               {section.sentences.map((s, j) => (
-                <p key={j}>
+                <p key={j} className={i === 0 && j === 0 ? "has-drop-cap" : undefined}>
                   {s.text}
                   {s.citations.map((c, k) => (
-                    <CitationRef key={k} id={c} index={k + 1} />
+                    <CitationRef
+                      key={k}
+                      id={c}
+                      index={k + 1}
+                      sources={brief.sources}
+                    />
                   ))}
                 </p>
               ))}
@@ -140,6 +145,36 @@ export function Brief({ brief }: { brief: OutcomeBrief }) {
         <footer className="mt-16 border-t border-[var(--color-rule)] pt-8">
           <ProofTokenStrip token={brief.proofToken} />
         </footer>
+
+        {/* METHODOLOGY footer block + CITE AS line */}
+        <section className="mt-16 border-t border-[var(--color-rule)] pt-8">
+          <div className="font-[var(--font-mono)] text-[var(--text-micro)] uppercase tracking-[var(--tracking-wide)] text-[var(--color-muted)]">
+            Methodology
+          </div>
+          <p className="mt-3 text-[var(--text-small)] leading-[1.55] text-[var(--color-paper)]">
+            This brief was generated under the Pythagorithm Proof
+            Methodology v{brief.proofToken.version}: every prose claim
+            carries a source pointer; direct quotes are capped at fifteen
+            words and at one quote per source; calibrated language is
+            enforced by a published regex set; entity-resolution
+            confidence thresholds gate any claim about a named individual.
+            See{" "}
+            <a
+              href="/methodology"
+              className="text-[var(--color-paper)] underline-offset-2 hover:underline"
+            >
+              the methodology page
+            </a>{" "}
+            for the canonical schema, the validator, and the AIA
+            structural correspondence.
+          </p>
+        </section>
+
+        <p className="mt-12 font-[var(--font-mono)] italic text-[var(--text-small)] text-[var(--color-muted)] leading-[1.5]">
+          Cite as: Pythagorithm Proof Methodology v{brief.proofToken.version},{" "}
+          {brief.subject.canonicalName} brief ({brief.briefId}), retrieved{" "}
+          {brief.proofToken.issuedAt.slice(0, 10)}.
+        </p>
       </div>
 
       {/* Marginal-notes column on desktop */}
@@ -178,14 +213,48 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function CitationRef({ id, index }: { id: string; index: number }) {
+function CitationRef({
+  id,
+  index,
+  sources,
+}: {
+  id: string;
+  index: number;
+  sources: OutcomeBrief["sources"];
+}) {
+  const src = sources.find((s) => s.id === id);
   return (
-    <a
-      href={`#${id}`}
-      className="ml-1 align-super font-[var(--font-mono)] text-[0.65em] text-[var(--color-muted)] hover:text-[var(--color-paper)]"
-    >
-      [{index}]
-    </a>
+    <span className="group relative inline-block">
+      <a
+        href={`#${id}`}
+        className="ml-1 align-super font-[var(--font-mono)] text-[0.65em] text-[var(--color-muted)] hover:text-[var(--color-paper)]"
+      >
+        [{index}]
+      </a>
+      {src && (
+        <span
+          role="tooltip"
+          className="invisible group-hover:visible absolute z-20 left-0 top-full mt-2 w-[320px] border border-[var(--color-rule)] bg-[var(--color-vellum)] rounded-[6px] p-4 text-[var(--text-small)] leading-[1.5] text-[var(--color-paper)] no-print"
+        >
+          <span className="block font-[var(--font-display)] text-[var(--text-small)] not-italic leading-snug">
+            {src.title}
+          </span>
+          {src.year && (
+            <span className="block font-[var(--font-mono)] text-[var(--text-micro)] uppercase tracking-[var(--tracking-wide)] text-[var(--color-muted)] mt-1">
+              {src.kind} · {src.year} · authority tier {src.authorityTier}
+            </span>
+          )}
+          {src.url && (
+            <span className="block font-[var(--font-mono)] text-[var(--text-micro)] text-[var(--color-muted)] mt-2 break-all">
+              {hostnameOf(src.url)}
+            </span>
+          )}
+          <span className="block font-[var(--font-mono)] text-[var(--text-micro)] uppercase tracking-[var(--tracking-wide)] text-[var(--color-muted)] mt-3">
+            Retrieved via PYTH-RES at {src.retrievalDate}
+          </span>
+        </span>
+      )}
+    </span>
   );
 }
 

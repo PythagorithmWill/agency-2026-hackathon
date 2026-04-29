@@ -2,8 +2,35 @@
 
 import { useRef } from "react";
 import { ProofBadge } from "./ProofBadge";
+import {
+  CharityGlyph,
+  FedGrantGlyph,
+  AbGrantGlyph,
+  ContractGlyph,
+  AIASystemGlyph,
+} from "./glyphs";
 import type { FindingCard as FindingCardType } from "@/lib/types";
 import { cn } from "@/lib/cn";
+
+function GlyphFor({ finding }: { finding: FindingCardType }) {
+  const cov = finding.proofToken.finding.subject.datasetCoverage;
+  const name = finding.proofToken.finding.subject.canonicalName.toLowerCase();
+  const Glyph = name.includes("aia") || name.includes("ai system")
+    ? AIASystemGlyph
+    : name.includes("shipping") || name.includes("contract")
+      ? ContractGlyph
+      : cov.includes("ab") && !cov.includes("fed")
+        ? AbGrantGlyph
+        : cov.includes("cra") && !cov.includes("fed")
+          ? CharityGlyph
+          : FedGrantGlyph;
+  return (
+    <Glyph
+      className="text-[var(--color-muted)]"
+      color="currentColor"
+    />
+  );
+}
 
 /**
  * Findings feed row. NO card background. 1px rule top and bottom is enough.
@@ -33,14 +60,28 @@ export function FindingCard({
     <article
       data-selected={selected}
       className={cn(
-        "border-t border-[var(--color-rule)] py-4 px-1",
-        "grid grid-cols-[1fr_auto] gap-6 items-baseline",
+        "relative border-t border-[var(--color-rule)] py-4 pr-1 pl-5",
+        "grid grid-cols-[1fr_auto] gap-6 items-baseline transition-colors",
+        "hover:bg-[var(--color-vellum)]/40",
         "data-[selected=true]:bg-[var(--color-vellum)]/30",
       )}
     >
+      {/* 2px risk-tier left edge */}
+      <span
+        aria-hidden
+        className={cn(
+          "absolute left-0 top-4 bottom-4 w-[2px]",
+          isHigh
+            ? "bg-[var(--color-ember)]"
+            : f.scoreLabel === "LOW"
+              ? "bg-[var(--color-sage)]"
+              : "bg-[var(--color-rule)]",
+        )}
+      />
       <div>
-        <h3 className="font-[var(--font-display)] text-[var(--text-h2)] tracking-[var(--tracking-tight)]">
-          {f.subject.canonicalName}
+        <h3 className="font-[var(--font-display)] text-[var(--text-h2)] tracking-[var(--tracking-tight)] flex items-center gap-3">
+          <GlyphFor finding={finding} />
+          <span>{f.subject.canonicalName}</span>
         </h3>
         <p className="mt-2 text-[var(--text-body-ui)] text-[var(--color-paper)]">
           {f.summary}
