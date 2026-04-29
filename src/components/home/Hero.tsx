@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { GlassboxWordmark } from "../brand/GlassboxMark";
-import { MapleLeaf } from "../brand/MapleLeaf";
 import { SearchInput } from "../SearchInput";
 
 /**
@@ -99,19 +98,26 @@ export function Hero() {
         style={{ opacity: 0.55 }}
       />
 
-      {/* Maple leaf — right-side silhouette echoing the hackathon's
-          Ottawa setting. Subtle Canadian red, parallaxes in the same
-          column as the dark overlay so it sits "in" the photograph
-          rather than floating in the foreground. */}
+      {/* Maple leaf — right-side rim-lit silhouette. The leaf body itself
+          is collapsed to black via brightness(0) so it disappears against
+          the hero photograph; layered drop-shadow filters paint a Canadian
+          red halo around its alpha edges. The result reads as a rim-lit
+          backglow in the shape of the leaf rather than a flat red sticker. */}
       <div
         aria-hidden
         className="absolute z-[2] inset-y-0 right-0 hidden md:flex items-center pointer-events-none"
         style={{ width: "min(46vw, 620px)" }}
       >
-        <MapleLeaf
-          className="w-full h-auto max-h-[68vh] mr-[-6vw] drop-shadow-[0_18px_48px_rgba(0,0,0,0.45)]"
-          fill="#D52B1E"
-          opacity={0.18}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/maple-leaf.webp"
+          alt=""
+          className="w-full h-auto max-h-[68vh] mr-[-6vw]"
+          style={{
+            filter:
+              "brightness(0) drop-shadow(0 0 8px #D52B1E) drop-shadow(0 0 24px #D52B1E) drop-shadow(0 0 60px rgba(213,43,30,0.55)) drop-shadow(0 0 120px rgba(213,43,30,0.35))",
+            opacity: 0.95,
+          }}
         />
       </div>
 
