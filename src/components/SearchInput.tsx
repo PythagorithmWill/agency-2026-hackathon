@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export type SearchMode = "search" | "evaluate";
@@ -13,6 +13,10 @@ export type SearchMode = "search" | "evaluate";
  * Submit behavior:
  *   - Search → /search?q=<encoded>
  *   - Evaluate → /evaluate?draft=<encoded> (form pre-fills the textarea)
+ *
+ * The submit path uses router.push first, with a window.location.assign
+ * fallback so the navigation always lands even if a transition or
+ * hydration race swallows the router call.
  */
 export function SearchInput({
   initialMode = "search",
@@ -24,20 +28,28 @@ export function SearchInput({
   const router = useRouter();
   const [mode, setMode] = useState<SearchMode>(initialMode);
   const [query, setQuery] = useState(initialQuery);
-  const [, start] = useTransition();
 
   const onSubmit = () => {
     const q = query.trim();
     if (!q) return;
-    if (mode === "search") {
-      start(() => {
-        router.push((`/search?q=${encodeURIComponent(q)}`) as never);
-      });
-    } else {
-      const params = new URLSearchParams({ draft: q });
-      start(() => {
-        router.push((`/evaluate?${params.toString()}`) as never);
-      });
+    const target =
+      mode === "search"
+        ? `/search?q=${encodeURIComponent(q)}`
+        : `/evaluate?draft=${encodeURIComponent(q)}`;
+    try {
+      router.push(target as never);
+    } catch {
+      // ignore — fall through to hard nav
+    }
+    // Hard fallback: if the soft client-side push doesn't land in 250ms,
+    // force a real navigation. This unblocks any rare hydration/transition
+    // edge case so the search button is never a dead end.
+    if (typeof window !== "undefined") {
+      window.setTimeout(() => {
+        if (window.location.pathname + window.location.search !== target) {
+          window.location.assign(target);
+        }
+      }, 250);
     }
   };
 
@@ -89,6 +101,13 @@ export function SearchInput({
           <button
             type="submit"
             disabled={!query.trim()}
+            onClick={(e) => {
+              // Defensive: explicit click handler so the navigation fires
+              // even if the surrounding form's onSubmit doesn't bubble for
+              // any reason (Turbopack hydration edge cases, etc).
+              e.preventDefault();
+              onSubmit();
+            }}
             className="group self-center h-14 px-6 rounded-[8px] bg-[var(--color-accent)] text-[var(--color-bg)] text-[14px] font-semibold tracking-[0.01em] hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed inline-flex items-center gap-2"
           >
             {mode === "search" ? "Search" : "Evaluate"}
