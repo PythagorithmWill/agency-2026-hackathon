@@ -1,82 +1,100 @@
+"use client";
+
 import Image from "next/image";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { GlassboxWordmark } from "../brand/GlassboxMark";
 import { SearchInput } from "../SearchInput";
 
 /**
- * Hero. The Glassbox wordmark is the headline; the literal glass-box
- * photograph is the dominant visual. Subhead and search input sit below.
+ * Hero. The Glassbox wordmark sits on top of a full-bleed photograph of
+ * the box. Three parallax layers driven by scrollY:
+ *   1. Background image — drifts down ~22% of scroll distance (slowest)
+ *   2. Dark gradient overlay — deepens to bg colour as user scrolls
+ *   3. Foreground (wordmark + subhead + search) — drifts up + fades
  *
- * Image: public/glassbox-hero.jpeg — photograph of a glass cube
- * containing a network graph with money flows leaving the box.
- *
- * No framer-motion here — the in-flight animations were racing with
- * route navigation away from the homepage and triggering React
- * removeChild crashes (Next 15 + React 19 + framer 11). Reveal is
- * driven by CSS keyframes (`glassbox-fade-up`) which are
- * deterministic and don't observe the DOM.
+ * Only `useScroll` + `useTransform` hooks — no mount/unmount animations,
+ * because the prior `motion.div` enter animations raced with route
+ * navigation and triggered React removeChild crashes (Next 15 + React 19).
+ * Scroll-derived MotionValues stay attached for the lifetime of the node.
  */
 export function Hero() {
+  const reduce = useReducedMotion();
+  const { scrollY } = useScroll();
+
+  const bgY = useTransform(scrollY, [0, 800], ["0%", "22%"]);
+  const bgScale = useTransform(scrollY, [0, 800], [1.05, 1.15]);
+  const overlayOpacity = useTransform(scrollY, [0, 600], [0.55, 0.95]);
+  const contentY = useTransform(scrollY, [0, 600], [0, -120]);
+  const contentOpacity = useTransform(scrollY, [0, 500], [1, 0]);
+
   return (
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
-      <div className="atmosphere-drift" aria-hidden />
+      {/* Background image — slowest parallax layer */}
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 z-0"
+        style={reduce ? undefined : { y: bgY, scale: bgScale }}
+      >
+        <Image
+          src="/glassbox-hero.jpeg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+      </motion.div>
 
-      <div className="relative z-10 mx-auto w-full max-w-[1200px] px-6 pt-24 pb-12 text-center">
-        {/* Wordmark — the new "headline" */}
+      {/* Dark gradient overlay — deepens on scroll */}
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 z-[1] bg-gradient-to-b from-black/60 via-black/30 to-[var(--color-bg)]"
+        style={reduce ? undefined : { opacity: overlayOpacity }}
+      />
+
+      {/* Atmospheric drift accents */}
+      <div className="atmosphere-drift z-[2]" aria-hidden />
+
+      {/* Foreground — pulled up & fades as user scrolls */}
+      <motion.div
+        className="relative z-10 mx-auto w-full max-w-[1200px] px-6 pt-24 pb-12 text-center"
+        style={reduce ? undefined : { y: contentY, opacity: contentOpacity }}
+      >
         <div
           className="flex justify-center"
-          style={{ animation: "glassbox-fade-up 0.6s ease-out both" }}
+          style={{ animation: "glassbox-fade-up 0.7s ease-out both" }}
         >
-          <GlassboxWordmark size={96} className="text-[var(--color-fg)]" />
+          <GlassboxWordmark
+            size={140}
+            animateDraw
+            className="text-white drop-shadow-[0_6px_30px_rgba(0,0,0,0.6)]"
+          />
         </div>
 
-        {/* Hero image — the prominent feature */}
-        <div
-          className="relative mt-10 mx-auto w-full max-w-[1100px]"
-          style={{ animation: "glassbox-fade-up 0.8s ease-out 0.2s both" }}
-        >
-          <div className="relative rounded-xl overflow-hidden border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] shadow-[0_30px_120px_-20px_rgba(94,234,212,0.18),0_10px_40px_-10px_rgba(0,0,0,0.6)]">
-            <Image
-              src="/glassbox-hero.jpeg"
-              alt="A glass box on a plinth, containing a network of nodes with money flows visible passing through and exiting the box."
-              width={2752}
-              height={1536}
-              priority
-              sizes="(max-width: 1100px) 100vw, 1100px"
-              className="block w-full h-auto"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-b from-transparent to-[var(--color-bg)]/50"
-            />
-          </div>
-        </div>
-
-        {/* Subhead */}
         <p
-          className="mt-12 mx-auto max-w-[820px] text-[24px] leading-[34px] italic text-[var(--color-fg-muted)]"
-          style={{ animation: "glassbox-fade-up 0.5s ease-out 0.7s both" }}
+          className="mt-12 mx-auto max-w-[820px] text-[24px] leading-[34px] italic text-white/90 drop-shadow-[0_2px_14px_rgba(0,0,0,0.55)]"
+          style={{ animation: "glassbox-fade-up 0.6s ease-out 0.5s both" }}
         >
           Follow the money — federal grants, Alberta contracts, charity flows,
           sole-source amendments — across millions of records, in calibrated
           language, with full citation.
         </p>
 
-        {/* Search */}
         <div
           className="mt-12"
-          style={{ animation: "glassbox-fade-up 0.4s ease-out 1.0s both" }}
+          style={{ animation: "glassbox-fade-up 0.5s ease-out 0.9s both" }}
         >
           <SearchInput />
         </div>
-      </div>
+      </motion.div>
 
       {/* Scroll affordance */}
       <div
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)] flex flex-col items-center gap-2 z-10"
-        style={{ animation: "glassbox-fade-up 0.4s ease-out 1.4s both" }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] text-white/75 flex flex-col items-center gap-2 z-10"
+        style={{ animation: "glassbox-fade-up 0.4s ease-out 1.3s both" }}
       >
         <span>scroll</span>
-        <span className="scroll-arrow text-[var(--color-fg-muted)]">↓</span>
+        <span className="scroll-arrow text-white/85">↓</span>
       </div>
     </section>
   );

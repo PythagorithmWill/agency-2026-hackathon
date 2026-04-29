@@ -32,8 +32,12 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
       values: params as unknown[],
     });
   } catch (err: unknown) {
-    const code = (err as { code?: string }).code ?? "unknown";
-    console.error("[DB] query failed", { code, text: text.slice(0, 120) });
+    const e = err as { code?: string; name?: string; message?: string };
+    console.error("[DB] query failed:", e.message ?? String(err), {
+      code: e.code ?? "unknown",
+      name: e.name ?? "Error",
+      text: text.slice(0, 120),
+    });
     throw err;
   }
 }

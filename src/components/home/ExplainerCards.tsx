@@ -1,61 +1,40 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
-
 /**
- * Section B — three explainer cards under the hero with whileInView
- * stagger reveal.
+ * Section B — three explainer cards under the hero. CSS-keyframe reveal
+ * with staggered delays. No framer-motion (its whileInView observers
+ * raced with route navigation and crashed React's removeChild path).
  */
 export function ExplainerCards() {
-  const reduce = useReducedMotion();
-  const ease = [0.16, 1, 0.3, 1] as const;
-
-  const sectionVariants = reduce
-    ? undefined
-    : {
-        hidden: {},
-        visible: { transition: { staggerChildren: 0.08 } },
-      };
-
   return (
     <section className="mx-auto max-w-[1200px] px-6 md:px-16 py-32">
-      <motion.div
-        initial={reduce ? false : { opacity: 0, y: 12 }}
-        whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6, ease }}
-      >
+      <div style={{ animation: "glassbox-fade-up 0.6s ease-out both" }}>
         <h2 className="text-[clamp(40px,5vw,56px)] leading-[1.1] tracking-[-0.025em] font-medium">
           What this does.
         </h2>
         <p className="mt-4 italic text-[18px] leading-[28px] text-[var(--color-fg-muted)]">
           Three primary capabilities. One coherent product.
         </p>
-      </motion.div>
+      </div>
 
-      <motion.div
-        className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
-        variants={sectionVariants}
-      >
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card
+          index={0}
           title="Search the corpus"
           body="Query 1.27M federal records and 2.5M Alberta provincial records by topic, recipient, or program. Hybrid retrieval — keyword and semantic — every result is auditable to its source row."
           glyph={<MagnifierGlyph />}
         />
         <Card
+          index={1}
           title="Evaluate a draft"
           body="Paste a solicitation draft to surface duplication risk, recipient concentration, and calibrated-language issues before publishing — not after audit."
           glyph={<ClipboardCheckGlyph />}
         />
         <Card
+          index={2}
           title="Audit-ready trail"
           body="Every result, every score, every recommendation carries an audit token. Downloadable JSON. Independently verifiable."
           glyph={<ShieldCheckGlyph />}
         />
-      </motion.div>
+      </div>
     </section>
   );
 }
@@ -64,28 +43,16 @@ function Card({
   title,
   body,
   glyph,
+  index,
 }: {
   title: string;
   body: string;
   glyph: React.ReactNode;
+  index: number;
 }) {
-  const reduce = useReducedMotion();
-  const ease = [0.16, 1, 0.3, 1] as const;
   return (
-    <motion.article
-      variants={
-        reduce
-          ? undefined
-          : {
-              hidden: { opacity: 0, y: 24 },
-              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } },
-            }
-      }
-      whileHover={
-        reduce
-          ? undefined
-          : { y: -2, transition: { duration: 0.2, ease } }
-      }
+    <article
+      style={{ animation: `glassbox-fade-up 0.6s ease-out ${0.15 + index * 0.08}s both` }}
       className="group relative rounded-[24px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-8 min-h-[320px] transition-colors hover:bg-[var(--color-bg-elev-2)] hover:border-[var(--color-border-strong)]"
     >
       <div className="absolute top-7 right-7 text-[var(--color-fg-subtle)] group-hover:text-[var(--color-accent)] transition-colors duration-200">
@@ -97,7 +64,7 @@ function Card({
       <p className="mt-4 text-[16px] leading-[1.55] text-[var(--color-fg)]">
         {body}
       </p>
-    </motion.article>
+    </article>
   );
 }
 

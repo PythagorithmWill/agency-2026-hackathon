@@ -735,6 +735,95 @@ export interface RecipientProfileRow {
   fyRange: { start: number; end: number };
 }
 
+/* ─── golden-record lookup for cross-dataset entities ─────────────
+   The federal corpus alone misses CRA-only entities (charities) and
+   AB-only entities. general.entity_golden_records is the canonical
+   cross-dataset reconciliation produced by TRACE — every record links
+   its CRA / fed / AB / ab profiles where present.
+   ───────────────────────────────────────────────────────────────── */
+
+export interface GoldenRecordSummary {
+  id: number;
+  canonicalName: string;
+  entityType: string | null;
+  bnRoot: string | null;
+  bnVariants: string[];
+  datasetSources: string[];
+  sourceSummary: Record<string, number>;
+  /** Raw JSON profiles per data source — shape depends on dataset. */
+  craProfile: Record<string, unknown> | null;
+  fedProfile: Record<string, unknown> | null;
+  abProfile: Record<string, unknown> | null;
+  addresses: Array<Record<string, unknown>>;
+  aliases: Array<Record<string, unknown>>;
+  confidence: number;
+}
+
+interface GoldenRow {
+  id: number;
+  canonical_name: string;
+  entity_type: string | null;
+  bn_root: string | null;
+  bn_variants: string[] | null;
+  dataset_sources: string[] | null;
+  source_summary: Record<string, number> | null;
+  cra_profile: Record<string, unknown> | null;
+  fed_profile: Record<string, unknown> | null;
+  ab_profile: Record<string, unknown> | null;
+  addresses: Array<Record<string, unknown>> | null;
+  aliases: Array<Record<string, unknown>> | null;
+  confidence: string | number | null;
+}
+
+export async function loadGoldenRecord(
+  identifier: string,
+  budget: Budget = "fast",
+): Promise<GoldenRecordSummary | null> {
+  // identifier may be a full BN ("129253308RR0001") or a 9-digit root
+  // ("129253308") or a free-text legal name. Try BN matches first; fall
+  // back to canonical_name match.
+  const bnLooking = /^\d{9,}/.test(identifier);
+  const r = await run(budget)<GoldenRow>(
+    bnLooking
+      ? `SELECT id, canonical_name, entity_type, bn_root, bn_variants,
+                dataset_sources, source_summary,
+                cra_profile, fed_profile, ab_profile,
+                addresses, aliases, confidence
+           FROM general.entity_golden_records
+          WHERE bn_root = $1
+             OR $1 = ANY(bn_variants)
+          ORDER BY source_link_count DESC NULLS LAST
+          LIMIT 1`
+      : `SELECT id, canonical_name, entity_type, bn_root, bn_variants,
+                dataset_sources, source_summary,
+                cra_profile, fed_profile, ab_profile,
+                addresses, aliases, confidence
+           FROM general.entity_golden_records
+          WHERE canonical_name = $1
+             OR norm_name = upper($1)
+          ORDER BY source_link_count DESC NULLS LAST
+          LIMIT 1`,
+    [bnLooking ? identifier.replace(/RR\d+$/i, "") : identifier],
+  );
+  const row = r.rows[0];
+  if (!row) return null;
+  return {
+    id: row.id,
+    canonicalName: row.canonical_name,
+    entityType: row.entity_type,
+    bnRoot: row.bn_root,
+    bnVariants: row.bn_variants ?? [],
+    datasetSources: row.dataset_sources ?? [],
+    sourceSummary: row.source_summary ?? {},
+    craProfile: row.cra_profile,
+    fedProfile: row.fed_profile,
+    abProfile: row.ab_profile,
+    addresses: row.addresses ?? [],
+    aliases: row.aliases ?? [],
+    confidence: Number(row.confidence) || 0,
+  };
+}
+
 /**
  * Recipient lookup by BN. The corpus uses recipient_business_number as
  * the canonical identifier; recipient_legal_name varies (translation,

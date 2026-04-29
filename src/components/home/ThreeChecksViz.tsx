@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
 import { CountUp } from "../motion/CountUp";
 
 const COLUMNS = [
@@ -31,42 +29,34 @@ const COLUMNS = [
 ] as const;
 
 /**
- * Section C — the dynamic showpiece. Three columns animate in on viewport
- * entry: glyphs fade in with stagger, bars draw left-to-right with their
- * numbers counting up, then convergence lines draw to a single score badge
- * showing "= 14/30".
+ * Section C — three columns, three score bars, one composite badge.
+ * Reveal animations are CSS-driven (glassbox-fade-up) gated by the
+ * parent ScrollReveal wrapper. Bar fills + lines use CSS keyframes
+ * (`bar-fill`, `convergence-draw`) so no framer-motion is involved.
+ *
+ * Removed framer-motion useInView entirely — its observers race with
+ * route navigation and trigger React removeChild crashes (Next 15 +
+ * React 19 + framer 11). The visual sequence is preserved.
  */
 export function ThreeChecksViz() {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
-  const ease = [0.16, 1, 0.3, 1] as const;
-
   return (
-    <section className="mx-auto max-w-[1200px] px-6 md:px-16 py-32" ref={ref}>
-      <motion.div
-        initial={reduce ? false : { opacity: 0, y: 12 }}
-        animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6, ease }}
-        className="text-center"
-      >
+    <section className="mx-auto max-w-[1200px] px-6 md:px-16 py-32">
+      <div className="text-center" style={{ animation: "glassbox-fade-up 0.6s ease-out both" }}>
         <h2 className="text-[clamp(48px,6vw,72px)] leading-[1.05] tracking-[-0.03em] font-semibold">
           Three checks. One score.
         </h2>
         <p className="mt-4 mx-auto max-w-[600px] italic text-[18px] leading-[28px] text-[var(--color-fg-muted)]">
-          Every draft is evaluated against four dimensions. The composite
-          score is the recommendation.
+          Every draft is evaluated against four dimensions. The composite score
+          is the recommendation.
         </p>
-      </motion.div>
+      </div>
 
       <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-12">
         {COLUMNS.map((col, i) => (
-          <motion.div
+          <div
             key={col.id}
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: i * 0.08, duration: 0.6, ease }}
             className="flex flex-col items-start"
+            style={{ animation: `glassbox-fade-up 0.6s ease-out ${0.15 + i * 0.08}s both` }}
           >
             <ColumnGlyph kind={col.glyph} />
             <div className="mt-6 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
@@ -76,34 +66,22 @@ export function ThreeChecksViz() {
               {col.description}
             </p>
             <div className="mt-6 w-full">
-              <BarFill
-                target={col.value}
-                triggered={inView}
-                delayMs={400 + i * 60}
-              />
+              <BarFill target={col.value} delaySec={0.4 + i * 0.06} />
             </div>
             <div className="mt-3 font-[var(--font-mono)] text-[36px] leading-none tracking-[-0.02em] text-[var(--color-fg)]">
-              <CountUp
-                to={col.value}
-                durationMs={1200}
-                decimals={2}
-                startOnView
-              />
+              <CountUp to={col.value} durationMs={1200} decimals={2} startOnView />
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
-      {/* Convergence + score badge */}
       <div className="relative mt-12 flex justify-center">
-        <ConvergenceSvg triggered={inView} />
+        <ConvergenceSvg />
       </div>
 
-      <motion.div
-        initial={reduce ? false : { opacity: 0, scale: 0.9 }}
-        animate={inView ? { opacity: 1, scale: 1 } : {}}
-        transition={{ delay: 1.6, duration: 0.4, ease }}
+      <div
         className="mt-2 flex justify-center"
+        style={{ animation: "glassbox-fade-up 0.4s ease-out 1.6s both" }}
       >
         <div className="px-8 h-20 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-bg-elev-2)] border border-[var(--color-border-strong)]">
           <span className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
@@ -116,60 +94,39 @@ export function ThreeChecksViz() {
             / 30
           </span>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }
 
-function BarFill({
-  target,
-  triggered,
-  delayMs,
-}: {
-  target: number;
-  triggered: boolean;
-  delayMs: number;
-}) {
-  const reduce = useReducedMotion();
+function BarFill({ target, delaySec }: { target: number; delaySec: number }) {
   return (
     <div className="h-2 w-full bg-[var(--color-border)] rounded-full overflow-hidden">
-      <motion.div
-        initial={{ width: 0 }}
-        animate={triggered ? { width: `${target * 100}%` } : { width: 0 }}
-        transition={{
-          delay: reduce ? 0 : delayMs / 1000,
-          duration: reduce ? 0 : 0.8,
-          ease: [0.16, 1, 0.3, 1],
-        }}
+      <div
         className="h-full rounded-full bg-[var(--color-accent)]"
+        style={{
+          width: `${target * 100}%`,
+          transformOrigin: "left center",
+          animation: `bar-fill 0.8s cubic-bezier(0.16,1,0.3,1) ${delaySec}s both`,
+        }}
       />
     </div>
   );
 }
 
 /** Three converging lines from each column's bottom-center down to a
- *  single point, then a vertical drop to where the badge will render.
- *  Lines draw in sequence on viewport entry. */
-function ConvergenceSvg({ triggered }: { triggered: boolean }) {
-  const reduce = useReducedMotion();
-  // Box: 0..900 wide × 120 tall. Three column anchors + one convergence
-  // anchor + drop line.
+ *  single point, then a vertical drop. Pure CSS stroke-dashoffset draw. */
+function ConvergenceSvg() {
   const cols = [150, 450, 750];
   const conv = { x: 450, y: 80 };
   const anchorY = 8;
-  const lineLength = (x: number) =>
-    Math.hypot(conv.x - x, conv.y - anchorY);
 
   return (
-    <svg
-      viewBox="0 0 900 130"
-      className="w-full max-w-[780px] h-[130px]"
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 900 130" className="w-full max-w-[780px] h-[130px]" aria-hidden="true">
       {cols.map((x, i) => {
-        const len = lineLength(x);
+        const len = Math.hypot(conv.x - x, conv.y - anchorY);
         return (
-          <motion.line
+          <line
             key={x}
             x1={x}
             y1={anchorY}
@@ -178,40 +135,29 @@ function ConvergenceSvg({ triggered }: { triggered: boolean }) {
             stroke="var(--color-border-strong)"
             strokeWidth="1"
             strokeLinecap="round"
-            initial={{ strokeDasharray: len, strokeDashoffset: len }}
-            animate={
-              triggered
-                ? {
-                    strokeDashoffset: 0,
-                    transition: {
-                      delay: reduce ? 0 : 1.0 + i * 0.08,
-                      duration: reduce ? 0 : 0.6,
-                      ease: [0.16, 1, 0.3, 1],
-                    },
-                  }
-                : { strokeDashoffset: len }
-            }
-          />
+            style={{
+              strokeDasharray: len,
+              strokeDashoffset: len,
+              animation: `convergence-draw-${len.toFixed(0)} 0.6s cubic-bezier(0.16,1,0.3,1) ${1.0 + i * 0.08}s forwards`,
+            }}
+          >
+            <style>{`@keyframes convergence-draw-${len.toFixed(0)} { to { stroke-dashoffset: 0; } }`}</style>
+          </line>
         );
       })}
-      <motion.circle
+      <circle
         cx={conv.x}
         cy={conv.y}
         r="3"
         fill="var(--color-accent)"
-        initial={{ opacity: 0, scale: 0.6 }}
-        animate={
-          triggered
-            ? {
-                opacity: 1,
-                scale: 1,
-                transition: { delay: reduce ? 0 : 1.4, duration: 0.3 },
-              }
-            : { opacity: 0 }
-        }
-        style={{ transformOrigin: `${conv.x}px ${conv.y}px` }}
+        style={{
+          opacity: 0,
+          transformOrigin: `${conv.x}px ${conv.y}px`,
+          transform: "scale(0.6)",
+          animation: "convergence-dot 0.3s ease-out 1.4s forwards",
+        }}
       />
-      <motion.line
+      <line
         x1={conv.x}
         y1={conv.y}
         x2={conv.x}
@@ -219,26 +165,17 @@ function ConvergenceSvg({ triggered }: { triggered: boolean }) {
         stroke="var(--color-accent)"
         strokeWidth="1"
         strokeLinecap="round"
-        initial={{ strokeDasharray: 40, strokeDashoffset: 40 }}
-        animate={
-          triggered
-            ? {
-                strokeDashoffset: 0,
-                transition: {
-                  delay: reduce ? 0 : 1.5,
-                  duration: reduce ? 0 : 0.3,
-                  ease: [0.16, 1, 0.3, 1],
-                },
-              }
-            : { strokeDashoffset: 40 }
-        }
+        style={{
+          strokeDasharray: 40,
+          strokeDashoffset: 40,
+          animation: "convergence-drop 0.3s cubic-bezier(0.16,1,0.3,1) 1.5s forwards",
+        }}
       />
     </svg>
   );
 }
 
 function ColumnGlyph({ kind }: { kind: string }) {
-  // Reuse the existing glyph set with consistent sizing
   const props = {
     width: 36,
     height: 36,

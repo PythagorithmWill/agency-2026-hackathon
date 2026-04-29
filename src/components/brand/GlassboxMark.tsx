@@ -49,9 +49,12 @@ export function GlassboxMark({
 export function GlassboxWordmark({
   className,
   size = 30,
+  animateDraw = false,
 }: {
   className?: string;
   size?: number;
+  /** When true, the cube edges draw themselves in over ~1.4s on mount. */
+  animateDraw?: boolean;
 }) {
   // Cube viewport ≈ same em as a lowercase "o" plus a small overshoot for
   // the back face. We render an isometric wireframe with three visible faces.
@@ -83,7 +86,7 @@ export function GlassboxWordmark({
           position: "relative",
         }}
       >
-        <CubeWireframe size={cubeSize} />
+        <CubeWireframe size={cubeSize} animateDraw={animateDraw} />
       </span>
       {/* "x" */}
       <span>x</span>
@@ -96,7 +99,7 @@ export function GlassboxWordmark({
  * as a single SVG path so the strokes share corners cleanly. Stroke matches
  * `currentColor` so the wordmark colour governs.
  */
-function CubeWireframe({ size }: { size: number }) {
+function CubeWireframe({ size, animateDraw = false }: { size: number; animateDraw?: boolean }) {
   // Build a 100-unit isometric cube and let the SVG scale to `size`.
   // Front face: a square offset from the back-top.
   // Top face: rhombus from the back-top back-right.
@@ -127,11 +130,11 @@ function CubeWireframe({ size }: { size: number }) {
       aria-label="cube"
     >
       {/* Front face square */}
-      <path d="M 18 38 L 18 88 L 68 88 L 68 38 Z" />
+      <path d="M 18 38 L 18 88 L 68 88 L 68 38 Z" className={animateDraw ? "cube-draw cube-draw-1" : undefined} />
       {/* Top face rhombus */}
-      <path d="M 18 38 L 38 18 L 88 18 L 68 38" />
+      <path d="M 18 38 L 38 18 L 88 18 L 68 38" className={animateDraw ? "cube-draw cube-draw-2" : undefined} />
       {/* Right face rhombus */}
-      <path d="M 68 38 L 88 18 L 88 68 L 68 88" />
+      <path d="M 68 38 L 88 18 L 88 68 L 68 88" className={animateDraw ? "cube-draw cube-draw-3" : undefined} />
       {/* Hidden edges — drawn at lower opacity so the cube reads as 3-D
           rather than as a flat hexagon. */}
       <g stroke="currentColor" strokeWidth={stroke * 0.7} opacity="0.35">

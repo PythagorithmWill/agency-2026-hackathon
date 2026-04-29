@@ -3,6 +3,7 @@ import { amendmentPurposeDriftDetector } from "./amendment-purpose-drift";
 import { soleSourceCreepDetector } from "./sole-source-creep";
 import { zombieRecipientsDetector } from "./zombie-recipients";
 import { vendorConcentrationDetector } from "./vendor-concentration";
+import { ghostCapacityDetector } from "./ghost-capacity";
 import { PATTERNS } from "./registry";
 import type { PatternDetector } from "./types";
 
@@ -18,6 +19,7 @@ const REGISTRY: Record<string, PatternDetector> = {
   "sole-source-creep": soleSourceCreepDetector,
   "zombie-recipients": zombieRecipientsDetector,
   "vendor-concentration": vendorConcentrationDetector,
+  "ghost-capacity": ghostCapacityDetector,
 };
 
 export function getDetector(patternId: string): PatternDetector | null {

@@ -52,11 +52,11 @@ export const PATTERNS: PatternDef[] = [
     name: "Ghost Capacity",
     challenge: 2,
     definition:
-      "The dataset shows entities persisting with no employees, no physical presence, and revenue almost entirely from government transfers — indefinite paper-only operations.",
+      "The dataset shows entities receiving substantial federal funding with no recorded business identity — recipients the federal government cannot independently identify.",
     signal:
-      "0 employees + 0 addresses + ≥ 90% revenue from government + filed 3+ consecutive years (CRA t3010)",
-    attribution: "TRACE",
-    status: "beta",
+      "recipient_business_number IS NULL · is_amendment = false · total funding ≥ $500K. Severity scales by total $ and departmental spread.",
+    attribution: "BOTH",
+    status: "live",
     order: 2,
   },
   {

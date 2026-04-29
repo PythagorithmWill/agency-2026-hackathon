@@ -5,6 +5,8 @@ import {
   loadRecipientByDepartment,
   loadRecipientAgreements,
   loadTemporalSeriesFed,
+  loadGoldenRecord,
+  type GoldenRecordSummary,
 } from "@/lib/analytics/queries";
 import { AnimatedBar } from "@/components/viz/AnimatedBar";
 import { AnimatedAreaChart } from "@/components/viz/AnimatedAreaChart";
@@ -26,7 +28,9 @@ export async function generateMetadata({ params }: { params: Promise<{ bn: strin
   const { bn } = await params;
   const decoded = decodeURIComponent(bn);
   const profile = await loadRecipientProfile(decoded).catch(() => null);
-  return { title: profile ? `${profile.legalName} — Glassbox` : "Recipient — Glassbox" };
+  if (profile) return { title: `${profile.legalName} — Glassbox` };
+  const golden = await loadGoldenRecord(decoded).catch(() => null);
+  return { title: golden ? `${golden.canonicalName} — Glassbox` : "Recipient — Glassbox" };
 }
 
 export default async function RecipientPage({
@@ -37,6 +41,7 @@ export default async function RecipientPage({
   const { bn } = await params;
   const identifier = decodeURIComponent(bn);
 
+  // Try federal-corpus lookup first.
   const [profileR, byDeptR, agreementsR, seriesR] = await Promise.allSettled([
     loadRecipientProfile(identifier),
     loadRecipientByDepartment(identifier),
@@ -45,27 +50,61 @@ export default async function RecipientPage({
   ]);
 
   const profile = profileR.status === "fulfilled" ? profileR.value : null;
-  if (!profile) notFound();
-
   const byDept = byDeptR.status === "fulfilled" ? byDeptR.value : [];
   const agreements = agreementsR.status === "fulfilled" ? agreementsR.value : [];
   const series = seriesR.status === "fulfilled" ? seriesR.value : null;
 
+  if (profile) {
+    return (
+      <FederalRecipientView
+        profile={profile}
+        byDept={byDept}
+        agreements={agreements}
+        series={series}
+      />
+    );
+  }
+
+  // Federal lookup empty — fall back to the cross-dataset canonical record.
+  // Surfaces CRA-only (charity) and AB-only entities reached via funding-loop
+  // matches, ghost-capacity matches, etc.
+  const golden = await loadGoldenRecord(identifier).catch(() => null);
+  if (!golden) notFound();
+  return <GoldenRecordView golden={golden} identifier={identifier} />;
+}
+
+/* ─── Federal-corpus view (existing behaviour) ───────────────────── */
+
+type FedProfile = NonNullable<Awaited<ReturnType<typeof loadRecipientProfile>>>;
+type FedByDept = Awaited<ReturnType<typeof loadRecipientByDepartment>>;
+type FedAgreements = Awaited<ReturnType<typeof loadRecipientAgreements>>;
+type FedSeries = Awaited<ReturnType<typeof loadTemporalSeriesFed>>;
+
+function FederalRecipientView({
+  profile,
+  byDept,
+  agreements,
+  series,
+}: {
+  profile: FedProfile;
+  byDept: FedByDept;
+  agreements: FedAgreements;
+  series: FedSeries | null;
+}) {
   return (
     <main className="min-h-screen pt-16">
-      {/* Hero */}
       <section className="relative border-b border-[var(--color-border)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
         <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-24 pb-12">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-            Glassbox · recipient profile
+            Glassbox · recipient profile · federal
           </div>
           <h1 className="mt-4 text-[var(--text-display-md)] leading-[0.95] tracking-[var(--tracking-display-md)]">
             {profile.legalName}
           </h1>
           <div className="mt-3 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)] flex flex-wrap gap-x-6 gap-y-1">
             {profile.bn && <span>BN {profile.bn}</span>}
-            {profile.province && <span>Recipient province · {profile.province}</span>}
+            {profile.province && <span>Province · {profile.province}</span>}
           </div>
           <p className="mt-6 max-w-[720px] text-[var(--text-body-lg)] text-[var(--color-fg-muted)]">
             The dataset shows {compactDollar(profile.totalReceived)} in federal grants and
@@ -78,7 +117,6 @@ export default async function RecipientPage({
         </div>
       </section>
 
-      {/* KPI strip */}
       <section className="mx-auto max-w-[1280px] px-6 pt-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Stat label="Total received" value={compactDollar(profile.totalReceived)} />
@@ -88,9 +126,7 @@ export default async function RecipientPage({
         </div>
       </section>
 
-      {/* Content */}
       <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-8">
-        {/* Trajectory */}
         <Card
           title="Receiving trajectory"
           subtitle="Federal money received, by fiscal year of agreement start date."
@@ -107,7 +143,6 @@ export default async function RecipientPage({
           )}
         </Card>
 
-        {/* By department */}
         <Card title="By funding department">
           {byDept.length > 0 ? (
             <AnimatedBar
@@ -123,7 +158,6 @@ export default async function RecipientPage({
           )}
         </Card>
 
-        {/* Agreements table */}
         <Card title="Top 50 agreements" subtitle="Sorted by current value (descending).">
           {agreements.length > 0 ? (
             <div className="overflow-x-auto -mx-6 px-6">
@@ -146,9 +180,7 @@ export default async function RecipientPage({
                       <td className="py-2 pr-4 max-w-[260px] truncate text-[var(--color-fg-muted)]">
                         {a.department}
                       </td>
-                      <td className="py-2 pr-4 max-w-[280px] truncate">
-                        {a.program ?? "—"}
-                      </td>
+                      <td className="py-2 pr-4 max-w-[280px] truncate">{a.program ?? "—"}</td>
                       <td className="py-2 pr-4 text-right font-[var(--font-mono)] tabular-nums">
                         {dollar.format(a.value)}
                       </td>
@@ -174,20 +206,168 @@ export default async function RecipientPage({
         </Card>
       </section>
 
-      <section className="border-t border-[var(--color-border)] py-8">
-        <div className="mx-auto max-w-[1280px] px-6 flex flex-wrap items-baseline justify-between gap-4">
-          <Link
-            href={"/transparency/recipients" as never}
-            className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"
-          >
-            ← Recipient concentration
-          </Link>
-          <div className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
-            Source: fed.grants_contributions · current amendment per record
+      <RecipientFooter />
+    </main>
+  );
+}
+
+/* ─── Cross-dataset (golden record) fallback view ────────────────── */
+
+function GoldenRecordView({
+  golden,
+  identifier,
+}: {
+  golden: GoldenRecordSummary;
+  identifier: string;
+}) {
+  const cra = (golden.craProfile ?? {}) as Record<string, unknown>;
+  const fed = (golden.fedProfile ?? {}) as Record<string, unknown>;
+  const ab = (golden.abProfile ?? {}) as Record<string, unknown>;
+
+  const totalCra = Number(cra.total_revenue ?? cra.total_received ?? 0) || 0;
+  const totalFed = Number(fed.total_grants ?? fed.total_received ?? 0) || 0;
+  const totalAb = Number(ab.total_grants ?? ab.total_received ?? 0) || 0;
+  const total = totalCra + totalFed + totalAb;
+
+  return (
+    <main className="min-h-screen pt-16">
+      <section className="relative border-b border-[var(--color-border)] overflow-hidden">
+        <div className="atmosphere-drift" aria-hidden />
+        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-24 pb-12">
+          <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+            Glassbox · recipient profile · cross-dataset
           </div>
+          <h1 className="mt-4 text-[var(--text-display-md)] leading-[0.95] tracking-[var(--tracking-display-md)]">
+            {golden.canonicalName}
+          </h1>
+          <div className="mt-3 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)] flex flex-wrap gap-x-6 gap-y-1">
+            {golden.entityType && <span>Type · {golden.entityType}</span>}
+            {golden.bnRoot && <span>BN root · {golden.bnRoot}</span>}
+            {golden.confidence > 0 && (
+              <span>Match confidence · {(golden.confidence * 100).toFixed(0)}%</span>
+            )}
+          </div>
+          <p className="mt-6 max-w-[760px] text-[var(--text-body-lg)] text-[var(--color-fg-muted)]">
+            The dataset shows this entity in {golden.datasetSources.length}{" "}
+            {golden.datasetSources.length === 1 ? "source" : "sources"} (
+            {golden.datasetSources.join(", ")}). Identifier looked up:{" "}
+            <code className="font-[var(--font-mono)] text-[13px] text-[var(--color-accent)]">
+              {identifier}
+            </code>
+            .
+          </p>
         </div>
       </section>
+
+      <section className="mx-auto max-w-[1280px] px-6 pt-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Stat label="Total across sources" value={compactDollar(total)} />
+          <Stat
+            label="Source link count"
+            value={Object.values(golden.sourceSummary).reduce((s, n) => s + Number(n || 0), 0).toLocaleString("en-CA")}
+          />
+          <Stat label="BN variants" value={golden.bnVariants.length.toLocaleString("en-CA")} />
+          <Stat
+            label="Aliases"
+            value={golden.aliases.length.toLocaleString("en-CA")}
+          />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-8">
+        <Card
+          title="Source breakdown"
+          subtitle="Per-dataset record counts for this entity."
+        >
+          {Object.keys(golden.sourceSummary).length > 0 ? (
+            <AnimatedBar
+              rows={Object.entries(golden.sourceSummary).map(([k, n]) => ({
+                label: k,
+                value: Number(n) || 0,
+                sublabel: `${Number(n).toLocaleString("en-CA")} records`,
+              }))}
+              format="number"
+            />
+          ) : (
+            <Empty />
+          )}
+        </Card>
+
+        {golden.craProfile && (
+          <Card title="CRA T3010 profile">
+            <PreJson value={golden.craProfile} />
+          </Card>
+        )}
+
+        {golden.fedProfile && (
+          <Card title="Federal grants profile">
+            <PreJson value={golden.fedProfile} />
+          </Card>
+        )}
+
+        {golden.abProfile && (
+          <Card title="Alberta provincial profile">
+            <PreJson value={golden.abProfile} />
+          </Card>
+        )}
+
+        {golden.bnVariants.length > 0 && (
+          <Card title="Known BN variants" subtitle="All business-number forms recorded for this entity.">
+            <ul className="flex flex-wrap gap-2">
+              {golden.bnVariants.map((v) => (
+                <li
+                  key={v}
+                  className="font-[var(--font-mono)] text-[12px] px-2.5 py-1 rounded-md bg-[var(--color-bg-elev-2)] border border-[var(--color-border)]"
+                >
+                  {v}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+      </section>
+
+      <RecipientFooter />
     </main>
+  );
+}
+
+function PreJson({ value }: { value: Record<string, unknown> }) {
+  const lines = Object.entries(value).map(([k, v]) => ({
+    k,
+    v: typeof v === "object" ? JSON.stringify(v) : String(v ?? "—"),
+  }));
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-[13px]">
+      {lines.map(({ k, v }) => (
+        <div key={k} className="border-b border-[var(--color-border)] py-2">
+          <div className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
+            {k}
+          </div>
+          <div className="mt-1 font-[var(--font-mono)] text-[12px] text-[var(--color-fg)] break-words">
+            {v.length > 240 ? v.slice(0, 240) + "…" : v}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RecipientFooter() {
+  return (
+    <section className="border-t border-[var(--color-border)] py-8">
+      <div className="mx-auto max-w-[1280px] px-6 flex flex-wrap items-baseline justify-between gap-4">
+        <Link
+          href={"/transparency/recipients" as never}
+          className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"
+        >
+          ← Recipient concentration
+        </Link>
+        <div className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
+          Source: fed.grants_contributions + general.entity_golden_records
+        </div>
+      </div>
+    </section>
   );
 }
 
