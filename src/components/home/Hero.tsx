@@ -71,14 +71,29 @@ export function Hero() {
           />
         </div>
 
-        <p
-          className="mt-12 mx-auto max-w-[820px] text-[24px] leading-[34px] italic text-white/90 drop-shadow-[0_2px_14px_rgba(0,0,0,0.55)]"
+        <div
+          className="mt-12 mx-auto max-w-[920px] relative"
           style={{ animation: "glassbox-fade-up 0.6s ease-out 0.5s both" }}
         >
-          Follow the money — federal grants, Alberta contracts, charity flows,
-          sole-source amendments — across millions of records, in calibrated
-          language, with full citation.
-        </p>
+          {/* Reading surface — soft dark plate with feathered edges so the
+              subhead reads cleanly over the busy network-graph centre of the
+              hero photograph without becoming a hard card. */}
+          <div
+            aria-hidden
+            className="absolute inset-0 rounded-2xl pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 90% at 50% 50%, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.62) 45%, rgba(10,10,10,0.18) 80%, transparent 100%)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+            }}
+          />
+          <p className="relative px-8 py-7 text-[24px] leading-[34px] italic text-white text-center">
+            Follow the money — federal grants, Alberta contracts, charity flows,
+            sole-source amendments — across millions of records, in calibrated
+            language, with full citation.
+          </p>
+        </div>
 
         <div
           className="mt-12"
