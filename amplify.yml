@@ -1,0 +1,26 @@
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            # Materialise build-time env vars into .env.production so the
+            # Next.js standalone server can load them at Lambda invoke time.
+            # Amplify branch-level environment variables don't reliably
+            # propagate to the SSR Compute runtime; baking them into the
+            # build artifact via .env.production sidesteps that.
+            - echo "DATABASE_URL=$DATABASE_URL" > .env.production
+            - echo "NODE_ENV=production" >> .env.production
+            - echo "NEXT_TELEMETRY_DISABLED=1" >> .env.production
+            - npm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+          - .next/cache/**/*
