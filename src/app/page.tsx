@@ -1,5 +1,6 @@
 import { Hero } from "@/components/home/Hero";
 import { ScrollReveal } from "@/components/home/ScrollReveal";
+import { IntroSection } from "@/components/home/IntroSection";
 import { FollowTheMoneySection } from "@/components/home/FollowTheMoneySection";
 import { ExplainerCards } from "@/components/home/ExplainerCards";
 import { ThreeChecksViz } from "@/components/home/ThreeChecksViz";
@@ -12,6 +13,9 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <Hero />
+      <ScrollReveal>
+        <IntroSection />
+      </ScrollReveal>
       <ScrollReveal>
         <FollowTheMoneySection />
       </ScrollReveal>
