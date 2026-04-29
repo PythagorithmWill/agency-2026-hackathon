@@ -620,6 +620,47 @@ export function enrichRecommendation(draft: RecommendationDraft): Recommendation
   };
 }
 
+/**
+ * Topologically push each dependent's start date to be at least as late
+ * as its predecessor's end date. Without this, recs in the same priority
+ * bucket all start on the same day regardless of dependencies — useless
+ * for capital planning. Runs in O(N²) over the DAG which is fine for the
+ * handful of recommendations Glassbox emits.
+ *
+ * Cycles in the dependency graph would loop forever; we cap iterations
+ * at 2 × N as a safety net (the hand-curated DAG has no cycles today).
+ */
+function cascadeTimelines(recs: Recommendation[]): Recommendation[] {
+  const byId = new Map(recs.map((r) => [r.id, r] as const));
+  const maxIters = recs.length * 2;
+  let changed = true;
+  let iter = 0;
+  while (changed && iter < maxIters) {
+    changed = false;
+    iter++;
+    for (const r of recs) {
+      let earliestStart = r.timeline.startOffsetDays;
+      for (const depId of r.dependsOn) {
+        const dep = byId.get(depId);
+        if (!dep) continue;
+        const depEnd = dep.timeline.startOffsetDays + dep.timeline.durationDays;
+        // Allow a 14-day overlap so dependents can begin discovery while the
+        // predecessor finishes its closeout. Capital plans rarely require
+        // 100% sequential execution — discovery overlap is the realistic case.
+        const minStart = Math.max(0, depEnd - 14);
+        if (minStart > earliestStart) earliestStart = minStart;
+      }
+      if (earliestStart !== r.timeline.startOffsetDays) {
+        r.timeline.startOffsetDays = earliestStart;
+        // Milestones are relative to the bar's start, so they shift
+        // automatically — no recomputation needed for offsetDays values.
+        changed = true;
+      }
+    }
+  }
+  return recs;
+}
+
 /* ─── public API ─────────────────────────────────────────────────── */
 
 export function buildRecommendations(args: BuildArgs): Recommendation[] {
@@ -632,8 +673,12 @@ export function buildRecommendations(args: BuildArgs): Recommendation[] {
     ...recsFromAmendmentDrift(args.amendmentDrift),
   ];
   const enriched = drafts.map(enrichRecommendation);
+  // Push dependents' start dates so dependencies actually cascade.
+  // Without this, every "now" rec starts on day 0 in parallel, which
+  // misrepresents the real execution sequence on the Gantt.
+  const cascaded = cascadeTimelines(enriched);
   // Prioritise by severity desc, then dollars desc.
-  return enriched.sort((a, b) => {
+  return cascaded.sort((a, b) => {
     const sev = severityRank(b.severity) - severityRank(a.severity);
     if (sev !== 0) return sev;
     return b.dollarsAtStake - a.dollarsAtStake;
