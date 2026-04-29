@@ -32,7 +32,7 @@ export function ProofTokenStrip({ token }: { token: ProofToken }) {
   return (
     <div>
       <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-        Pythagorithm Proof · {token.proofId}
+        Audit token · {token.proofId}
       </div>
       <motion.div
         className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-4"

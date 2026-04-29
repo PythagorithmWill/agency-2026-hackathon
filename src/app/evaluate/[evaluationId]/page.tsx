@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { loadEvaluation } from "@/lib/evaluate/store";
 import { EvaluationView } from "@/components/evaluate/EvaluationView";
 
@@ -13,15 +12,7 @@ export default async function EvaluationResultPage({
   if (!result) notFound();
 
   return (
-    <main>
-      <header className="mx-auto max-w-[1440px] px-8 pt-8 flex items-baseline justify-between font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-        <Link href={"/" as never} className="hover:text-[var(--color-fg)]">
-          ← Pythagorithm
-        </Link>
-        <Link href={"/evaluate" as never} className="hover:text-[var(--color-fg)]">
-          New evaluation
-        </Link>
-      </header>
+    <main className="pt-16">
       <EvaluationView result={result} />
     </main>
   );

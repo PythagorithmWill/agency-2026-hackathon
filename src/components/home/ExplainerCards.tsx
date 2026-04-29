@@ -42,7 +42,7 @@ export function ExplainerCards() {
       >
         <Card
           title="Search the corpus"
-          body="Query 1.27M federal records and 47K Alberta records by topic, recipient, or program. Hybrid retrieval — keyword and semantic — every result is auditable to its source row."
+          body="Query 1.27M federal records and 2.5M Alberta provincial records by topic, recipient, or program. Hybrid retrieval — keyword and semantic — every result is auditable to its source row."
           glyph={<MagnifierGlyph />}
         />
         <Card
@@ -52,7 +52,7 @@ export function ExplainerCards() {
         />
         <Card
           title="Audit-ready trail"
-          body="Every result, every score, every recommendation carries a Pythagorithm Proof token. Downloadable JSON. Independently verifiable."
+          body="Every result, every score, every recommendation carries an audit token. Downloadable JSON. Independently verifiable."
           glyph={<ShieldCheckGlyph />}
         />
       </motion.div>

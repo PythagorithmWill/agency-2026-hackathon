@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { findProofTokenById } from "@/lib/proofRegistry";
 import { proofTokenCompleteness, type Violation } from "@/lib/gov/validators";
 
@@ -24,19 +23,10 @@ export default async function VerifyPage({
   ];
 
   return (
-    <main className="min-h-screen">
-      <header className="mx-auto max-w-[1440px] px-8 pt-8 flex items-baseline justify-between font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-        <Link href={"/" as never} className="hover:text-[var(--color-fg)]">
-          ← Pythagorithm
-        </Link>
-        <Link href={"/methodology" as never} className="hover:text-[var(--color-fg)]">
-          Methodology
-        </Link>
-      </header>
-
+    <main className="min-h-screen pt-16">
       <article className="mx-auto max-w-[760px] px-6 py-16">
         <div className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-          Verify Proof token
+          Verify audit token
         </div>
         <h1 className="mt-6 text-[var(--text-display-md)] tracking-[var(--tracking-display-md)] font-semibold leading-[52px]">
           {found.subjectName}
@@ -110,7 +100,7 @@ export default async function VerifyPage({
         )}
 
         <section className="mt-16 font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)] leading-[1.6]">
-          Validator version: PYTH-GOV v1.0 · Methodology: Pythagorithm Proof v{found.token.version}
+          Validator version: PYTH-GOV v1.0 · Methodology: Glassbox audit v{found.token.version}
         </section>
 
         <section className="mt-12 flex gap-6 font-[var(--font-mono)] text-[var(--text-mono)]">

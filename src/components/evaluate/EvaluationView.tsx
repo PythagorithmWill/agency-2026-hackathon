@@ -1,12 +1,13 @@
 "use client";
 
-import type { EvaluationResult } from "@/lib/types";
+import type { DatasetSource, EvaluationResult } from "@/lib/types";
 import { SuitabilityScoreCircle } from "./SuitabilityScoreCircle";
 import { SimilarRecordCard } from "./SimilarRecordCard";
 import { RecipientConcentrationBar } from "./RecipientConcentrationBar";
 import { LanguageAuditView } from "./LanguageAuditView";
 import { ProofTokenStrip } from "./ProofTokenStrip";
 import { CharStaggerHeadline } from "../motion/CharStaggerHeadline";
+import { SourceBreakdown } from "../SourceBreakdown";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 
@@ -79,6 +80,16 @@ export function EvaluationView({ result }: { result: EvaluationResult }) {
             {cad.format(submission.anticipatedAmount)} · FY
             {submission.anticipatedFiscalYear} · submitted{" "}
             {result.createdAt.slice(0, 10)}
+          </motion.div>
+
+          {/* Per-source breakdown chip row */}
+          <motion.div
+            initial={reduce ? false : { opacity: 0, y: 4 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            transition={{ delay: 1.3, duration: 0.5, ease }}
+            className="mt-4"
+          >
+            <SourceBreakdown bySource={countBySource(comparables)} />
           </motion.div>
         </div>
       </header>
@@ -164,18 +175,20 @@ export function EvaluationView({ result }: { result: EvaluationResult }) {
           <section className="border-t border-[var(--color-border)] pt-16">
             <SectionLabel number="06">Methodology</SectionLabel>
             <p className="mt-6 max-w-[760px] text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
-              This evaluation was generated under the Pythagorithm Proof
-              Methodology v{proofToken.version}. Hybrid retrieval combines
-              BM25 with cosine similarity over a curated corpus that
-              applies the F-3 amendment-current CTE pattern, A-13
-              reversal-pair dedupe, and A-10 roll-up exclusion. Every
-              comparable record traces to its source dataset row; every
+              This evaluation was generated under the Glassbox audit
+              token schema v{proofToken.version}. Hybrid retrieval
+              combines BM25 with cosine similarity across federal
+              grants &amp; contributions and Alberta provincial
+              corpora. Federal records pass through the F-3
+              amendment-current CTE pattern; AB rows pass through
+              A-13 reversal-pair dedupe and A-10 roll-up exclusion.
+              Every comparable record traces to its source row; every
               score component carries a calibrated explanation; every
-              prose claim is gated by the calibrated-language regex set
-              before publishing.
+              prose claim is gated by the calibrated-language regex
+              set before publishing.
             </p>
             <p className="mt-8 font-[var(--font-mono)] italic text-[13px] text-[var(--color-fg-subtle)]">
-              Cite as: Pythagorithm Proof Methodology v{proofToken.version},
+              Cite as: Glassbox audit token v{proofToken.version},
               evaluation {result.evaluationId}, retrieved{" "}
               {result.createdAt.slice(0, 10)}.
             </p>
@@ -259,6 +272,16 @@ function SectionLabel({
       </h2>
     </div>
   );
+}
+
+function countBySource(
+  records: ReadonlyArray<{ sourceDataset: DatasetSource }>,
+): Partial<Record<DatasetSource, number>> {
+  const out: Partial<Record<DatasetSource, number>> = {};
+  for (const r of records) {
+    out[r.sourceDataset] = (out[r.sourceDataset] ?? 0) + 1;
+  }
+  return out;
 }
 
 function ShieldCheckGlyph() {

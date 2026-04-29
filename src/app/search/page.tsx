@@ -2,8 +2,9 @@ import Link from "next/link";
 import { searchCorpus } from "@/lib/evaluate/retrieval";
 import { SimilarRecordCard } from "@/components/evaluate/SimilarRecordCard";
 import { SearchEditBar } from "@/components/SearchEditBar";
+import { SourceBreakdown } from "@/components/SourceBreakdown";
 
-export const metadata = { title: "Search — Pythagorithm" };
+export const metadata = { title: "Search — Glassbox" };
 
 export default async function SearchPage({
   searchParams,
@@ -15,25 +16,22 @@ export default async function SearchPage({
   const rawDept = typeof sp.dept === "string" ? sp.dept : undefined;
   const q = rawQ.trim();
 
-  const start = Date.now();
-  const records = q ? await searchCorpus(q, rawDept) : [];
-  const elapsed = Date.now() - start;
+  const result = q
+    ? await searchCorpus(q, rawDept)
+    : {
+        records: [],
+        bySource: { fed: 0, ab_grants: 0, ab_contracts: 0, general: 0 },
+        latencyMs: 0,
+        retrievalMode: "keyword" as const,
+      };
+
+  const { records, bySource, latencyMs, retrievalMode } = result;
 
   return (
-    <main className="min-h-screen">
-      <header className="absolute top-0 left-0 right-0 z-20 mx-auto max-w-[1440px] px-8 pt-8 flex items-baseline justify-between font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-        <Link href={"/" as never} className="hover:text-[var(--color-fg)]">
-          ← Pythagorithm
-        </Link>
-        <Link href={"/evaluate" as never} className="hover:text-[var(--color-fg)]">
-          Evaluate a draft
-        </Link>
-      </header>
-
-      {/* Hero strip — atmosphere drift behind */}
+    <main className="min-h-screen pt-16">
       <section className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1080px] px-6 pt-32 pb-16">
+        <div className="relative z-10 mx-auto max-w-[1080px] px-6 pt-24 pb-16">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Search the corpus
           </div>
@@ -50,13 +48,20 @@ export default async function SearchPage({
             )}
           </div>
           {q && (
-            <div className="mt-4 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
-              {records.length} {records.length === 1 ? "record" : "records"}
-              {" · "}
-              keyword retrieval
-              {" · "}
-              {elapsed}ms
-            </div>
+            <>
+              <div className="mt-4 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
+                {records.length} {records.length === 1 ? "record" : "records"}
+                {" · "}
+                {retrievalMode} retrieval
+                {" · "}
+                {latencyMs}ms
+              </div>
+              {records.length > 0 && (
+                <div className="mt-3">
+                  <SourceBreakdown bySource={bySource} />
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
@@ -65,7 +70,7 @@ export default async function SearchPage({
         <section className="mx-auto max-w-[1080px] px-6 py-16">
           <div className="max-w-[760px] space-y-4">
             {records.map((r, i) => (
-              <SimilarRecordCard key={r.recordId} record={r} index={i} />
+              <SimilarRecordCard key={`${r.sourceDataset}-${r.recordId}`} record={r} index={i} />
             ))}
           </div>
         </section>
@@ -78,12 +83,20 @@ export default async function SearchPage({
               No matches found.
             </div>
             <p className="mt-4 text-[14px] text-[var(--color-fg-muted)] leading-[20px]">
-              Try fewer terms or a different department. The retrieval is
-              keyword-only against
-              <code className="font-[var(--font-mono)] mx-1.5 text-[var(--color-fg)]">
-                fed.grants_contributions.description_en
+              Try fewer terms or a different department. Retrieval runs
+              against federal{" "}
+              <code className="font-[var(--font-mono)] mx-0.5 text-[var(--color-fg)]">
+                grants_contributions
               </code>
-              with the F-3 max-amendment guard applied.
+              {" "}and Alberta provincial{" "}
+              <code className="font-[var(--font-mono)] mx-0.5 text-[var(--color-fg)]">
+                ab_grants
+              </code>
+              {" "}+{" "}
+              <code className="font-[var(--font-mono)] mx-0.5 text-[var(--color-fg)]">
+                ab_contracts
+              </code>
+              {" "}with the F-3, A-13, A-10 landmine guards applied.
             </p>
           </div>
         </section>

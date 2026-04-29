@@ -36,7 +36,7 @@ export function AnimatedAiaTable({ rows }: { rows: Row[] }) {
           className="border-b border-[var(--color-border)]"
         >
           <Th>Tier</Th>
-          <Th>Pythagorithm Proof</Th>
+          <Th>Audit token (Glassbox)</Th>
           <Th>Federal AIA</Th>
         </motion.tr>
       </thead>

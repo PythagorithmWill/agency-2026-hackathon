@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { EvaluateForm } from "@/components/EvaluateForm";
 
 export default async function EvaluatePage({
@@ -10,15 +9,7 @@ export default async function EvaluatePage({
   const initialDraft = typeof sp.draft === "string" ? sp.draft : "";
 
   return (
-    <main className="min-h-screen">
-      <header className="mx-auto max-w-[1440px] px-8 pt-8 flex items-baseline justify-between font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-        <Link href={"/" as never} className="hover:text-[var(--color-fg)]">
-          ← Pythagorithm
-        </Link>
-        <Link href={"/methodology" as never} className="hover:text-[var(--color-fg)]">
-          Methodology
-        </Link>
-      </header>
+    <main className="min-h-screen pt-16">
       <EvaluateForm initialDraft={initialDraft} />
     </main>
   );

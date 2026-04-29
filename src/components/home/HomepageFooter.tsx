@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { PythagorithmMark } from "../glyphs/PythagorithmMark";
+import { GlassboxMark, GlassboxWordmark } from "../brand/GlassboxMark";
+import { DataSourceStatusPill } from "../DataSourceStatusPill";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -9,11 +10,12 @@ export function HomepageFooter() {
       <div className="mx-auto max-w-[1200px] px-6 md:px-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div>
-            <div className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] font-medium text-[var(--color-fg)]">
-              Pythagorithm
+            <div className="flex items-center gap-3">
+              <GlassboxMark size={24} className="text-[var(--color-fg)]" />
+              <GlassboxWordmark size={18} className="text-[var(--color-fg)]" />
             </div>
-            <div className="mt-3 text-[14px] leading-[20px] text-[var(--color-fg-muted)] max-w-[260px]">
-              Prospective accountability for federal spending.
+            <div className="mt-4 text-[14px] leading-[20px] text-[var(--color-fg-muted)] max-w-[260px]">
+              See through the spend.
             </div>
             <div className="mt-3 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
               Built for Agency 2026 Hackathon · Ottawa · April 29 2026
@@ -27,6 +29,7 @@ export function HomepageFooter() {
               <FooterLink href="/methodology">Methodology</FooterLink>
               <FooterLink href="/evaluate">Evaluate a draft</FooterLink>
               <FooterLink href="/search?q=federal+broadband">Search corpus</FooterLink>
+              <FooterLink href="/api/health">/api/health</FooterLink>
             </ul>
           </div>
           <div>
@@ -41,15 +44,23 @@ export function HomepageFooter() {
                 {process.env.BUILD_COMMIT?.slice(0, 7) ?? "dev"}
               </div>
             )}
+            <div className="mt-4">
+              <DataSourceStatusPill />
+            </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-[var(--color-border)] flex items-center justify-center gap-3 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
-          <PythagorithmMark className="w-3 h-3 text-[var(--color-fg-subtle)]" />
-          <span>·</span>
-          <span className="normal-case tracking-normal italic text-[var(--color-fg-muted)]">
-            Pythagorithm — observations from public records. They are not findings of misconduct.
-          </span>
+        <div className="mt-12 pt-8 border-t border-[var(--color-border)] flex flex-col items-center gap-2">
+          <div className="flex items-center justify-center gap-3 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
+            <GlassboxMark size={12} className="text-[var(--color-fg-subtle)]" />
+            <span>·</span>
+            <span className="normal-case tracking-normal italic text-[var(--color-fg-muted)]">
+              Glassbox — observations from public records. They are not findings of misconduct.
+            </span>
+          </div>
+          <div className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)] mt-2">
+            Built on the Pythagorithm Proof Methodology v1.0
+          </div>
         </div>
       </div>
     </footer>

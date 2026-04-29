@@ -15,11 +15,11 @@ export async function GET(
     );
   }
   const verifiability = {
-    issuer: "Pythagorithm Proof Methodology",
+    issuer: "Glassbox · built on the Pythagorithm Proof Methodology",
     issuedAt: found.token.issuedAt,
     methodologyVersion: found.token.version,
     verifyAt: `https://pythagorithm.ai/verify/${found.token.proofId}`,
-    note: "This token was issued by the Pythagorithm Proof Methodology. The verifyAt URL renders an independent gate-by-gate validation pass.",
+    note: "This audit token was issued by Glassbox under the Pythagorithm Proof Methodology v1.0. The verifyAt URL renders an independent gate-by-gate validation pass.",
   };
   const payload = { ...found.token, _verifiability: verifiability };
   const body = JSON.stringify(payload, null, 2);

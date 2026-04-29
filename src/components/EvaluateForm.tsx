@@ -56,7 +56,7 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
     <div className="mx-auto max-w-[960px] px-6 py-16">
       <header>
         <div className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-          Pythagorithm
+          Glassbox · Evaluate
         </div>
         <h1 className="mt-6 text-[var(--text-display-md)] tracking-[var(--tracking-display-md)] font-semibold leading-[52px]">
           Evaluate a draft

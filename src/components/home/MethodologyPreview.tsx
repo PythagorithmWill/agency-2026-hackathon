@@ -41,7 +41,7 @@ export function MethodologyPreview() {
               : { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }
           }
         >
-          Pythagorithm runs every output against a published regex set, a
+          Glassbox runs every output against a published regex set, a
           citation discipline, and a Proof token schema. The validator is
           open. The scoring is reproducible. The audit trail is the product.
         </motion.p>

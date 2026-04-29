@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { FORBIDDEN_ABSOLUTE, FORBIDDEN_CAUSAL } from "@/lib/gov/validators";
 import { MethodologyTryItYourself } from "@/components/MethodologyTryItYourself";
 import { MethodologyHero } from "@/components/methodology/MethodologyHero";
@@ -9,7 +8,7 @@ import { AgentsDiagram } from "@/components/methodology/AgentsDiagram";
 import { RegexCard } from "@/components/methodology/RegexCard";
 import { PythagorithmMark } from "@/components/glyphs/PythagorithmMark";
 
-export const metadata = { title: "Methodology — Pythagorithm" };
+export const metadata = { title: "Methodology — Glassbox" };
 
 const REGEX_DESCRIPTIONS: { pattern: string; description: string }[] = [
   {
@@ -111,15 +110,6 @@ const AGENTS = [
 export default function MethodologyPage() {
   return (
     <main className="min-h-screen">
-      <header className="absolute top-0 left-0 right-0 z-20 mx-auto max-w-[1440px] px-8 pt-8 flex items-baseline justify-between font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-        <Link href={"/" as never} className="hover:text-[var(--color-fg)]">
-          ← Pythagorithm
-        </Link>
-        <Link href={"/evaluate" as never} className="hover:text-[var(--color-fg)]">
-          Evaluate a draft
-        </Link>
-      </header>
-
       <MethodologyHero />
 
       <article className="mx-auto max-w-[760px] px-6 py-24">
@@ -214,7 +204,7 @@ export default function MethodologyPage() {
 
         <Section number="04" heading="Structural correspondence with the federal AIA">
           <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
-            The Pythagorithm Proof token is structurally equivalent to a
+            The audit token is structurally equivalent to a
             Treasury Board Algorithmic Impact Assessment, applied at every
             output rather than once at deployment.
           </p>

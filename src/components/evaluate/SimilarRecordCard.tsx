@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
+import { SourceBadge } from "../SourceBadge";
 import type { ComparableRecord } from "@/lib/types";
 
 const cad = new Intl.NumberFormat("en-CA", {
@@ -32,23 +34,36 @@ export function SimilarRecordCard({
     >
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-start">
         <div>
-          <h3 className="text-[var(--text-heading)] tracking-[var(--tracking-heading)] font-medium">
-            {record.recipientLegalName}
-          </h3>
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h3 className="text-[var(--text-heading)] tracking-[var(--tracking-heading)] font-medium">
+              {record.recipientLegalName}
+            </h3>
+            <SourceBadge source={record.sourceDataset} />
+          </div>
           <div className="mt-2 font-[var(--font-mono)] text-[var(--text-mono)] text-[var(--color-fg-muted)]">
-            {record.programCode ?? "—"} · FY{record.fiscalYear} · {cad.format(record.agreementValue)}
+            {record.programCode ?? "—"} · {record.awardingDept.split(" | ")[0]} · FY{record.fiscalYear} · {cad.format(record.agreementValue)}
             {record.recipientProvince && <> · {record.recipientProvince}</>}
           </div>
           <p className="mt-3 text-[var(--text-body-sm)] leading-[20px] text-[var(--color-fg-muted)] line-clamp-2">
             {record.description}
           </p>
-          <button
-            type="button"
-            onClick={() => setOpen((o) => !o)}
-            className="mt-4 inline-flex items-center gap-2 text-[var(--text-body-sm)] text-[var(--color-accent)] hover:underline-offset-2 hover:underline"
-          >
-            {open ? "Hide source row ↑" : "View source row →"}
-          </button>
+          <div className="mt-4 flex flex-wrap items-center gap-4 text-[var(--text-body-sm)]">
+            <button
+              type="button"
+              onClick={() => setOpen((o) => !o)}
+              className="inline-flex items-center gap-2 text-[var(--color-accent)] hover:underline-offset-2 hover:underline"
+            >
+              {open ? "Hide source row ↑" : "View source row →"}
+            </button>
+            <Link
+              href={
+                (`/record/${recordRouteSegment(record.sourceDataset)}/${encodeURIComponent(record.recordId)}`) as never
+              }
+              className="inline-flex items-center gap-2 text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"
+            >
+              Open record →
+            </Link>
+          </div>
         </div>
         <div className="min-w-[200px]">
           <SimilarityBar score={sim} />
@@ -115,6 +130,19 @@ function SimilarityBar({ score }: { score: number }) {
       `}</style>
     </div>
   );
+}
+
+function recordRouteSegment(source: ComparableRecord["sourceDataset"]): string {
+  switch (source) {
+    case "fed":
+      return "fed";
+    case "ab_grants":
+      return "ab-grants";
+    case "ab_contracts":
+      return "ab-contracts";
+    default:
+      return "fed";
+  }
 }
 
 function Cell({ label, value }: { label: string; value: string }) {

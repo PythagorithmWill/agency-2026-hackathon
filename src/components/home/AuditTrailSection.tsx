@@ -26,7 +26,7 @@ export function AuditTrailSection() {
             Every output carries an audit trail.
           </h2>
           <p className="mt-6 text-[18px] leading-[1.55] text-[var(--color-fg-muted)]">
-            Pythagorithm Proof tokens wrap every score with full provenance.
+            Audit tokens wrap every score with full provenance.
             Four governance tiers — input filtering, contextual modeling,
             output gating, audit sealing — each with passing gates,
             evidence count, and retrieval timestamps. Independently
