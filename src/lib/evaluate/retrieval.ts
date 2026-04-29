@@ -646,9 +646,14 @@ export async function loadRecord(
   source: DatasetSource,
   recordId: string,
 ): Promise<ComparableRecord | null> {
+  // Use longQuery (no client timeout, 30s server statement_timeout) —
+  // single-record lookup by ref_number can sequential-scan 1.27M rows
+  // without an index, which exceeds the 8s fast-pool budget on big
+  // recipients. Returning null silently turns into a 404 in the page,
+  // so the budget upgrade is worth the marginal pool pressure.
   try {
     if (source === "fed") {
-      const r = await query<FedRow>(
+      const r = await longQuery<FedRow>(
         `WITH agreement_current AS (
            SELECT DISTINCT ON (
              ref_number,
@@ -668,28 +673,31 @@ export async function loadRecord(
          )
          SELECT * FROM agreement_current LIMIT 1`,
         [recordId],
+        30_000,
       );
       return r.rows[0] ? fedToRecord(r.rows[0], 0, 1) : null;
     }
     if (source === "ab_grants") {
-      const r = await query<AbGrantsRow>(
+      const r = await longQuery<AbGrantsRow>(
         `SELECT id, recipient, program, ministry, amount, display_fiscal_year,
                 0::float AS rank
            FROM ab.ab_grants
           WHERE id = $1
           LIMIT 1`,
         [recordId],
+        30_000,
       );
       return r.rows[0] ? abGrantsToRecord(r.rows[0], 1) : null;
     }
     if (source === "ab_contracts") {
-      const r = await query<AbContractsRow>(
+      const r = await longQuery<AbContractsRow>(
         `SELECT id, recipient, ministry, amount, display_fiscal_year,
                 0::float AS rank
            FROM ab.ab_contracts
           WHERE id = $1
           LIMIT 1`,
         [recordId],
+        30_000,
       );
       return r.rows[0] ? abContractsToRecord(r.rows[0], 1) : null;
     }
