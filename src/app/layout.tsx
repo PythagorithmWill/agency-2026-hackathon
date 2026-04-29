@@ -43,7 +43,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${inter.variable} ${jbMono.variable} dark`}>
-      <body className="min-h-screen bg-[var(--color-bg)] text-[var(--color-fg)] antialiased">
+      <body
+        className="min-h-screen bg-[var(--color-bg)] text-[var(--color-fg)] antialiased notranslate"
+        translate="no"
+      >
         <SiteHeader />
         {children}
       </body>

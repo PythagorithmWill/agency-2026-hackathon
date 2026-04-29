@@ -39,10 +39,10 @@ export default async function PatternDetail({
 
   return (
     <main className="min-h-screen pt-16">
-      <section className="relative border-b border-[var(--color-border)] overflow-hidden">
+      <section className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-20 pb-12">
-          <div className="flex items-baseline gap-3">
+        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-32 pb-16">
+          <div className="flex items-baseline gap-3 flex-wrap">
             <Link
               href={"/follow" as never}
               className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)]"
@@ -51,19 +51,24 @@ export default async function PatternDetail({
             </Link>
             <span className="font-[var(--font-mono)] text-[11px] text-[var(--color-fg-subtle)]">/</span>
             <PatternStatusPill status={pattern.status} />
+            {pattern.challenge && (
+              <span className="font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
+                · Challenge #{pattern.challenge}
+              </span>
+            )}
           </div>
-          <h1 className="mt-4 text-[var(--text-display-lg)] leading-[0.95] tracking-[var(--tracking-display-lg)]">
+          <h1 className="mt-6 text-[clamp(56px,9vw,128px)] leading-[0.92] tracking-[-0.04em] font-medium">
             {pattern.name}<span className="text-[var(--color-accent)]">.</span>
           </h1>
-          <p className="mt-6 max-w-[760px] text-[var(--text-body-lg)] italic text-[var(--color-fg-muted)] leading-[1.45]">
+          <p className="mt-8 max-w-[860px] text-[clamp(18px,1.7vw,24px)] italic text-[var(--color-fg-muted)] leading-[1.4]">
             {pattern.definition}
           </p>
-          <div className="mt-8 max-w-[820px] font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] leading-relaxed">
+          <div className="mt-8 max-w-[860px] font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] leading-relaxed">
             <span className="text-[var(--color-fg-muted)]">Detection signal · </span>
             {pattern.signal}
           </div>
           {pattern.attribution === "TRACE" && (
-            <div className="mt-3 max-w-[820px] font-[var(--font-mono)] text-[11px] uppercase tracking-[0.06em] text-[var(--color-fg-subtle)] leading-relaxed">
+            <div className="mt-3 max-w-[860px] font-[var(--font-mono)] text-[11px] uppercase tracking-[0.06em] text-[var(--color-fg-subtle)] leading-relaxed">
               {TRACE_ATTRIBUTION_LINE}
             </div>
           )}
@@ -115,9 +120,9 @@ function MatchList({ matches }: { matches: PatternMatch[] }) {
         </div>
       </div>
       <ul className="space-y-3">
-        {matches.map((m) => (
+        {matches.map((m, idx) => (
           <li
-            key={m.matchId}
+            key={`${m.matchId}#${idx}`}
             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-5 hover:border-[var(--color-border-strong)] transition-colors"
           >
             <div className="flex items-baseline justify-between gap-4">

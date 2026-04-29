@@ -99,6 +99,12 @@ export function SiteHeader() {
             Follow the money
           </Link>
           <Link
+            href={"/recommendations" as never}
+            className="hover:text-[var(--color-fg)] transition-colors"
+          >
+            Recommendations
+          </Link>
+          <Link
             href={"/transparency" as never}
             className="hover:text-[var(--color-fg)] transition-colors"
           >

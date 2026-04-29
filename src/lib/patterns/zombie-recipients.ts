@@ -126,9 +126,13 @@ function mapRowToMatch(row: ZombieRow): PatternMatch | null {
   const name = row.recipient_legal_name ?? "Unknown recipient";
   const bn = row.recipient_business_number;
 
+  // matchId must be unique across rows. Multiple recipients can share
+  // a name AND have null BN (publisher-aggregated rows), so include
+  // total + last_grant as a tiebreaker.
+  const tiebreak = `${total.toFixed(0)}-${lastGrantIso.slice(0, 10)}`;
   return {
     patternId: "zombie-recipients",
-    matchId: `zombie-recipients:${bn ?? name}`,
+    matchId: `zombie-recipients:${bn ?? name}:${tiebreak}`,
     subject: {
       type: "recipient",
       id: bn ?? name,
