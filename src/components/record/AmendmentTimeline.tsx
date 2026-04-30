@@ -12,6 +12,23 @@ const cad = new Intl.NumberFormat("en-CA", {
 });
 
 /**
+ * Defensive date formatter — pg returns DATE columns as JS Date instances
+ * by default, but the AmendmentEvent type declares date as string. Coerce
+ * before slicing so a Date doesn't crash the render with
+ * "date.slice is not a function".
+ */
+function formatDate(d: unknown): string {
+  if (!d) return "";
+  if (typeof d === "string") return d.slice(0, 10);
+  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  try {
+    return new Date(d as string | number).toISOString().slice(0, 10);
+  } catch {
+    return "";
+  }
+}
+
+/**
  * Horizontal amendment-chain timeline. Notches plot left-to-right on
  * viewport entry; line height = dollar value at that amendment. Hover
  * a notch to see the date + delta from previous amendment + description
@@ -127,7 +144,7 @@ export function AmendmentTimeline({ events }: { events: AmendmentEvent[] }) {
         {points.map((p, i) => (
           <g key={p.i} className="cursor-help">
             <title>
-              {`Amendment ${p.amendmentNumber}${p.date ? ` · ${p.date.slice(0, 10)}` : ""} · ${cad.format(p.agreementValue)}`}
+              {`Amendment ${p.amendmentNumber}${p.date ? ` · ${formatDate(p.date)}` : ""} · ${cad.format(p.agreementValue)}`}
             </title>
             {/* drop line */}
             <motion.line
@@ -177,7 +194,7 @@ export function AmendmentTimeline({ events }: { events: AmendmentEvent[] }) {
                 #{p.amendmentNumber}
                 {p.date && (
                   <span className="ml-2 text-[var(--color-fg-subtle)]">
-                    {p.date.slice(0, 10)}
+                    {formatDate(p.date)}
                   </span>
                 )}
               </span>
