@@ -112,7 +112,7 @@ export default function MethodologyPage() {
     <main className="min-h-screen">
       <MethodologyHero />
 
-      <article className="mx-auto max-w-[760px] px-6 py-24">
+      <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-16 sm:py-24">
         <RevealSection>
           <h2 className="text-[clamp(40px,5vw,56px)] tracking-[-0.025em] font-semibold leading-[1.1]">
             The substance behind the surface.
@@ -276,7 +276,7 @@ function Section({
 }) {
   return (
     <RevealSection>
-      <section className="mt-32">
+      <section className="mt-20 sm:mt-32">
         <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
           Section {number}
         </div>

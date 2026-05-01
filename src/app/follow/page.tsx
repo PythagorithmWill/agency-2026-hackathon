@@ -12,11 +12,11 @@ export default function FollowLanding() {
       {/* Hero */}
       <section className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-32 pb-20 text-center">
+        <div className="relative z-10 mx-auto max-w-[1280px] px-4 sm:px-6 pt-20 sm:pt-32 pb-12 sm:pb-20 text-center">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · pattern catalog
           </div>
-          <h1 className="mt-6 text-[clamp(72px,11vw,160px)] leading-[0.92] tracking-[-0.045em] font-medium">
+          <h1 className="mt-6 text-[clamp(48px,11vw,160px)] leading-[0.92] tracking-[-0.045em] font-medium">
             Follow the money<span className="text-[var(--color-accent)]">.</span>
           </h1>
           <p className="mt-8 mx-auto max-w-[820px] text-[clamp(20px,2vw,26px)] italic text-[var(--color-fg-muted)] leading-[1.4]">
@@ -30,7 +30,7 @@ export default function FollowLanding() {
       </section>
 
       {/* Grid */}
-      <section className="mx-auto max-w-[1280px] px-6 py-16">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {PATTERNS.map((p, i) => (
             <PatternCard key={p.id} pattern={p} index={i} />
@@ -40,7 +40,7 @@ export default function FollowLanding() {
 
       {/* Attribution */}
       <section className="border-t border-[var(--color-border)] py-12">
-        <div className="mx-auto max-w-[1280px] px-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <h3 className="text-[15px] tracking-tight">TRACE attribution</h3>
             <p className="mt-2 text-[14px] text-[var(--color-fg-muted)] leading-[1.55]">

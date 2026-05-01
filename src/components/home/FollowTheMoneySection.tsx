@@ -10,8 +10,8 @@ export function FollowTheMoneySection() {
   const patterns = tracePatterns().slice(0, 6);
 
   return (
-    <section className="relative py-24 md:py-32 border-t border-[var(--color-border)]">
-      <div className="mx-auto max-w-[1280px] px-6">
+    <section className="relative py-16 sm:py-24 md:py-32 border-t border-[var(--color-border)]">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
         <div className="max-w-[760px]">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox patterns

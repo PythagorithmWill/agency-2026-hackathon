@@ -18,7 +18,7 @@ export default async function RiskTab() {
   return (
     <main className="min-h-screen pt-16">
       <section className="border-b border-[var(--color-border)]">
-        <div className="mx-auto max-w-[1280px] px-6 pt-20 pb-8">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-20 pb-8">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · risk map
           </div>
@@ -34,7 +34,7 @@ export default async function RiskTab() {
       </section>
       <DashboardTabs />
 
-      <section className="mx-auto max-w-[1280px] px-6 py-12">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12">
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] overflow-hidden">
           <div className="px-6 py-4 border-b border-[var(--color-border)] flex items-baseline justify-between">
             <h3 className="text-[15px] tracking-tight">Amendment-growth observations</h3>

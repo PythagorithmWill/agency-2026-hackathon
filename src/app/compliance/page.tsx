@@ -52,7 +52,7 @@ export default function CompliancePage() {
     <main className="min-h-screen pt-16">
       <section className="relative border-b border-[var(--color-border)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[920px] px-6 pt-24 pb-12">
+        <div className="relative z-10 mx-auto max-w-[920px] px-4 sm:px-6 pt-24 pb-12">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · compliance
           </div>
@@ -67,9 +67,9 @@ export default function CompliancePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[920px] px-6 py-12">
-        <div className="rounded-lg border border-[var(--color-border)] overflow-hidden">
-          <table className="w-full text-[14px]">
+      <section className="mx-auto max-w-[920px] px-4 sm:px-6 py-12">
+        <div className="rounded-lg border border-[var(--color-border)] overflow-x-auto">
+          <table className="w-full min-w-[640px] text-[14px]">
             <thead className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.1em] text-[var(--color-fg-subtle)] bg-[var(--color-bg-elev-2)]">
               <tr>
                 <th className="text-left py-3 px-5 border-b border-[var(--color-border)]">
@@ -106,7 +106,7 @@ export default function CompliancePage() {
       </section>
 
       <section className="border-t border-[var(--color-border)] py-12">
-        <div className="mx-auto max-w-[920px] px-6 flex flex-wrap items-baseline justify-between gap-4">
+        <div className="mx-auto max-w-[920px] px-4 sm:px-6 flex flex-wrap items-baseline justify-between gap-4">
           <Link
             href={"/trace" as never}
             className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"

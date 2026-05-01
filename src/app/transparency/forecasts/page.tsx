@@ -21,7 +21,7 @@ export default async function ForecastsTab() {
   return (
     <main className="min-h-screen pt-16">
       <section className="border-b border-[var(--color-border)]">
-        <div className="mx-auto max-w-[1280px] px-6 pt-20 pb-8">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-20 pb-8">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · forecasts
           </div>
@@ -37,7 +37,7 @@ export default async function ForecastsTab() {
       </section>
       <DashboardTabs />
 
-      <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-8">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-8">
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6">
           <h3 className="text-[15px] tracking-tight mb-2">All federal spend by fiscal year</h3>
           <p className="mb-6 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">

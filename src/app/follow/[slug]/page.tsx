@@ -62,7 +62,7 @@ export default async function PatternDetail({
     <main className="min-h-screen pt-16">
       <section className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-32 pb-16">
+        <div className="relative z-10 mx-auto max-w-[1280px] px-4 sm:px-6 pt-20 sm:pt-32 pb-12 sm:pb-16">
           <div className="flex items-baseline gap-3 flex-wrap">
             <Link
               href={"/follow" as never}
@@ -78,7 +78,7 @@ export default async function PatternDetail({
               </span>
             )}
           </div>
-          <h1 className="mt-6 text-[clamp(56px,9vw,128px)] leading-[0.92] tracking-[-0.04em] font-medium">
+          <h1 className="mt-6 text-[clamp(40px,9vw,128px)] leading-[0.95] tracking-[-0.04em] font-medium">
             {pattern.name}<span className="text-[var(--color-accent)]">.</span>
           </h1>
           <p className="mt-8 max-w-[860px] text-[clamp(18px,1.7vw,24px)] italic text-[var(--color-fg-muted)] leading-[1.4]">
@@ -96,7 +96,7 @@ export default async function PatternDetail({
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-8">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-8">
         {detector && matches.length > 0 && (
           <MatchDashboard
             patternId={pattern.id}
@@ -129,7 +129,7 @@ export default async function PatternDetail({
       </section>
 
       <section className="border-t border-[var(--color-border)] py-12">
-        <div className="mx-auto max-w-[1280px] px-6 flex flex-wrap items-baseline justify-between gap-4">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 flex flex-wrap items-baseline justify-between gap-4">
           <Link
             href={"/follow" as never}
             className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"

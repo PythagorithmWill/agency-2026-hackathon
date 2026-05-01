@@ -70,7 +70,7 @@ export function SearchInput({
         }}
         className="search-input-wrap rounded-[16px] bg-[var(--color-bg-elev-1)] border border-[var(--color-border-strong)]"
       >
-        <div className="flex items-stretch h-[88px] px-6 gap-4">
+        <div className="flex items-stretch h-[72px] sm:h-[88px] px-3 sm:px-6 gap-2 sm:gap-4">
           <span className="flex items-center text-[var(--color-fg-muted)]">
             {mode === "search" ? <SearchGlyph /> : <ClipboardGlyph />}
           </span>
@@ -82,7 +82,7 @@ export function SearchInput({
               onChange={(e) => setQuery(e.target.value)}
               autoFocus
               placeholder="Search by topic, recipient, program, or paste a draft excerpt"
-              className="flex-1 bg-transparent border-0 outline-none text-[22px] leading-[28px] placeholder:italic placeholder:text-[var(--color-fg-subtle)]"
+              className="min-w-0 flex-1 bg-transparent border-0 outline-none text-[16px] sm:text-[22px] leading-[24px] sm:leading-[28px] placeholder:italic placeholder:text-[var(--color-fg-subtle)]"
             />
           ) : (
             <textarea
@@ -97,16 +97,19 @@ export function SearchInput({
                 }
               }}
               placeholder="Paste your draft solicitation. Working title, scope, recipient — whatever you have. (⌘/Ctrl+Enter to submit)"
-              className="flex-1 bg-transparent border-0 outline-none text-[18px] leading-[26px] placeholder:italic placeholder:text-[var(--color-fg-subtle)] resize-none py-5 max-h-[180px]"
+              className="min-w-0 flex-1 bg-transparent border-0 outline-none text-[15px] sm:text-[18px] leading-[22px] sm:leading-[26px] placeholder:italic placeholder:text-[var(--color-fg-subtle)] resize-none py-3 sm:py-5 max-h-[140px] sm:max-h-[180px]"
               rows={3}
             />
           )}
           <button
             type="submit"
             disabled={!query.trim()}
-            className="group self-center h-14 px-6 rounded-[8px] bg-[var(--color-accent)] text-[var(--color-bg)] text-[14px] font-semibold tracking-[0.01em] hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            className="group shrink-0 self-center h-11 sm:h-14 px-3 sm:px-6 rounded-[8px] bg-[var(--color-accent)] text-[var(--color-bg)] text-[13px] sm:text-[14px] font-semibold tracking-[0.01em] hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed inline-flex items-center gap-1.5 sm:gap-2"
           >
-            {mode === "search" ? "Search" : "Evaluate"}
+            <span className="hidden sm:inline">{mode === "search" ? "Search" : "Evaluate"}</span>
+            <span className="sm:hidden" aria-label={mode === "search" ? "Search" : "Evaluate"}>
+              {mode === "search" ? "Search" : "Eval"}
+            </span>
             <span
               aria-hidden
               className="transition-transform group-hover:translate-x-1"
@@ -116,7 +119,7 @@ export function SearchInput({
           </button>
         </div>
       </form>
-      <div className="mt-6 flex justify-center gap-3">
+      <div className="mt-4 sm:mt-6 flex flex-wrap justify-center gap-2 sm:gap-3">
         <Pill
           active={mode === "search"}
           onClick={() => setMode("search")}

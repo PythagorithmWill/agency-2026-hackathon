@@ -52,13 +52,15 @@ export function GlassboxWordmark({
   animateDraw = false,
 }: {
   className?: string;
-  size?: number;
+  /** Em-height of the wordmark. Number → `${size}px`; string → used verbatim
+   *  (e.g. `clamp(72px, 18vw, 140px)` for fluid hero sizing on mobile). */
+  size?: number | string;
   /** When true, the cube edges draw themselves in over ~1.4s on mount. */
   animateDraw?: boolean;
 }) {
-  // Cube viewport ≈ same em as a lowercase "o" plus a small overshoot for
-  // the back face. We render an isometric wireframe with three visible faces.
-  const cubeSize = size * 0.78;
+  // The cube and its margins are sized in `em` so they track whatever
+  // fontSize ends up resolving to (allowing the caller to pass a clamp()).
+  const fontSize = typeof size === "number" ? `${size}px` : size;
 
   return (
     <span
@@ -67,7 +69,7 @@ export function GlassboxWordmark({
         fontFamily: "var(--font-sans)",
         fontWeight: 600,
         letterSpacing: "-0.02em",
-        fontSize: `${size}px`,
+        fontSize,
         lineHeight: 1,
         display: "inline-flex",
         alignItems: "baseline",
@@ -80,13 +82,13 @@ export function GlassboxWordmark({
         aria-hidden
         style={{
           display: "inline-block",
-          width: `${cubeSize}px`,
-          height: `${cubeSize}px`,
-          margin: `0 ${size * 0.04}px ${-size * 0.06}px`,
+          width: "0.78em",
+          height: "0.78em",
+          margin: "0 0.04em -0.06em",
           position: "relative",
         }}
       >
-        <CubeWireframe size={cubeSize} animateDraw={animateDraw} />
+        <CubeWireframe animateDraw={animateDraw} />
       </span>
       {/* "x" */}
       <span>x</span>
@@ -99,8 +101,9 @@ export function GlassboxWordmark({
  * as a single SVG path so the strokes share corners cleanly. Stroke matches
  * `currentColor` so the wordmark colour governs.
  */
-function CubeWireframe({ size, animateDraw = false }: { size: number; animateDraw?: boolean }) {
-  // Build a 100-unit isometric cube and let the SVG scale to `size`.
+function CubeWireframe({ animateDraw = false }: { animateDraw?: boolean }) {
+  // Build a 100-unit isometric cube; the SVG fills its parent box (which is
+  // sized in em by the wordmark wrapper).
   // Front face: a square offset from the back-top.
   // Top face: rhombus from the back-top back-right.
   // Right face: rhombus from the front-right to the back-right.

@@ -19,11 +19,14 @@
   --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono:    var(--font-mono-jb), ui-monospace, monospace;
 
-  /* Type scale — display-xl through caption */
-  --text-display-xl: 80px;
-  --text-display-lg: 64px;
-  --text-display-md: 48px;
-  --text-display-sm: 32px;
+  /* Type scale — display-xl through caption.
+     Display sizes use clamp() so they shrink on phones without changing
+     the desktop appearance (the upper bound matches the original fixed
+     pixel value and is reached at ~1000–1024px viewports). */
+  --text-display-xl: clamp(44px, 8vw, 80px);
+  --text-display-lg: clamp(36px, 6.5vw, 64px);
+  --text-display-md: clamp(30px, 5vw, 48px);
+  --text-display-sm: clamp(22px, 3.5vw, 32px);
   --text-heading:    20px;
   --text-body-lg:    18px;
   --text-body:       16px;

@@ -284,11 +284,12 @@ function Tooltip({
   onSkip: () => void;
 }) {
   // Choose tooltip side: below the target if there's room, above otherwise.
-  const tooltipWidth = 360;
-  const tooltipMaxHeight = 220;
   const margin = 16;
   const vh = typeof window !== "undefined" ? window.innerHeight : 800;
   const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
+  // Shrink tooltip to fit narrow viewports (phones) without overflowing.
+  const tooltipWidth = Math.min(360, vw - margin * 2);
+  const tooltipMaxHeight = 220;
 
   let top = rect.bottom + margin;
   let left = rect.left + rect.width / 2 - tooltipWidth / 2;
@@ -342,7 +343,7 @@ function CenteredCard({
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
       <div
-        className="pointer-events-auto rounded-[14px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-6 shadow-2xl max-w-[440px] mx-6"
+        className="pointer-events-auto rounded-[14px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-5 sm:p-6 shadow-2xl max-w-[440px] mx-4 sm:mx-6"
         role="dialog"
         aria-label={step.title}
       >

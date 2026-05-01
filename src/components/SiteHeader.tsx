@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { GlassboxWordmark } from "./brand/GlassboxMark";
 
 /**
@@ -15,6 +16,28 @@ import { GlassboxWordmark } from "./brand/GlassboxMark";
  */
 export function SiteHeader() {
   const ref = useRef<HTMLElement | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close mobile menu on route change.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll while mobile menu is open; close on Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     const node = ref.current;
@@ -62,6 +85,15 @@ export function SiteHeader() {
     };
   }, []);
 
+  const navLinks: Array<{ href: string; label: string; tourId?: string; pill?: boolean }> = [
+    { href: "/follow", label: "Follow the money", tourId: "tour-nav-follow" },
+    { href: "/recommendations", label: "Recommendations", tourId: "tour-nav-recommendations" },
+    { href: "/transparency", label: "Transparency", tourId: "tour-nav-transparency" },
+    { href: "/methodology", label: "Methodology", tourId: "tour-nav-methodology" },
+    { href: "/search", label: "Search" },
+    { href: "/evaluate", label: "Evaluate", pill: true },
+  ];
+
   return (
     <header
       ref={ref}
@@ -73,7 +105,7 @@ export function SiteHeader() {
         WebkitBackdropFilter: "blur(0px)",
       }}
     >
-      <div className="mx-auto max-w-[1440px] h-20 px-6 md:px-8 flex items-center justify-between">
+      <div className="mx-auto max-w-[1440px] h-20 px-4 sm:px-6 md:px-8 flex items-center justify-between">
         <Link
           href={"/" as never}
           className="flex items-center group"
@@ -91,47 +123,97 @@ export function SiteHeader() {
             className="text-[var(--color-fg)] group-hover:opacity-90 transition-opacity"
           />
         </Link>
-        <nav className="flex items-center gap-6 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] text-[var(--color-fg-muted)]">
-          <Link
-            href={"/follow" as never}
-            data-tour-id="tour-nav-follow"
-            className="hover:text-[var(--color-fg)] transition-colors"
+
+        {/* Desktop nav — unchanged at md+. */}
+        <nav className="hidden md:flex items-center gap-6 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.12em] text-[var(--color-fg-muted)]">
+          {navLinks.map((link) =>
+            link.pill ? (
+              <Link
+                key={link.href}
+                href={link.href as never}
+                data-tour-id={link.tourId}
+                className="px-3 py-1.5 rounded-full border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href as never}
+                data-tour-id={link.tourId}
+                className="hover:text-[var(--color-fg)] transition-colors"
+              >
+                {link.label}
+              </Link>
+            ),
+          )}
+        </nav>
+
+        {/* Mobile hamburger — only renders below md. */}
+        <button
+          type="button"
+          className="md:hidden inline-flex items-center justify-center w-10 h-10 -mr-2 rounded-md text-[var(--color-fg)] hover:bg-white/5 transition-colors"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-nav"
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            aria-hidden="true"
           >
-            Follow the money
-          </Link>
-          <Link
-            href={"/recommendations" as never}
-            data-tour-id="tour-nav-recommendations"
-            className="hover:text-[var(--color-fg)] transition-colors"
-          >
-            Recommendations
-          </Link>
-          <Link
-            href={"/transparency" as never}
-            data-tour-id="tour-nav-transparency"
-            className="hover:text-[var(--color-fg)] transition-colors"
-          >
-            Transparency
-          </Link>
-          <Link
-            href={"/methodology" as never}
-            data-tour-id="tour-nav-methodology"
-            className="hover:text-[var(--color-fg)] transition-colors"
-          >
-            Methodology
-          </Link>
-          <Link
-            href={"/search" as never}
-            className="hover:text-[var(--color-fg)] transition-colors"
-          >
-            Search
-          </Link>
-          <Link
-            href={"/evaluate" as never}
-            className="px-3 py-1.5 rounded-full border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
-          >
-            Evaluate
-          </Link>
+            {menuOpen ? (
+              <>
+                <line x1="5" y1="5" x2="19" y2="19" />
+                <line x1="19" y1="5" x2="5" y2="19" />
+              </>
+            ) : (
+              <>
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <line x1="4" y1="13" x2="20" y2="13" />
+                <line x1="4" y1="19" x2="20" y2="19" />
+              </>
+            )}
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile menu — drops below the header on small screens only. */}
+      <div
+        id="mobile-nav"
+        className={`md:hidden overflow-hidden transition-[max-height,opacity] duration-300 ease-out ${
+          menuOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
+        }`}
+        style={{
+          backgroundColor: "rgba(19, 19, 19, 0.96)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderTop: menuOpen ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
+        }}
+        aria-hidden={!menuOpen}
+      >
+        <nav className="px-4 sm:px-6 py-4 flex flex-col gap-1 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-muted)]">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href as never}
+              data-tour-id={link.tourId}
+              className={
+                link.pill
+                  ? "mt-2 inline-flex items-center justify-center px-3 py-2.5 rounded-full border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+                  : "py-2.5 hover:text-[var(--color-fg)] transition-colors"
+              }
+              onClick={() => setMenuOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
       </div>
     </header>

@@ -85,12 +85,12 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
   };
 
   return (
-    <div className="mx-auto max-w-[960px] px-6 py-16">
+    <div className="mx-auto max-w-[960px] px-4 sm:px-6 py-12 sm:py-16">
       <header>
         <div className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
           Glassbox · Evaluate
         </div>
-        <h1 className="mt-6 text-[var(--text-display-md)] tracking-[var(--tracking-display-md)] font-semibold leading-[52px]">
+        <h1 className="mt-6 text-[var(--text-display-md)] tracking-[var(--tracking-display-md)] font-semibold leading-[1.08]">
           Evaluate a draft
         </h1>
         <p className="mt-4 text-[var(--text-body-lg)] text-[var(--color-fg-muted)] leading-[28px] max-w-[720px]">

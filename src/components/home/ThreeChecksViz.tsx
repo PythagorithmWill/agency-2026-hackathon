@@ -40,7 +40,7 @@ const COLUMNS = [
  */
 export function ThreeChecksViz() {
   return (
-    <section className="mx-auto max-w-[1200px] px-6 md:px-16 py-32">
+    <section className="mx-auto max-w-[1200px] px-4 sm:px-6 md:px-16 py-20 sm:py-28 md:py-32">
       <div className="text-center" style={{ animation: "glassbox-fade-up 0.6s ease-out both" }}>
         <h2 className="text-[clamp(48px,6vw,72px)] leading-[1.05] tracking-[-0.03em] font-semibold">
           Three checks. One score.
@@ -51,7 +51,7 @@ export function ThreeChecksViz() {
         </p>
       </div>
 
-      <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-12">
+      <div className="mt-12 sm:mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-12">
         {COLUMNS.map((col, i) => (
           <div
             key={col.id}
@@ -83,14 +83,14 @@ export function ThreeChecksViz() {
         className="mt-2 flex justify-center"
         style={{ animation: "glassbox-fade-up 0.4s ease-out 1.6s both" }}
       >
-        <div className="px-8 h-20 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-bg-elev-2)] border border-[var(--color-border-strong)]">
-          <span className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+        <div className="px-5 sm:px-8 h-16 sm:h-20 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-bg-elev-2)] border border-[var(--color-border-strong)]">
+          <span className="font-[var(--font-mono)] text-[11px] sm:text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Composite
           </span>
-          <span className="font-[var(--font-mono)] text-[42px] leading-none text-[var(--color-fg)] ml-3">
+          <span className="font-[var(--font-mono)] text-[32px] sm:text-[42px] leading-none text-[var(--color-fg)] ml-2 sm:ml-3">
             <CountUp to={14} durationMs={1500} startOnView />
           </span>
-          <span className="font-[var(--font-mono)] text-[18px] text-[var(--color-fg-subtle)]">
+          <span className="font-[var(--font-mono)] text-[15px] sm:text-[18px] text-[var(--color-fg-subtle)]">
             / 30
           </span>
         </div>

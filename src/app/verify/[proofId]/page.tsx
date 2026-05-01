@@ -24,11 +24,11 @@ export default async function VerifyPage({
 
   return (
     <main className="min-h-screen pt-16">
-      <article className="mx-auto max-w-[760px] px-6 py-16">
+      <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-16">
         <div className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
           Verify audit token
         </div>
-        <h1 className="mt-6 text-[var(--text-display-md)] tracking-[var(--tracking-display-md)] font-semibold leading-[52px]">
+        <h1 className="mt-6 text-[var(--text-display-md)] tracking-[var(--tracking-display-md)] font-semibold leading-[1.08]">
           {found.subjectName}
         </h1>
         <div className="mt-4 font-[var(--font-mono)] text-[var(--text-mono)] text-[var(--color-fg-muted)] break-all">
@@ -54,7 +54,7 @@ export default async function VerifyPage({
         </section>
 
         <section className="mt-12">
-          <h2 className="text-[var(--text-display-sm)] tracking-[var(--tracking-display-sm)] font-semibold leading-[36px]">
+          <h2 className="text-[var(--text-display-sm)] tracking-[var(--tracking-display-sm)] font-semibold leading-[1.15]">
             Tier-by-tier
           </h2>
           <ul className="mt-6 space-y-4">
@@ -81,7 +81,7 @@ export default async function VerifyPage({
 
         {violations.length > 0 && (
           <section className="mt-12">
-            <h2 className="text-[var(--text-display-sm)] tracking-[var(--tracking-display-sm)] font-semibold leading-[36px]">
+            <h2 className="text-[var(--text-display-sm)] tracking-[var(--tracking-display-sm)] font-semibold leading-[1.15]">
               Violations
             </h2>
             <ul className="mt-6 space-y-3">

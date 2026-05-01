@@ -40,7 +40,7 @@ export default async function SearchPage({
     <main className="min-h-screen pt-16">
       <section className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1080px] px-6 pt-24 pb-16">
+        <div className="relative z-10 mx-auto max-w-[1080px] px-4 sm:px-6 pt-16 sm:pt-24 pb-12 sm:pb-16">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Search the corpus
           </div>
@@ -92,7 +92,7 @@ export default async function SearchPage({
       </section>
 
       {q && records.length > 0 && (
-        <section className="mx-auto max-w-[1080px] px-6 py-16">
+        <section className="mx-auto max-w-[1080px] px-4 sm:px-6 py-16">
           <div className="max-w-[760px] space-y-4">
             {records.map((r, i) => (
               <SimilarRecordCard key={`${r.sourceDataset}-${r.recordId}`} record={r} index={i} />
@@ -102,7 +102,7 @@ export default async function SearchPage({
       )}
 
       {q && records.length === 0 && (
-        <section className="mx-auto max-w-[1080px] px-6 py-16">
+        <section className="mx-auto max-w-[1080px] px-4 sm:px-6 py-16">
           <div className="max-w-[760px] rounded-[16px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-8">
             <div className="text-[clamp(28px,3.5vw,36px)] tracking-[-0.02em] font-semibold leading-[1.1]">
               No matches found for &ldquo;{q}&rdquo;.

@@ -127,7 +127,7 @@ export function Hero() {
       {/* Foreground — pulled up & fades as user scrolls */}
       <div
         ref={contentRef}
-        className="relative z-10 mx-auto w-full max-w-[1200px] px-6 pt-24 pb-12 text-center will-change-transform"
+        className="relative z-10 mx-auto w-full max-w-[1200px] px-4 sm:px-6 pt-24 pb-12 text-center will-change-transform"
         style={{ transform: "translate3d(0, 0, 0)", opacity: 1 }}
       >
         <div
@@ -135,7 +135,7 @@ export function Hero() {
           style={{ animation: "glassbox-fade-up 0.7s ease-out both" }}
         >
           <GlassboxWordmark
-            size={140}
+            size="clamp(64px, 16vw, 140px)"
             animateDraw
             className="text-white drop-shadow-[0_6px_30px_rgba(0,0,0,0.6)]"
           />

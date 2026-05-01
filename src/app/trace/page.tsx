@@ -7,7 +7,7 @@ export default function TracePage() {
     <main className="min-h-screen pt-16">
       <section className="relative border-b border-[var(--color-border)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[920px] px-6 pt-24 pb-12">
+        <div className="relative z-10 mx-auto max-w-[920px] px-4 sm:px-6 pt-24 pb-12">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · data lineage
           </div>
@@ -22,7 +22,7 @@ export default function TracePage() {
         </div>
       </section>
 
-      <article className="mx-auto max-w-[760px] px-6 py-16 space-y-14 text-[16px] leading-[1.65] text-[var(--color-fg)]">
+      <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-16 space-y-14 text-[16px] leading-[1.65] text-[var(--color-fg)]">
         <Section number="01" title="What is TRACE?">
           <p>
             TRACE — Targeted Review of Alberta&apos;s Contracts and Expenditures — is a program of
@@ -72,7 +72,8 @@ export default function TracePage() {
           <p className="text-[var(--color-fg-muted)] mb-4">
             Which Glassbox surface uses which TRACE data product:
           </p>
-          <table className="w-full text-[13px] border-t border-[var(--color-border)]">
+          <div className="-mx-4 sm:mx-0 overflow-x-auto px-4 sm:px-0">
+          <table className="w-full min-w-[560px] sm:min-w-0 text-[13px] border-t border-[var(--color-border)]">
             <thead className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
               <tr>
                 <th className="text-left py-2 pr-4">Glassbox surface</th>
@@ -88,6 +89,7 @@ export default function TracePage() {
               <Row a="/transparency/recipients" b="cra.matrix_census · concentration analysis" />
             </tbody>
           </table>
+          </div>
         </Section>
 
         <Section number="04" title="Aligned with the Alberta AI Usage Policy">
@@ -121,7 +123,7 @@ export default function TracePage() {
       </article>
 
       <section className="border-t border-[var(--color-border)] py-12">
-        <div className="mx-auto max-w-[760px] px-6 flex flex-wrap items-baseline justify-between gap-4">
+        <div className="mx-auto max-w-[760px] px-4 sm:px-6 flex flex-wrap items-baseline justify-between gap-4">
           <Link
             href={"/follow" as never}
             className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"

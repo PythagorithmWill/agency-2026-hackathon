@@ -11,7 +11,7 @@ export function MethodologyHero() {
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
       <div className="atmosphere-drift" aria-hidden />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1080px] px-6 py-24 text-center">
+      <div className="relative z-10 mx-auto w-full max-w-[1080px] px-4 sm:px-6 py-16 sm:py-24 text-center">
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 4 }}
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
@@ -25,7 +25,7 @@ export function MethodologyHero() {
           <CharStaggerHeadline
             text="The methodology."
             accentLast
-            className="text-[clamp(56px,8vw,112px)] leading-[1.0] tracking-[-0.04em] font-semibold"
+            className="text-[clamp(40px,8vw,112px)] leading-[1.05] tracking-[-0.04em] font-semibold"
             staggerMs={32}
             charDurationMs={550}
             initialDelayMs={150}

@@ -65,7 +65,7 @@ export default async function TransparencyOverview() {
       {/* Hero */}
       <section className="relative border-b border-[var(--color-border)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-24 pb-12">
+        <div className="relative z-10 mx-auto max-w-[1280px] px-4 sm:px-6 pt-24 pb-12">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · transparency dashboard
           </div>
@@ -85,7 +85,7 @@ export default async function TransparencyOverview() {
       <DashboardTabs />
 
       {/* KPI strip */}
-      <section className="mx-auto max-w-[1280px] px-6 pt-10">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiTile
             label="Total federal spend"
@@ -111,7 +111,7 @@ export default async function TransparencyOverview() {
       </section>
 
       {/* 6-panel grid */}
-      <section className="mx-auto max-w-[1280px] px-6 py-12">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* 1. Top departments */}
           <Panel
@@ -255,8 +255,8 @@ export default async function TransparencyOverview() {
             span={3}
           >
             {snap.recentLarge.length > 0 ? (
-              <div className="overflow-x-auto -mx-6 px-6">
-                <table className="w-full text-[13px]">
+              <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
+                <table className="w-full min-w-[720px] text-[13px]">
                   <thead className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] border-b border-[var(--color-border)]">
                     <tr>
                       <th className="text-left py-2">Recipient</th>
@@ -310,7 +310,7 @@ export default async function TransparencyOverview() {
 
       {/* Footer methodology link */}
       <section className="border-t border-[var(--color-border)] py-12 mt-12">
-        <div className="mx-auto max-w-[1280px] px-6 flex flex-wrap items-baseline justify-between gap-4">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 flex flex-wrap items-baseline justify-between gap-4">
           <div className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] max-w-[640px]">
             Glassbox derives every figure from the source corpus. The dataset shows what is in the
             published record and nothing else. Aggregations are precomputed nightly; record-level

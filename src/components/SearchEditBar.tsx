@@ -43,7 +43,7 @@ export function SearchEditBar({ initialQuery }: { initialQuery: string }) {
           e.preventDefault();
           submit();
         }}
-        className="search-input-wrap flex items-center gap-3 rounded-[10px] bg-[var(--color-bg-elev-1)] border border-[var(--color-border-strong)] px-4 py-3 max-w-[680px]"
+        className="search-input-wrap flex items-center gap-2 sm:gap-3 rounded-[10px] bg-[var(--color-bg-elev-1)] border border-[var(--color-border-strong)] px-3 sm:px-4 py-3 max-w-[680px]"
       >
         <input
           type="search"
@@ -55,12 +55,12 @@ export function SearchEditBar({ initialQuery }: { initialQuery: string }) {
               : "Try “indigenous broadband”, “artificial intelligence”, “housing”…"
           }
           autoFocus={!initialQuery}
-          className="flex-1 bg-transparent border-0 outline-none text-[var(--text-body)] placeholder:italic placeholder:text-[var(--color-fg-subtle)] min-w-[200px]"
+          className="min-w-0 flex-1 bg-transparent border-0 outline-none text-[var(--text-body)] placeholder:italic placeholder:text-[var(--color-fg-subtle)]"
         />
         <button
           type="submit"
           disabled={!q.trim() || working || q.trim() === initialQuery}
-          className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.08em] text-[var(--color-accent)] hover:opacity-90 disabled:opacity-30"
+          className="shrink-0 font-[var(--font-mono)] text-[11px] sm:text-[12px] uppercase tracking-[0.08em] text-[var(--color-accent)] hover:opacity-90 disabled:opacity-30"
         >
           {working ? "Searching…" : initialQuery ? "Update →" : "Search →"}
         </button>

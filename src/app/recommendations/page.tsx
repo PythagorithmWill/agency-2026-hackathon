@@ -115,11 +115,11 @@ export default async function RecommendationsPage() {
       {/* Hero */}
       <section className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-32 pb-16">
+        <div className="relative z-10 mx-auto max-w-[1280px] px-4 sm:px-6 pt-20 sm:pt-32 pb-12 sm:pb-16">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · decision intelligence
           </div>
-          <h1 className="mt-6 text-[clamp(56px,8vw,108px)] leading-[0.95] tracking-[-0.04em] font-medium">
+          <h1 className="mt-6 text-[clamp(40px,8vw,108px)] leading-[1.0] tracking-[-0.04em] font-medium">
             Recommendations<span className="text-[var(--color-accent)]">.</span>
           </h1>
           <p className="mt-6 max-w-[820px] text-[clamp(18px,1.6vw,22px)] italic text-[var(--color-fg-muted)] leading-[1.45]">
@@ -137,7 +137,7 @@ export default async function RecommendationsPage() {
       </section>
 
       {/* KPI strip */}
-      <section className="mx-auto max-w-[1280px] px-6 pt-10">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Stat label="Recommendations" value={recommendations.length.toLocaleString("en-CA")} />
           <Stat label="Underlying matches" value={totalMatches.toLocaleString("en-CA")} />
@@ -159,12 +159,12 @@ export default async function RecommendationsPage() {
       </section>
 
       {/* Capital-planning Gantt */}
-      <section className="mx-auto max-w-[1280px] px-6 pt-12">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-12">
         <RecommendationGantt recommendations={recommendations} />
       </section>
 
       {/* Priority sections */}
-      <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-12">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-12">
         <PrioritySection
           title="Now"
           subtitle="Highest severity or largest dollars at stake. Surface to the audit committee or program lead."
@@ -187,7 +187,7 @@ export default async function RecommendationsPage() {
 
       {/* Methodology footer */}
       <section className="border-t border-[var(--color-border)] py-12">
-        <div className="mx-auto max-w-[1280px] px-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-[14px] leading-[1.55] text-[var(--color-fg-muted)]">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-[14px] leading-[1.55] text-[var(--color-fg-muted)]">
           <div>
             <h3 className="text-[15px] tracking-tight text-[var(--color-fg)]">
               How recommendations are built

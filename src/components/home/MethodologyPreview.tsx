@@ -10,7 +10,7 @@ import Link from "next/link";
  */
 export function MethodologyPreview() {
   return (
-    <section className="mx-auto max-w-[800px] px-6 py-32">
+    <section className="mx-auto max-w-[800px] px-4 sm:px-6 py-20 sm:py-28 md:py-32">
       <h2 className="text-[clamp(40px,5vw,56px)] leading-[1.1] tracking-[-0.025em] font-semibold">
         The substance behind the surface.
       </h2>

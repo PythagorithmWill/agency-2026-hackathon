@@ -20,7 +20,7 @@ export default async function RecipientsTab() {
   return (
     <main className="min-h-screen pt-16">
       <section className="border-b border-[var(--color-border)]">
-        <div className="mx-auto max-w-[1280px] px-6 pt-20 pb-8">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-20 pb-8">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · recipients
           </div>
@@ -42,7 +42,7 @@ export default async function RecipientsTab() {
       </section>
       <DashboardTabs />
 
-      <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-8">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-8">
         {conc && conc.recipientCount > 0 ? (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

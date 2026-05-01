@@ -5,7 +5,7 @@
  */
 export function ExplainerCards() {
   return (
-    <section className="mx-auto max-w-[1200px] px-6 md:px-16 py-32">
+    <section className="mx-auto max-w-[1200px] px-4 sm:px-6 md:px-16 py-20 sm:py-28 md:py-32">
       <div style={{ animation: "glassbox-fade-up 0.6s ease-out both" }}>
         <h2 className="text-[clamp(40px,5vw,56px)] leading-[1.1] tracking-[-0.025em] font-medium">
           What this does.
@@ -53,7 +53,7 @@ function Card({
   return (
     <article
       style={{ animation: `glassbox-fade-up 0.6s ease-out ${0.15 + index * 0.08}s both` }}
-      className="group relative rounded-[24px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-8 min-h-[320px] transition-colors hover:bg-[var(--color-bg-elev-2)] hover:border-[var(--color-border-strong)]"
+      className="group relative rounded-[24px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-6 sm:p-8 min-h-[260px] sm:min-h-[320px] transition-colors hover:bg-[var(--color-bg-elev-2)] hover:border-[var(--color-border-strong)]"
     >
       <div className="absolute top-7 right-7 text-[var(--color-fg-subtle)] group-hover:text-[var(--color-accent)] transition-colors duration-200">
         {glyph}

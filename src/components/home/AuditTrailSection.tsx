@@ -14,8 +14,8 @@ const TIERS = ["Input", "Context", "Output", "Audit"] as const;
  */
 export function AuditTrailSection() {
   return (
-    <section className="mx-auto max-w-[1200px] px-6 md:px-16 py-32">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+    <section className="mx-auto max-w-[1200px] px-4 sm:px-6 md:px-16 py-20 sm:py-28 md:py-32">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
         <div style={{ animation: "glassbox-fade-up 0.6s ease-out both" }}>
           <h2 className="text-[clamp(40px,5vw,56px)] leading-[1.1] tracking-[-0.025em] font-semibold">
             Every output carries an audit trail.

@@ -58,7 +58,7 @@ export default async function DepartmentPage({
       {/* Hero */}
       <section className="relative border-b border-[var(--color-border)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-24 pb-12">
+        <div className="relative z-10 mx-auto max-w-[1280px] px-4 sm:px-6 pt-24 pb-12">
           <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             Glassbox · department profile
           </div>
@@ -79,7 +79,7 @@ export default async function DepartmentPage({
       </section>
 
       {/* KPI strip */}
-      <section className="mx-auto max-w-[1280px] px-6 pt-10">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Stat label="Total spend" value={compactDollar(dept.total)} />
           <Stat label="Agreements" value={dept.agreementCount.toLocaleString("en-CA")} />
@@ -92,7 +92,7 @@ export default async function DepartmentPage({
       </section>
 
       {/* Content panels */}
-      <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-8">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-8">
         {profile && (
           <>
             <Card
@@ -171,7 +171,7 @@ export default async function DepartmentPage({
       </section>
 
       <section className="border-t border-[var(--color-border)] py-8">
-        <div className="mx-auto max-w-[1280px] px-6 flex flex-wrap items-baseline justify-between gap-4">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 flex flex-wrap items-baseline justify-between gap-4">
           <Link
             href={"/transparency/departments" as never}
             className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"

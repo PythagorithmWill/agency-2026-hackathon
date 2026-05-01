@@ -49,7 +49,7 @@ export default async function RecordPage({
     <main className="min-h-screen pt-16">
       <section className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1080px] px-6 pt-24 pb-16">
+        <div className="relative z-10 mx-auto max-w-[1080px] px-4 sm:px-6 pt-24 pb-16">
           <div className="flex items-baseline gap-3 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
             <span>Source record</span>
             <SourceBadge source={source} />
@@ -69,7 +69,7 @@ export default async function RecordPage({
         </div>
       </section>
 
-      <article className="mx-auto max-w-[1080px] px-6 py-16">
+      <article className="mx-auto max-w-[1080px] px-4 sm:px-6 py-16">
         {/* Description */}
         <section className="max-w-[720px]">
           <h2 className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">

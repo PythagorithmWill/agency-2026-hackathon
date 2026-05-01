@@ -19,8 +19,8 @@ export function DashboardTabs() {
       aria-label="Transparency dashboard tabs"
       className="border-b border-[var(--color-border)] sticky top-20 z-20 bg-[var(--color-bg)]/85 backdrop-blur"
     >
-      <div className="mx-auto max-w-[1280px] px-6">
-        <ul className="flex gap-1 overflow-x-auto -mb-px">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
+        <ul className="flex gap-1 overflow-x-auto -mb-px scrollbar-thin">
           {TABS.map((t) => {
             const active =
               path === t.href ||
@@ -30,7 +30,7 @@ export function DashboardTabs() {
                 <Link
                   href={t.href as never}
                   className={
-                    "block px-4 py-3 text-[13px] tracking-tight border-b-2 transition-colors " +
+                    "block px-3 sm:px-4 py-3 text-[13px] tracking-tight border-b-2 whitespace-nowrap transition-colors " +
                     (active
                       ? "border-[var(--color-accent)] text-[var(--color-fg)]"
                       : "border-transparent text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]")

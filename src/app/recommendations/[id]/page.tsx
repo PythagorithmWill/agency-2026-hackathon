@@ -90,7 +90,7 @@ export default async function RecommendationDetail({
     <main className="min-h-screen pt-16">
       <section className="relative border-b border-[var(--color-border-strong)] overflow-hidden">
         <div className="atmosphere-drift" aria-hidden />
-        <div className="relative z-10 mx-auto max-w-[1280px] px-6 pt-32 pb-16">
+        <div className="relative z-10 mx-auto max-w-[1280px] px-4 sm:px-6 pt-20 sm:pt-32 pb-12 sm:pb-16">
           <div className="flex items-baseline gap-3 flex-wrap">
             <Link
               href={"/recommendations" as never}
@@ -122,7 +122,7 @@ export default async function RecommendationDetail({
       </section>
 
       {/* KPI strip */}
-      <section className="mx-auto max-w-[1280px] px-6 pt-10">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Stat label="Gross at stake" value={compactDollar(rec.monetaryImpact.grossAtStake)} />
           <Stat
@@ -138,7 +138,7 @@ export default async function RecommendationDetail({
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1280px] px-6 py-12 space-y-8">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-8">
         {/* Monetary impact */}
         <Panel title="Monetary impact">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -226,8 +226,8 @@ export default async function RecommendationDetail({
               <div className="font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] mb-3">
                 Source rows ({rec.evidence.length} cited)
               </div>
-              <div className="overflow-x-auto -mx-6 px-6">
-                <table className="w-full text-[12px] font-[var(--font-mono)]">
+              <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
+                <table className="w-full min-w-[600px] text-[12px] font-[var(--font-mono)]">
                   <thead className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] border-b border-[var(--color-border)]">
                     <tr>
                       <th className="text-left py-2">Source</th>

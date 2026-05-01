@@ -17,7 +17,7 @@ export default function RecipientError({
 }) {
   return (
     <main className="min-h-screen pt-32">
-      <div className="mx-auto max-w-[760px] px-6 py-16">
+      <div className="mx-auto max-w-[760px] px-4 sm:px-6 py-16">
         <div className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
           Glassbox · recipient profile
         </div>

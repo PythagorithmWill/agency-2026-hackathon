@@ -12,7 +12,7 @@
 export function IntroSection() {
   return (
     <section className="border-t border-[var(--color-border)]">
-      <div className="mx-auto max-w-[1200px] px-6 md:px-16 py-32 md:py-40">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 md:px-16 py-20 sm:py-28 md:py-40">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
           {/* Left column — label + canonical phrase */}
           <div className="lg:col-span-5">

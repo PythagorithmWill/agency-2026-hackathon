@@ -12,8 +12,9 @@ export function AnimatedAiaTable({ rows }: { rows: Row[] }) {
   const reduce = useReducedMotion();
   const ease = [0.16, 1, 0.3, 1] as const;
   return (
+    <div className="mt-6 -mx-4 sm:mx-0 overflow-x-auto px-4 sm:px-0">
     <motion.table
-      className="mt-6 w-full border-collapse text-[14px]"
+      className="w-full min-w-[640px] sm:min-w-0 border-collapse text-[14px]"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-80px" }}
@@ -69,6 +70,7 @@ export function AnimatedAiaTable({ rows }: { rows: Row[] }) {
         ))}
       </tbody>
     </motion.table>
+    </div>
   );
 }
 

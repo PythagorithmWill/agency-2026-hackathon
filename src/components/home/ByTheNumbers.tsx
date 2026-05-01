@@ -31,9 +31,9 @@ const STATS = [
  */
 export function ByTheNumbers() {
   return (
-    <section className="border-y border-[var(--color-border-strong)] py-24">
-      <div className="mx-auto max-w-[1200px] px-6 md:px-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <section className="border-y border-[var(--color-border-strong)] py-16 sm:py-24">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 md:px-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {STATS.map((s, i) => (
             <div
               key={s.label}
