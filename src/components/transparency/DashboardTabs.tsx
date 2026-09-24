@@ -10,6 +10,7 @@ const TABS = [
   { href: "/transparency/programs", label: "Programs" },
   { href: "/transparency/forecasts", label: "Forecasts" },
   { href: "/transparency/risk", label: "Risk map" },
+  { href: "/transparency/data-quality", label: "Data quality" },
 ] as const;
 
 export function DashboardTabs() {

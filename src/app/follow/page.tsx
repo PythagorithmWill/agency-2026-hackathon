@@ -1,11 +1,38 @@
 import Link from "next/link";
 import { PATTERNS } from "@/lib/patterns/registry";
+import { loadPatternCounts } from "@/lib/patterns/store";
+import { loadSnapshot } from "@/lib/analytics/snapshot";
 import { PatternCard } from "@/components/follow/PatternCard";
 
 export const metadata = { title: "Follow the money — Glassbox" };
 
-export default function FollowLanding() {
+/**
+ * Per-pattern match totals. Live counts come from the pattern_matches
+ * store; if that read fails (store not yet built, DB unreachable) the
+ * static analytics snapshot's per-pattern arrays are the fallback, and
+ * a pattern with neither shows the registry's status text instead.
+ */
+async function loadCounts(): Promise<{ counts: Record<string, number>; source: "table" | "snapshot" | "none" }> {
+  try {
+    const live = await loadPatternCounts();
+    if (live && Object.keys(live).length > 0) return { counts: live, source: "table" };
+  } catch (e) {
+    console.warn("[follow] loadPatternCounts failed, using snapshot:", (e as Error).message);
+  }
+  const snap = await loadSnapshot().catch(() => null);
+  if (snap?.patternMatches) {
+    const counts: Record<string, number> = {};
+    for (const [k, v] of Object.entries(snap.patternMatches)) {
+      if (Array.isArray(v) && v.length > 0) counts[k] = v.length;
+    }
+    return { counts, source: "snapshot" };
+  }
+  return { counts: {}, source: "none" };
+}
+
+export default async function FollowLanding() {
   const traceCount = PATTERNS.filter((p) => p.attribution === "TRACE").length;
+  const { counts, source } = await loadCounts();
 
   return (
     <main className="min-h-screen pt-16">
@@ -33,9 +60,17 @@ export default function FollowLanding() {
       <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {PATTERNS.map((p, i) => (
-            <PatternCard key={p.id} pattern={p} index={i} />
+            <PatternCard key={p.id} pattern={p} index={i} matchCount={counts[p.id] ?? null} />
           ))}
         </div>
+        {source !== "none" && (
+          <p className="mt-6 font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
+            Match counts ·{" "}
+            {source === "table"
+              ? "totals from the pattern store (see each pattern page footer for live-table vs snapshot)"
+              : "from the static analytics snapshot fallback (top 50 per pattern)"}
+          </p>
+        )}
       </section>
 
       {/* Attribution */}

@@ -93,10 +93,43 @@ const AIA_TABLE = [
 
 const LANDMINES: { id: string; what: string; guard: string }[] = [
   { id: "F-1", what: "ref_number collisions across distinct recipients (~41K rows)", guard: "Partition by (ref_number, COALESCE(bn, legal_name, _id::text))" },
-  { id: "F-3", what: "agreement_value is cumulative — naive SUM triple-counts amendments", guard: "WITH agreement_current AS (DISTINCT ON … ORDER BY amendment_number DESC)" },
+  { id: "F-3", what: "agreement_value is cumulative — each amendment row carries the running total, so a naive SUM triple-counts amendments", guard: "WITH agreement_current AS (DISTINCT ON … ORDER BY amendment_number DESC); every growth ratio is latest ÷ original for the (ref_number, BN|legal_name) chain per F-1, never a sum across rows" },
   { id: "A-13", what: "AB exact duplicates + 951 reversal pairs", guard: "Dedupe on (ministry, business_unit_name, recipient, program, amount, payment_date); pair-collapse opposite-sign matches" },
   { id: "A-10", what: "AB recipient-NULL roll-up rows (~$25B in FY24+25)", guard: "Filter recipient IS NOT NULL; disclose the omitted aggregate" },
   { id: "C-7", what: "CRA name history is mostly missing (1.4% of BNs)", guard: "Treat cra.cra_identification.legal_name as current-state, not historical" },
+];
+
+const V2_CHOICES: { title: string; body: string }[] = [
+  {
+    title: "Evidence strength (0–1) is separate from severity.",
+    body:
+      "Every stored match carries an evidence-strength score: how much of the published record supports the match — row volume, recency, corroborating rows across sources. Severity says how far the match sits from its peers; strength says how well-documented it is. Labels: weak < 0.40, moderate < 0.70, strong ≥ 0.70. Formula reference: src/lib/patterns/strength.ts.",
+  },
+  {
+    title: "Thresholds are relative percentiles over rolling windows.",
+    body:
+      "v1 used fixed cutoffs chosen in April 2026. v2 detectors compute cutoffs as percentiles of the comparable population — same department, program or fiscal-year window — and recompute them at every refresh. A match means 'top decile of its peers in this window', not 'above a number that stopped being reviewed'.",
+  },
+  {
+    title: "The loop-score attention threshold of 12 is a Glassbox choice.",
+    body:
+      "The upstream scoring script reports the score distribution at ≥ 15 and ≥ 10 and defines no attention cut. The 12 / 15 / 18 bands behind the observation / attention / flag pills are Glassbox calibration choices, and are documented as such on /trace.",
+  },
+  {
+    title: "Zombie recipients use a rolling 36-month window, not a fixed date.",
+    body:
+      "The upstream zombie script keys on last agreement start before 2022-01-01. Glassbox measures silence relative to the refresh date (last agreement start < today − 36 months), so the set advances with each refresh instead of growing against a stale cutoff.",
+  },
+  {
+    title: "Amendment values are cumulative; growth is always latest ÷ original.",
+    body:
+      "agreement_value on a federal amendment row is the running total (F-3). Sole-source creep, amendment growth on /transparency/risk and every ratio on a match card divide the latest-amendment value by the amendment-0 value for the chain keyed by (ref_number, BN | legal name) per F-1.",
+  },
+  {
+    title: "Data quality is scored, not just listed.",
+    body:
+      "The /transparency/data-quality scorecard records, per documented landmine, how many rows and dollars the guard touches at refresh time and whether the property is active, mitigated by a canonical table, or resolved by the publisher. These are properties of the published data, not findings about any entity.",
+  },
 ];
 
 const AGENTS = [
@@ -232,7 +265,28 @@ export default function MethodologyPage() {
           </ul>
         </Section>
 
-        <Section number="06" heading="The five agents">
+        <Section number="06" heading="Evidence strength and thresholds (v2)">
+          <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
+            Methodology v2 moved pattern detection from request-time queries to
+            precomputed match tables. In doing so several thresholds became
+            explicit Glassbox choices rather than inherited constants. They
+            are listed here so no reader mistakes them for upstream or
+            Ministry definitions; the data lineage is on /trace and the
+            operator description is in docs/METHODOLOGY-V2.md.
+          </p>
+          <ul className="mt-6 space-y-5">
+            {V2_CHOICES.map((c, i) => (
+              <li key={i} className="border-l border-[var(--color-border)] pl-4">
+                <div className="text-[14px] text-[var(--color-fg)]">{c.title}</div>
+                <div className="mt-1 text-[14px] leading-[20px] text-[var(--color-fg-muted)]">
+                  {c.body}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Section>
+
+        <Section number="07" heading="The five agents">
           <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
             Each agent operates within bounded perception. The strata are
             not decorative — they are how the architecture is scoped.
@@ -256,7 +310,7 @@ export default function MethodologyPage() {
           <footer className="mt-32 border-t border-[var(--color-border-strong)] pt-12 text-center">
             <PythagorithmMark className="w-8 h-8 mx-auto text-[var(--color-accent)]" />
             <p className="mt-6 font-[var(--font-mono)] italic text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-              Cite as: Pythagorithm Proof Methodology v1.0, retrieved {new Date().toISOString().slice(0, 10)}.
+              Cite as: Pythagorithm Proof Methodology v2.0, retrieved {new Date().toISOString().slice(0, 10)}.
             </p>
           </footer>
         </RevealSection>

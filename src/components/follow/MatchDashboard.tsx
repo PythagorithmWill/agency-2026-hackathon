@@ -1,4 +1,15 @@
-import type { PatternMatch, SignalStrength } from "@/lib/patterns/types";
+import type { SignalStrength } from "@/lib/patterns/types";
+
+/**
+ * The minimal shape the dashboard needs. Structural on purpose: both the
+ * v1 snapshot match and the v2 store row (after severity → signalStrength
+ * mapping) satisfy it, so store-side type changes do not ripple in here.
+ */
+export interface DashboardMatch {
+  subject: { type: string; id: string; canonicalName: string };
+  evidence: Array<{ field: string; value: string | number | null }>;
+  signalStrength: SignalStrength;
+}
 
 /**
  * At-a-glance KPI strip for a pattern detail page. Always renders a
@@ -41,11 +52,11 @@ type Kpi = {
 };
 
 function topMatchByEvidence(
-  matches: PatternMatch[],
+  matches: DashboardMatch[],
   field: string,
-): PatternMatch | null {
+): DashboardMatch | null {
   if (matches.length === 0) return null;
-  return matches.reduce<PatternMatch | null>((acc, m) => {
+  return matches.reduce<DashboardMatch | null>((acc, m) => {
     const v = n(m.evidence.find((e) => e.field === field)?.value);
     if (acc === null) return m;
     const accV = n(acc.evidence.find((e) => e.field === field)?.value);
@@ -57,7 +68,7 @@ function truncate(s: string, max = 48): string {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
-function ev(m: PatternMatch, field: string): unknown {
+function ev(m: DashboardMatch, field: string): unknown {
   return m.evidence.find((e) => e.field === field)?.value ?? null;
 }
 
@@ -65,7 +76,7 @@ function n(v: unknown): number {
   return typeof v === "number" ? v : Number(v) || 0;
 }
 
-function buildKpis(patternId: string, matches: PatternMatch[]): Kpi[] {
+function buildKpis(patternId: string, matches: DashboardMatch[]): Kpi[] {
   if (matches.length === 0) return [];
   switch (patternId) {
     case "zombie-recipients": {
@@ -156,7 +167,7 @@ function buildKpis(patternId: string, matches: PatternMatch[]): Kpi[] {
       const avgHhi =
         hhis.length > 0 ? hhis.reduce((s, h) => s + h, 0) / hhis.length : 0;
       const deptTotal = matches.reduce((s, m) => s + n(ev(m, "dept_total")), 0);
-      const topShareMatch = matches.reduce<PatternMatch | null>((acc, m) => {
+      const topShareMatch = matches.reduce<DashboardMatch | null>((acc, m) => {
         const v = parseFloat(String(ev(m, "top3_share_pct")) || "0");
         if (acc === null) return m;
         const accV = parseFloat(String(ev(acc, "top3_share_pct")) || "0");
@@ -236,7 +247,7 @@ function buildKpis(patternId: string, matches: PatternMatch[]): Kpi[] {
     case "duplicative-funding": {
       const fed = matches.reduce((s, m) => s + n(ev(m, "fed_records")), 0);
       const ab = matches.reduce((s, m) => s + n(ev(m, "ab_records")), 0);
-      const topMatch = matches.reduce<PatternMatch | null>((acc, m) => {
+      const topMatch = matches.reduce<DashboardMatch | null>((acc, m) => {
         const v = n(ev(m, "fed_records")) + n(ev(m, "ab_records"));
         if (acc === null) return m;
         const accV = n(ev(acc, "fed_records")) + n(ev(acc, "ab_records"));
@@ -287,11 +298,20 @@ export function MatchDashboard({
   matches,
   slug,
   severityFilter,
+  baseQuery = "",
+  scopeLabel,
 }: {
   patternId: string;
-  matches: PatternMatch[];
+  matches: DashboardMatch[];
   slug: string;
   severityFilter: SignalStrength | null;
+  /**
+   * Query string (without leading `?`) of the non-severity filters on the
+   * page (dept/prov/fy/strength/page), so the severity chips keep them.
+   */
+  baseQuery?: string;
+  /** Optional caption override, e.g. "on this page of 1,204". */
+  scopeLabel?: string;
 }) {
   const total = matches.length;
   const flag = matches.filter((m) => m.signalStrength === "flag").length;
@@ -313,12 +333,13 @@ export function MatchDashboard({
           At-a-glance
         </h2>
         <div className="font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
-          {total.toLocaleString("en-CA")} {total === 1 ? "match" : "matches"} in this view
+          {scopeLabel ??
+            `${total.toLocaleString("en-CA")} ${total === 1 ? "match" : "matches"} in this view`}
           {severityFilter && (
             <>
               {" · filtering "}
               <a
-                href={`/follow/${slug}`}
+                href={`/follow/${slug}${baseQuery ? `?${baseQuery}` : ""}`}
                 className="text-[var(--color-accent)] underline-offset-4 hover:underline"
               >
                 clear filter ×
@@ -345,6 +366,7 @@ export function MatchDashboard({
             slug={slug}
             value="flag"
             active={severityFilter === "flag"}
+            baseQuery={baseQuery}
           />
           <SeverityChip
             color={SEVERITY_COLORS.attention}
@@ -354,6 +376,7 @@ export function MatchDashboard({
             slug={slug}
             value="attention"
             active={severityFilter === "attention"}
+            baseQuery={baseQuery}
           />
           <SeverityChip
             color={SEVERITY_COLORS.observation}
@@ -363,6 +386,7 @@ export function MatchDashboard({
             slug={slug}
             value="observation"
             active={severityFilter === "observation"}
+            baseQuery={baseQuery}
           />
         </div>
       </div>
@@ -455,6 +479,7 @@ function SeverityChip({
   slug,
   value,
   active,
+  baseQuery = "",
 }: {
   color: string;
   label: string;
@@ -463,9 +488,12 @@ function SeverityChip({
   slug: string;
   value: string;
   active: boolean;
+  baseQuery?: string;
 }) {
   const pct = total > 0 ? (count / total) * 100 : 0;
-  const href = active ? `/follow/${slug}` : `/follow/${slug}?severity=${value}`;
+  const base = `/follow/${slug}`;
+  const sep = baseQuery ? `?${baseQuery}&` : "?";
+  const href = active ? (baseQuery ? `${base}?${baseQuery}` : base) : `${base}${sep}severity=${value}`;
   const disabled = count === 0;
   const className = `rounded-md border p-3 flex items-center gap-3 transition-colors ${
     active

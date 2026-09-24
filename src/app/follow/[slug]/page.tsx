@@ -2,10 +2,26 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPattern, TRACE_ATTRIBUTION_LINE } from "@/lib/patterns/registry";
 import { getDetector } from "@/lib/patterns/detectors";
-import { loadSnapshot } from "@/lib/analytics/snapshot";
-import type { PatternMatch, SignalStrength } from "@/lib/patterns/types";
+import {
+  loadPatternMatches,
+  loadPatternFilters,
+  type PatternMatchRow,
+} from "@/lib/patterns/store";
+import type { SignalStrength } from "@/lib/patterns/types";
 import { PatternStatusPill } from "@/components/follow/PatternStatusPill";
-import { MatchDashboard } from "@/components/follow/MatchDashboard";
+import { MatchDashboard, type DashboardMatch } from "@/components/follow/MatchDashboard";
+import { MatchFilterBar } from "@/components/follow/MatchFilterBar";
+import { MatchPagination } from "@/components/follow/MatchPagination";
+import { EvidenceStrengthMeter } from "@/components/follow/EvidenceStrengthMeter";
+import {
+  FOLLOW_PAGE_SIZE,
+  followHref,
+  parseFy,
+  parsePage,
+  parseStrength,
+  parseText,
+  type FollowQuery,
+} from "@/components/follow/query";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -13,10 +29,41 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: p ? `${p.name} — Glassbox` : "Pattern — Glassbox" };
 }
 
-const SEV_COLOR: Record<SignalStrength, string> = {
-  observation: "var(--color-fg-muted)",
-  attention: "var(--color-accent-warn)",
-  flag: "var(--color-accent-fail)",
+type Severity = PatternMatchRow["severity"];
+
+const SEV_COLOR: Record<Severity, string> = {
+  low: "var(--color-fg-muted)",
+  medium: "var(--color-accent-warn)",
+  high: "var(--color-accent-fail)",
+  critical: "var(--color-accent-fail)",
+};
+
+/**
+ * The store's four-band severity (low/medium/high/critical) collapses to
+ * the three calibrated bands the dashboard ribbon and legend already use:
+ * low → observation, medium → attention, high + critical → flag.
+ */
+function toSignal(sev: Severity): SignalStrength {
+  if (sev === "low") return "observation";
+  if (sev === "medium") return "attention";
+  return "flag";
+}
+
+function toDashboardMatch(r: PatternMatchRow): DashboardMatch {
+  return {
+    subject: r.subject,
+    evidence: r.evidence,
+    signalStrength: toSignal(r.severity),
+  };
+}
+
+type SearchParams = {
+  severity?: string;
+  page?: string;
+  dept?: string;
+  prov?: string;
+  fy?: string;
+  strength?: string;
 };
 
 export default async function PatternDetail({
@@ -24,7 +71,7 @@ export default async function PatternDetail({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ severity?: string }>;
+  searchParams: Promise<SearchParams>;
 }) {
   const { slug } = await params;
   const sp = await searchParams;
@@ -35,28 +82,66 @@ export default async function PatternDetail({
   const pattern = getPattern(slug);
   if (!pattern) notFound();
 
+  const query: FollowQuery = {
+    page: parsePage(sp.page),
+    dept: parseText(sp.dept),
+    prov: parseText(sp.prov, 8),
+    fy: parseFy(sp.fy),
+    strength: parseStrength(sp.strength),
+  };
+  const page = query.page ?? 1;
+  // Non-severity params, serialised once so the dashboard chips can keep them.
+  const baseQuery = followHref(slug, query).split("?")[1] ?? "";
+
   const detector = getDetector(slug);
-  let matches: PatternMatch[] = [];
+  let rows: PatternMatchRow[] = [];
+  let total = 0;
+  let source: "table" | "snapshot" = "snapshot";
+  let filters: Awaited<ReturnType<typeof loadPatternFilters>> = {
+    departments: [],
+    provinces: [],
+    fyRange: null,
+  };
   let detectorError: string | null = null;
   if (detector) {
-    // Snapshot-first: read precomputed matches when available.
-    // Falls back to live detection only when the snapshot is missing
-    // or empty for this pattern.
-    const snap = await loadSnapshot();
-    const cached = snap?.patternMatches?.[slug] as PatternMatch[] | undefined;
-    const cachedError = snap?.patternMatchErrors?.[slug];
-    if (cached && cached.length > 0) {
-      matches = cached.slice(0, 50);
-    } else if (cachedError) {
-      detectorError = cachedError;
-    } else {
-      try {
-        matches = await detector.detect({ limit: 50 });
-      } catch (e) {
-        detectorError = (e as Error).message;
-      }
+    try {
+      const [res, f] = await Promise.all([
+        loadPatternMatches({
+          patternId: slug,
+          limit: FOLLOW_PAGE_SIZE,
+          offset: (page - 1) * FOLLOW_PAGE_SIZE,
+          department: query.dept,
+          province: query.prov,
+          fyFrom: query.fy,
+          minStrength: query.strength,
+        }),
+        loadPatternFilters(slug).catch(() => ({
+          departments: [],
+          provinces: [],
+          fyRange: null,
+        })),
+      ]);
+      rows = res.rows;
+      total = res.total;
+      source = res.source;
+      filters = f;
+    } catch (e) {
+      detectorError = (e as Error).message;
     }
   }
+
+  const hasFilters =
+    source === "table" &&
+    (filters.departments.length > 0 || filters.provinces.length > 0 || filters.fyRange !== null);
+  const anyFilterActive =
+    !!query.dept || !!query.prov || query.fy != null || (query.strength ?? 0) > 0;
+  const pages = Math.max(1, Math.ceil(total / FOLLOW_PAGE_SIZE));
+  const outOfRange = total > 0 && page > pages;
+  const dashboardRows = rows.map(toDashboardMatch);
+  const visibleRows = severityFilter
+    ? rows.filter((r) => toSignal(r.severity) === severityFilter)
+    : rows;
+  const computedAt = rows[0]?.computedAt ?? null;
 
   return (
     <main className="min-h-screen pt-16">
@@ -97,35 +182,53 @@ export default async function PatternDetail({
       </section>
 
       <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-8">
-        {detector && matches.length > 0 && (
-          <MatchDashboard
-            patternId={pattern.id}
-            matches={matches}
+        {detector && hasFilters && (
+          <MatchFilterBar
             slug={slug}
-            severityFilter={severityFilter}
+            current={query}
+            departments={filters.departments}
+            provinces={filters.provinces}
+            fyRange={filters.fyRange}
           />
         )}
-        {detector && matches.length > 0 && <SeverityLegend pattern={pattern} />}
+        {detector && rows.length > 0 && (
+          <MatchDashboard
+            patternId={pattern.id}
+            matches={dashboardRows}
+            slug={slug}
+            severityFilter={severityFilter}
+            baseQuery={baseQuery}
+            scopeLabel={
+              total > rows.length
+                ? `${rows.length.toLocaleString("en-CA")} of ${total.toLocaleString("en-CA")} matches on this page`
+                : undefined
+            }
+          />
+        )}
+        {detector && rows.length > 0 && <SeverityLegend pattern={pattern} />}
         {detector ? (
           detectorError ? (
             <DetectorErrorPanel error={detectorError} />
-          ) : matches.length > 0 ? (
+          ) : outOfRange ? (
+            <OutOfRangePanel slug={slug} query={query} pages={pages} />
+          ) : rows.length > 0 ? (
             <MatchList
-              matches={
-                severityFilter
-                  ? matches.filter((m) => m.signalStrength === severityFilter)
-                  : matches
-              }
+              rows={visibleRows}
+              total={total}
+              page={page}
               severityFilter={severityFilter}
               slug={slug}
+              query={query}
+              computedAt={computedAt}
+              source={source}
             />
           ) : (
-            <NoMatchesPanel />
+            <NoMatchesPanel filtered={anyFilterActive} slug={slug} />
           )
         ) : (
           <PendingPanel pattern={pattern} />
         )}
-        {detector && matches.length > 0 && <RecommendedActions pattern={pattern} />}
+        {detector && rows.length > 0 && <RecommendedActions pattern={pattern} />}
       </section>
 
       <section className="border-t border-[var(--color-border)] py-12">
@@ -136,8 +239,19 @@ export default async function PatternDetail({
           >
             ← All patterns
           </Link>
-          <div className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
-            Attribution: {pattern.attribution === "TRACE" ? "Alberta TRACE methodology" : "Glassbox-native"}
+          <div className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] text-right">
+            <div>
+              Attribution: {pattern.attribution === "TRACE" ? "Alberta TRACE methodology" : "Glassbox-native"}
+            </div>
+            {detector && (
+              <div className="mt-1">
+                Source ·{" "}
+                {source === "table"
+                  ? "live pattern_matches table"
+                  : "static analytics snapshot (filters unavailable)"}
+                {computedAt && ` · computed ${new Date(computedAt).toUTCString()}`}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -146,27 +260,37 @@ export default async function PatternDetail({
 }
 
 function MatchList({
-  matches,
+  rows,
+  total,
+  page,
   severityFilter,
   slug,
+  query,
+  computedAt,
+  source,
 }: {
-  matches: PatternMatch[];
+  rows: PatternMatchRow[];
+  total: number;
+  page: number;
   severityFilter: SignalStrength | null;
   slug: string;
+  query: FollowQuery;
+  computedAt: string | null;
+  source: "table" | "snapshot";
 }) {
-  if (matches.length === 0) {
+  if (rows.length === 0) {
     return (
       <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-10 text-center">
         <h3 className="text-[15px] tracking-tight">
-          No {severityFilter ?? ""} matches in this view.
+          No {severityFilter ?? ""} matches on this page.
         </h3>
         <p className="mt-3 max-w-[520px] mx-auto text-[14px] text-[var(--color-fg-muted)] leading-[1.55]">
-          The severity filter you selected has no matches in this snapshot.{" "}
+          The severity filter you selected has no matches on this page of results.{" "}
           <Link
-            href={`/follow/${slug}` as never}
+            href={followHref(slug, query) as never}
             className="text-[var(--color-accent)] underline-offset-4 hover:underline"
           >
-            Clear the filter →
+            Clear the severity filter →
           </Link>
         </p>
       </div>
@@ -176,19 +300,25 @@ function MatchList({
     <div>
       <div className="mb-6 flex items-baseline justify-between flex-wrap gap-3">
         <h2 className="text-[20px] tracking-tight">
-          {matches.length.toLocaleString("en-CA")} {matches.length === 1 ? "match" : "matches"}
+          {total.toLocaleString("en-CA")} {total === 1 ? "match" : "matches"}
+          {total > FOLLOW_PAGE_SIZE && (
+            <span className="ml-2 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)]">
+              · page {page}
+            </span>
+          )}
           {severityFilter && (
             <span className="ml-2 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-muted)]">
-              · severity = {severityFilter}
+              · severity = {severityFilter} (this page)
             </span>
           )}
         </h2>
         <div className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
-          Detection run · {new Date(matches[0].detectedAt).toUTCString()}
+          {source === "table" ? "Live table" : "Snapshot"}
+          {computedAt && ` · computed ${new Date(computedAt).toUTCString()}`}
         </div>
       </div>
       <ul className="space-y-3">
-        {matches.map((m, idx) => (
+        {rows.map((m, idx) => (
           <li
             key={`${m.matchId}#${idx}`}
             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-5 hover:border-[var(--color-border-strong)] transition-colors"
@@ -199,17 +329,31 @@ function MatchList({
               </h3>
               <span
                 className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] whitespace-nowrap"
-                style={{ color: SEV_COLOR[m.signalStrength] }}
+                style={{ color: SEV_COLOR[m.severity] }}
               >
-                {m.signalStrength}
+                {m.severity}
               </span>
             </div>
             <div className="mt-1 font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
               {m.subject.type} · {m.subject.id}
+              {m.department && ` · ${m.department}`}
+              {m.province && ` · ${m.province}`}
+              {m.fiscalYear != null && ` · FY ${m.fiscalYear}`}
             </div>
             <p className="mt-3 text-[14px] text-[var(--color-fg-muted)] leading-[1.55]">
               {m.calibratedSummary}
             </p>
+            <div className="mt-3">
+              <EvidenceStrengthMeter value={m.evidenceStrength} />
+            </div>
+            {m.benignNote && (
+              <p className="mt-3 text-[13px] leading-[1.5] text-[var(--color-fg-muted)] border-l-2 border-[var(--color-border-strong)] pl-3">
+                <span className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.1em] text-[var(--color-fg-subtle)]">
+                  Why this may be benign ·{" "}
+                </span>
+                {m.benignNote}
+              </p>
+            )}
             <div className="mt-3 font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.06em] text-[var(--color-fg-subtle)]">
               {m.evidence.length} source records cited
             </div>
@@ -232,17 +376,62 @@ function MatchList({
           </li>
         ))}
       </ul>
+      <div className="mt-6">
+        <MatchPagination slug={slug} query={query} page={page} total={total} />
+      </div>
     </div>
   );
 }
 
-function NoMatchesPanel() {
+function OutOfRangePanel({
+  slug,
+  query,
+  pages,
+}: {
+  slug: string;
+  query: FollowQuery;
+  pages: number;
+}) {
   return (
     <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-10 text-center">
-      <h3 className="text-[15px] tracking-tight">No matches above threshold</h3>
+      <h3 className="text-[15px] tracking-tight">Page out of range</h3>
       <p className="mt-3 max-w-[520px] mx-auto text-[14px] text-[var(--color-fg-muted)] leading-[1.55]">
-        The detector ran successfully and produced no records meeting the signal threshold for
-        this snapshot. The dataset shows what is in the published record and nothing else.
+        This view has {pages} {pages === 1 ? "page" : "pages"}.{" "}
+        <Link
+          href={followHref(slug, { ...query, page: 1 }) as never}
+          className="text-[var(--color-accent)] underline-offset-4 hover:underline"
+        >
+          Go to the first page →
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+function NoMatchesPanel({ filtered, slug }: { filtered: boolean; slug: string }) {
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-10 text-center">
+      <h3 className="text-[15px] tracking-tight">
+        {filtered ? "No matches for these filters" : "No matches above threshold"}
+      </h3>
+      <p className="mt-3 max-w-[520px] mx-auto text-[14px] text-[var(--color-fg-muted)] leading-[1.55]">
+        {filtered ? (
+          <>
+            No stored matches meet the selected department, province, fiscal-year or
+            evidence-strength filters.{" "}
+            <Link
+              href={`/follow/${slug}` as never}
+              className="text-[var(--color-accent)] underline-offset-4 hover:underline"
+            >
+              Clear the filters →
+            </Link>
+          </>
+        ) : (
+          <>
+            The detector ran successfully and produced no records meeting the signal threshold for
+            this snapshot. The dataset shows what is in the published record and nothing else.
+          </>
+        )}
       </p>
     </div>
   );

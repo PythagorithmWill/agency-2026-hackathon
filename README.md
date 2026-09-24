@@ -158,6 +158,7 @@ Open. Reproducible. Auditable.
 | `.claude/skills/` | calibrated language, agency2026 data, audit-token schema |
 | `docs/PRD.md` | product source of truth |
 | `docs/DESIGN-SYSTEM.md` | locked design language |
+| `docs/METHODOLOGY-V2.md` | v2 pipeline: canonical tables → detectors → pattern_matches → pages; strength score; refresh procedure |
 
 ## License
 
