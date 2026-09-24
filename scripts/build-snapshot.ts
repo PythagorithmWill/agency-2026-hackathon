@@ -58,6 +58,9 @@ import {
   type DepartmentProfileSnapshot,
 } from "../src/lib/analytics/snapshot";
 import { listLiveDetectors } from "../src/lib/patterns/detectors";
+import { hasAppTable } from "../src/lib/db/features";
+import { loadPatternMatches, rowToDetectorMatch } from "../src/lib/patterns/store";
+import { PATTERNS } from "../src/lib/patterns/registry";
 import { closePool } from "../src/lib/db/pool";
 
 const TOP_DEPT_PROFILE_COUNT = 15;
@@ -185,21 +188,45 @@ async function main() {
       ? series.value.points[series.value.points.length - 1].fy
       : new Date().getFullYear();
 
-  // Pattern detector run — sequential to avoid long-pool contention.
-  console.log(`\nRunning pattern detectors sequentially...`);
+  // Pattern matches. Preferred source: app.pattern_matches (every
+  // detector, unbounded, built by scripts/refresh-derived.ts) — the
+  // snapshot keeps the top 50 by signal per pattern so the static pages
+  // show exactly what the table-backed pages show. Fallback: run each
+  // live detector (capped) when the derived layer is absent.
   const patternMatches: Record<string, unknown[]> = {};
   const patternMatchErrors: Record<string, string> = {};
-  for (const det of listLiveDetectors()) {
-    const slug = det.pattern.id;
-    const r = await timed(`  detect:${slug.padEnd(28)}`, () =>
-      det.detect({ limit: PATTERN_MATCH_LIMIT }),
-    );
-    if (r.ok) {
-      patternMatches[slug] = (r.value as unknown[]) ?? [];
-    } else {
-      patternMatchErrors[slug] = r.error ?? "unknown";
-      patternMatches[slug] = [];
-      notes.push(`Pattern detector "${slug}" failed: ${r.error}`);
+  if (await hasAppTable("pattern_matches")) {
+    console.log(`\nReading pattern matches from app.pattern_matches (top ${PATTERN_MATCH_LIMIT} by signal)...`);
+    for (const p of PATTERNS) {
+      const slug = p.id;
+      const r = await timed(`  table:${slug.padEnd(28)}`, async () => {
+        const res = await loadPatternMatches({ patternId: slug, limit: PATTERN_MATCH_LIMIT });
+        if (res.source !== "table") throw new Error("pattern store fell back to snapshot");
+        return res.rows.map(rowToDetectorMatch);
+      });
+      if (r.ok) {
+        patternMatches[slug] = (r.value as unknown[]) ?? [];
+      } else {
+        patternMatchErrors[slug] = r.error ?? "unknown";
+        patternMatches[slug] = [];
+        notes.push(`Pattern store read "${slug}" failed: ${r.error}`);
+      }
+    }
+    notes.push("patternMatches sourced from app.pattern_matches (top 50 by signal per pattern)");
+  } else {
+    console.log(`\nRunning pattern detectors sequentially (app.pattern_matches absent)...`);
+    for (const det of listLiveDetectors()) {
+      const slug = det.pattern.id;
+      const r = await timed(`  detect:${slug.padEnd(28)}`, () =>
+        det.detect({ limit: PATTERN_MATCH_LIMIT }),
+      );
+      if (r.ok) {
+        patternMatches[slug] = (r.value as unknown[]) ?? [];
+      } else {
+        patternMatchErrors[slug] = r.error ?? "unknown";
+        patternMatches[slug] = [];
+        notes.push(`Pattern detector "${slug}" failed: ${r.error}`);
+      }
     }
   }
 

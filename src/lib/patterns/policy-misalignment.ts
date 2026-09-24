@@ -4,9 +4,13 @@ import {
   type PatternDetector,
   type PatternMatch,
   type PatternFilters,
-  type SignalStrength,
+  type Severity,
   meetsMinSignal,
+  asIso,
+  fiscalYearOf,
 } from "./types";
+import { evidenceStrength, benignNoteFor, severityToSignalStrength } from "./strength";
+import { CORPUS_AS_OF_SQL } from "./format";
 
 /**
  * Policy misalignment (Challenge #7).
@@ -28,6 +32,9 @@ import {
  *   priority area defined below
  *   keyword match found in prog_purpose_en or prog_name_en
  *   ratio of actual / stated < 1.0 (any underspend signals attention)
+ *
+ * Window (v2): rolling 5 years ending at the corpus as-of date
+ * (MAX(agreement_start_date) ≤ CURRENT_DATE), never the wall clock.
  */
 
 interface PolicyArea {
@@ -122,14 +129,16 @@ interface PolicyRow {
   fy_min: string | number | null;
   fy_max: string | number | null;
   dept_count: string | number | null;
+  corpus_as_of: string | Date | null;
 }
 
-function severityFor(ratio: number): SignalStrength {
+function severityFor(ratio: number): Severity {
   // Ratio = actual / stated. Severity bands chosen so that the headline
   // is "consistent underspend" rather than minor variance.
-  if (ratio < 0.25) return "flag";
-  if (ratio < 0.6) return "attention";
-  return "observation";
+  if (ratio < 0.1) return "critical";
+  if (ratio < 0.25) return "high";
+  if (ratio < 0.6) return "medium";
+  return "low";
 }
 
 const compactDollar = (v: number) => {
@@ -161,21 +170,24 @@ export const policyMisalignmentDetector: PatternDetector = {
 
       // Sum spend for the most recent 5 federal fiscal years to give a
       // current-period comparison rather than lifetime totals.
-      const sql = `SELECT
+      const sql = `WITH asof AS (SELECT ${CORPUS_AS_OF_SQL} AS d)
+                   SELECT
                      SUM(agreement_value)::numeric AS total,
                      COUNT(DISTINCT ref_number) AS agreement_count,
                      COUNT(DISTINCT owner_org_title) AS dept_count,
                      MIN(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_min,
-                     MAX(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_max
-                   FROM fed.grants_contributions
+                     MAX(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_max,
+                     MAX(asof.d) AS corpus_as_of
+                   FROM fed.grants_contributions, asof
                    WHERE is_amendment = false
                      AND agreement_value > 0
                      AND agreement_start_date IS NOT NULL
-                     AND agreement_start_date >= (CURRENT_DATE - INTERVAL '5 years')
+                     AND agreement_start_date >  asof.d - INTERVAL '5 years'
+                     AND agreement_start_date <= asof.d
                      AND (${conds.join(" OR ")})`;
 
       try {
-        const r = await longQuery<PolicyRow>(sql, params, 30_000);
+        const r = await longQuery<PolicyRow>(sql, params, filters.statementTimeoutMs ?? 30_000);
         const row = r.rows[0];
         if (!row) continue;
         const total = Number(row.total) || 0;
@@ -190,6 +202,8 @@ export const policyMisalignmentDetector: PatternDetector = {
         const ratio = annualRate / area.statedAnnualCommitmentCad;
         const agreementCount = Number(row.agreement_count) || 0;
         const deptCount = Number(row.dept_count) || 0;
+        const asOfIso = asIso(row.corpus_as_of);
+        const severity = severityFor(ratio);
 
         matches.push({
           patternId: "policy-misalignment",
@@ -236,9 +250,23 @@ export const policyMisalignmentDetector: PatternDetector = {
               field: "commitment_note",
               value: area.commitmentNote,
             },
+            {
+              source: "fed.grants_contributions",
+              rowId: area.id,
+              field: "window",
+              value: asOfIso ? `5 years to ${asOfIso.slice(0, 10)}` : "5 years",
+            },
           ],
-          calibratedSummary: `The dataset shows federal grant & contribution spending tagged to ${area.label.toLowerCase()} ran at ~${compactDollar(annualRate)}/year over the most recent 5-year window (${agreementCount.toLocaleString("en-CA")} agreements across ${deptCount} departments), versus a stated annual baseline of ~${compactDollar(area.statedAnnualCommitmentCad)} (${(ratio * 100).toFixed(0)}% of stated). Glassbox shows the gap; the policy decision-maker confirms whether the baseline measure is right.`,
-          signalStrength: severityFor(ratio),
+          calibratedSummary: `The dataset shows federal grant & contribution spending tagged to ${area.label.toLowerCase()} ran at ~${compactDollar(annualRate)}/year over the 5 years to ${asOfIso ? asOfIso.slice(0, 10) : "the corpus as-of date"} (${agreementCount.toLocaleString("en-CA")} agreements across ${deptCount} departments), versus a stated annual baseline of ~${compactDollar(area.statedAnnualCommitmentCad)} (${(ratio * 100).toFixed(0)}% of stated). Glassbox shows the gap; the policy decision-maker confirms whether the baseline measure is right.`,
+          severity,
+          signalStrength: severityToSignalStrength(severity),
+          signal: Number(ratio.toFixed(4)),
+          // Threshold is ratio < 1; margin = how far below full commitment.
+          evidenceStrength: evidenceStrength({ margin: Math.max(0, 1 - ratio), flags: {} }),
+          benignNote: benignNoteFor("policy-misalignment", { always: ["KEYWORD_PROXY"] }),
+          department: null,
+          province: null,
+          fiscalYear: fiscalYearOf(asOfIso),
           detectedAt,
         });
       } catch {
