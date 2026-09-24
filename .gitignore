@@ -32,3 +32,6 @@ e2e-screenshots/
 # TS
 tsconfig.tsbuildinfo
 next-env.d.ts
+
+# Raw source downloads for scripts/ingest/* (regenerable)
+data/ingest/

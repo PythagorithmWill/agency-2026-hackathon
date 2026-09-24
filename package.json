@@ -14,7 +14,11 @@
     "test:watch": "vitest",
     "embed": "tsx scripts/embed-corpus.ts",
     "verify-db": "tsx scripts/verify-db.ts",
-    "audit": "npm audit --audit-level=high"
+    "audit": "npm audit --audit-level=high",
+    "ingest:fedc": "tsx scripts/ingest/fedc.ts",
+    "ingest:elections": "tsx scripts/ingest/elections.ts",
+    "ingest:corp": "tsx scripts/ingest/corp.ts",
+    "ingest:lobby": "tsx scripts/ingest/lobby.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
