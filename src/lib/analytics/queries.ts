@@ -197,10 +197,7 @@ export async function loadCorpusFacts(budget: Budget = "long"): Promise<CorpusFa
     withCanonical(
       () =>
         run(budget)<{ total: string | number | null }>(
-          `SELECT SUM(current_value)::numeric AS total
-             FROM app.agreement_current
-            WHERE current_value >= 1
-              AND (description IS NULL OR btrim(description) = '')`,
+          `SELECT no_description_total AS total FROM app.overview_rollup WHERE id = 1`,
         ),
       () =>
         run(budget)<{ total: string | number | null }>(
@@ -235,16 +232,8 @@ export async function loadOverviewStats(budget: Budget = "fast"): Promise<Overvi
   const r = await withCanonical(
     () =>
       run(budget)<Row>(
-        `SELECT
-           SUM(current_value)::numeric AS total,
-           COUNT(*) AS agreement_count,
-           COUNT(DISTINCT recipient_key) AS recipient_count,
-           COUNT(DISTINCT department) AS department_count,
-           COUNT(DISTINCT program) AS program_count,
-           MIN(fiscal_year) AS fy_min,
-           MAX(fiscal_year) AS fy_max
-         FROM app.agreement_current
-         WHERE current_value >= 1`,
+        `SELECT total, agreement_count, recipient_count, department_count, program_count, fy_min, fy_max
+           FROM app.overview_rollup WHERE id = 1`,
       ),
     () =>
       run(budget)<Row>(
@@ -262,6 +251,8 @@ export async function loadOverviewStats(budget: Budget = "fast"): Promise<Overvi
       ),
   );
   const row = r.rows[0] ?? {
+    // Empty only when the rollup is missing — refresh-derived builds it
+    // in the same step as agreement_current, so this is a safety net.
     total: 0,
     agreement_count: 0,
     recipient_count: 0,
@@ -521,15 +512,9 @@ export async function loadProvinceTotalsFed(budget: Budget = "fast"): Promise<Pr
   const r = await withCanonical(
     () =>
       run(budget)<Row>(
-        `SELECT
-           recipient_province AS province,
-           SUM(current_value)::numeric AS total,
-           COUNT(*) AS agreement_count,
-           COUNT(DISTINCT recipient_key) AS recipient_count
-         FROM app.agreement_current
-         WHERE recipient_province IS NOT NULL
-         GROUP BY recipient_province
-         ORDER BY total DESC`,
+        `SELECT province, total, agreement_count, recipient_count
+           FROM app.province_rollup
+          ORDER BY total DESC`,
       ),
     () =>
       run(budget)<Row>(
@@ -593,16 +578,20 @@ export async function loadTemporalSeriesFed(opts: {
   const r = await withCanonical(
     () =>
       run(opts.budget ?? "fast")<Row>(
-        `SELECT
-           fiscal_year AS fy,
-           SUM(current_value)::numeric AS total,
-           COUNT(DISTINCT recipient_key) AS recipient_count,
-           COUNT(DISTINCT program) AS program_count,
-           COUNT(*) AS agreement_count
-         FROM app.agreement_current
-         WHERE ${fastFilters.join(" AND ")}
-         GROUP BY 1
-         ORDER BY 1`,
+        params.length === 0
+          ? `SELECT fiscal_year AS fy, total, recipient_count, program_count, agreement_count
+               FROM app.fiscal_year_rollup
+              ORDER BY 1`
+          : `SELECT
+               fiscal_year AS fy,
+               SUM(current_value)::numeric AS total,
+               COUNT(DISTINCT recipient_key) AS recipient_count,
+               COUNT(DISTINCT program) AS program_count,
+               COUNT(*) AS agreement_count
+             FROM app.agreement_current
+             WHERE ${fastFilters.join(" AND ")}
+             GROUP BY 1
+             ORDER BY 1`,
         params,
       ),
     () =>

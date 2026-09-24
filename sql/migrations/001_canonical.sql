@@ -119,6 +119,35 @@ CREATE TABLE IF NOT EXISTS app.program_rollup (
 CREATE INDEX IF NOT EXISTS idx_pr_total      ON app.program_rollup (total DESC);
 CREATE INDEX IF NOT EXISTS idx_pr_department ON app.program_rollup (department, total DESC);
 
+-- Whole-corpus, per-fiscal-year and per-province rollups (the request
+-- path's overview / temporal / province queries become index lookups).
+CREATE TABLE IF NOT EXISTS app.overview_rollup (
+  id               integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  total            numeric NOT NULL,
+  agreement_count  integer NOT NULL,
+  recipient_count  integer NOT NULL,
+  department_count integer NOT NULL,
+  program_count    integer NOT NULL,
+  fy_min           integer,
+  fy_max           integer,
+  no_description_total numeric NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS app.fiscal_year_rollup (
+  fiscal_year      integer PRIMARY KEY,
+  total            numeric NOT NULL,
+  agreement_count  integer NOT NULL,
+  recipient_count  integer NOT NULL,
+  program_count    integer NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS app.province_rollup (
+  province         text PRIMARY KEY,
+  total            numeric NOT NULL,
+  agreement_count  integer NOT NULL,
+  recipient_count  integer NOT NULL
+);
+
 -- ───────────────────────────────────────────────────────────────────────
 -- 2. Detector output — every live detector, unbounded (safety cap 20,000
 --    per pattern, recorded in pattern_runs.cap_hit).
