@@ -12,7 +12,7 @@ export default async function VerifyPage({
 }) {
   const { proofId } = await params;
   const decoded = decodeURIComponent(proofId);
-  const found = findProofTokenById(decoded);
+  const found = await findProofTokenById(decoded);
   if (!found) notFound();
 
   // Structural completeness (PYTH-GOV check 3) AND a recomputed hash: a

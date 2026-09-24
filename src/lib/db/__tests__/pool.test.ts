@@ -21,3 +21,13 @@ describe("resolvePgConnection", () => {
     expect(resolvePgConnection(undefined)).toEqual({ connectionString: undefined, ssl: undefined });
   });
 });
+
+import { isOwnedAppDatabase } from "../../evaluate/store";
+describe("isOwnedAppDatabase", () => {
+  it("allows RDS and localhost, refuses the Render corpus host", () => {
+    expect(isOwnedAppDatabase("postgresql://u:p@glassbox-db.x.us-east-1.rds.amazonaws.com/glassbox")).toBe(true);
+    expect(isOwnedAppDatabase("postgresql://localhost:5432/agency26")).toBe(true);
+    expect(isOwnedAppDatabase("postgresql://u:p@dpg-x-a.oregon-postgres.render.com/db?sslmode=require")).toBe(false);
+    expect(isOwnedAppDatabase(undefined)).toBe(false);
+  });
+});

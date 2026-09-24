@@ -81,7 +81,7 @@ export async function POST(request: Request): Promise<Response> {
     console.error("[api/draft/evaluate] evaluation failed:", (err as Error).message);
     return bad("evaluation_failed", 500);
   }
-  saveEvaluation(result);
+  await saveEvaluation(result);
 
   return NextResponse.json(
     {

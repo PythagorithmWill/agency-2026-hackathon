@@ -10,7 +10,7 @@ export default async function EvaluationResultPage({
   params: Promise<{ evaluationId: string }>;
 }) {
   const { evaluationId } = await params;
-  const result = loadEvaluation(decodeURIComponent(evaluationId));
+  const result = await loadEvaluation(decodeURIComponent(evaluationId));
   if (!result) notFound();
 
   return (

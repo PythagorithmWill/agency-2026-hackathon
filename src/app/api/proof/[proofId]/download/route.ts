@@ -14,7 +14,7 @@ export async function GET(
   // params, which arrive raw). A second decodeURIComponent throws
   // URIError on any literal "%" (e.g. /api/proof/%25zz/download → 500).
   const { proofId } = await context.params;
-  const found = findProofTokenById(proofId);
+  const found = await findProofTokenById(proofId);
   if (!found) {
     return NextResponse.json(
       { error: "proof token not found", proofId },
