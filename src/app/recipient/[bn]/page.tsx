@@ -8,6 +8,15 @@ import {
   type GoldenRecordSummary,
 } from "@/lib/analytics/queries";
 import { classifyDbFailure, type DbFailureKind } from "@/lib/db/pool";
+import { corpusCached } from "@/lib/cache";
+
+// Successful corpus reads are cached for a day across visitors (see lib/cache.ts);
+// a rejected read is never cached, so the failure panel is always live.
+const profileCached = corpusCached(loadRecipientProfile, "recipient-profile");
+const byDeptCached = corpusCached(loadRecipientByDepartment, "recipient-by-dept");
+const agreementsCached = corpusCached(loadRecipientAgreements, "recipient-agreements");
+const seriesCached = corpusCached(loadTemporalSeriesFed, "recipient-series");
+const goldenCached = corpusCached(loadGoldenRecord, "golden-record");
 import { AnimatedBar } from "@/components/viz/AnimatedBar";
 import { AnimatedAreaChart } from "@/components/viz/AnimatedAreaChart";
 
@@ -27,9 +36,9 @@ const compactDollar = (v: number) => {
 export async function generateMetadata({ params }: { params: Promise<{ bn: string }> }) {
   const { bn } = await params;
   const decoded = decodeURIComponent(bn);
-  const profile = await loadRecipientProfile(decoded).catch(() => null);
+  const profile = await profileCached(decoded, "long").catch(() => null);
   if (profile) return { title: `${profile.legalName} — Glassbox` };
-  const golden = await loadGoldenRecord(decoded).catch(() => null);
+  const golden = await goldenCached(decoded, "long").catch(() => null);
   return { title: golden ? `${golden.canonicalName} — Glassbox` : "Recipient — Glassbox" };
 }
 
@@ -70,11 +79,11 @@ export default async function RecipientPage({
   // have hundreds of agreements. The long pool's 30s server timeout is
   // sufficient. The page renders whatever queries succeed.
   const [profileR, byDeptR, agreementsR, seriesR] = await Promise.allSettled([
-    loadRecipientProfile(identifier, "long"),
-    loadRecipientByDepartment(identifier, "long"),
-    loadRecipientAgreements(identifier, 50, "long"),
+    profileCached(identifier, "long"),
+    byDeptCached(identifier, "long"),
+    agreementsCached(identifier, 50, "long"),
     isBn
-      ? loadTemporalSeriesFed({ recipientBn: identifier, budget: "long" })
+      ? seriesCached({ recipientBn: identifier, budget: "long" })
       : Promise.resolve(null),
   ]);
 
@@ -106,7 +115,7 @@ export default async function RecipientPage({
   // matches, ghost-capacity matches, etc.
   let golden: GoldenRecordSummary | null = null;
   try {
-    golden = await loadGoldenRecord(identifier, "long");
+    golden = await goldenCached(identifier, "long");
   } catch {
     golden = null;
   }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { searchCorpus } from "@/lib/evaluate/retrieval";
+import { searchCorpusCached } from "@/lib/evaluate/search-cache";
 import { SimilarRecordCard } from "@/components/evaluate/SimilarRecordCard";
 import { SearchEditBar } from "@/components/SearchEditBar";
 import { SourceBreakdown } from "@/components/SourceBreakdown";
@@ -26,7 +26,7 @@ export default async function SearchPage({
   const q = rawQ.trim();
 
   const result = q
-    ? await searchCorpus(q, rawDept)
+    ? await searchCorpusCached(q, rawDept)
     : {
         records: [],
         bySource: { fed: 0, ab_grants: 0, ab_contracts: 0, general: 0 },

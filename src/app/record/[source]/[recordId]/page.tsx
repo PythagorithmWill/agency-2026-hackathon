@@ -1,5 +1,10 @@
 import { notFound } from "next/navigation";
-import { loadRecord, loadAmendmentChain, searchCorpus } from "@/lib/evaluate/retrieval";
+import { loadRecord, loadAmendmentChain } from "@/lib/evaluate/retrieval";
+import { searchCorpusCached } from "@/lib/evaluate/search-cache";
+import { corpusCached } from "@/lib/cache";
+
+const loadRecordCached = corpusCached(loadRecord, "record");
+const loadAmendmentChainCached = corpusCached(loadAmendmentChain, "amendment-chain");
 import { SourceBadge, getSourceLabel } from "@/components/SourceBadge";
 import { SimilarRecordCard } from "@/components/evaluate/SimilarRecordCard";
 import { AmendmentTimeline } from "@/components/record/AmendmentTimeline";
@@ -30,15 +35,15 @@ export default async function RecordPage({
   const recordId = decodeURIComponent(rawId);
 
   const [record, amendments] = await Promise.all([
-    loadRecord(source, recordId),
-    loadAmendmentChain(source, recordId),
+    loadRecordCached(source, recordId),
+    loadAmendmentChainCached(source, recordId),
   ]);
   if (!record) notFound();
 
   // Related records: same retrieval engine, query keyed on the recipient name
   const relatedQuery = record.recipientLegalName.split(/[|·]/)[0].trim();
   const related = relatedQuery
-    ? (await searchCorpus(relatedQuery)).records
+    ? (await searchCorpusCached(relatedQuery)).records
         .filter((r) => !(r.sourceDataset === source && r.recordId === recordId))
         .slice(0, 5)
     : [];
