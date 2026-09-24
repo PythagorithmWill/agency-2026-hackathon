@@ -1,4 +1,5 @@
 import { Pool, type QueryResult, type QueryResultRow } from "pg";
+import { RDS_GLOBAL_CA_BUNDLE } from "./rds-ca";
 
 /**
  * The hackathon Render Postgres replica is read-only and uses self-signed SSL.
@@ -16,16 +17,56 @@ import { Pool, type QueryResult, type QueryResultRow } from "pg";
  * time and fall back to a local postgres connection. Lazy init means
  * the env is read at first query, after the runner has populated it.
  */
+
+/**
+ * Resolve the connection string + TLS options for `pg`.
+ *
+ * Gotcha (verified 2026-09-24): when the URL carries `sslmode=…`, pg's
+ * connection-string parser produces its own `ssl` object which OVERRIDES the
+ * explicit `ssl` option passed to `new Pool()`. Against RDS that meant
+ * "self-signed certificate in certificate chain" even with
+ * rejectUnauthorized:false. So we strip every ssl* query parameter and set
+ * `ssl` ourselves, per host:
+ *   - *.rds.amazonaws.com  → verify against the embedded RDS CA bundle
+ *   - *.render.com         → encrypted, unverified (Render's self-signed chain)
+ *   - localhost/127.0.0.1  → plaintext
+ *   - anything else        → encrypted-unverified if the URL asked for ssl, else plaintext
+ */
+export function resolvePgConnection(raw: string | undefined): {
+  connectionString: string | undefined;
+  ssl: { ca?: string; rejectUnauthorized: boolean } | undefined;
+} {
+  if (!raw) return { connectionString: undefined, ssl: undefined };
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return { connectionString: raw, ssl: undefined };
+  }
+  const wantedSsl =
+    url.searchParams.has("sslmode") && url.searchParams.get("sslmode") !== "disable";
+  for (const k of [...url.searchParams.keys()]) {
+    if (k === "ssl" || k.startsWith("ssl")) url.searchParams.delete(k);
+  }
+  const host = url.hostname.toLowerCase();
+  let ssl: { ca?: string; rejectUnauthorized: boolean } | undefined;
+  if (host.endsWith(".rds.amazonaws.com")) {
+    ssl = { ca: RDS_GLOBAL_CA_BUNDLE, rejectUnauthorized: true };
+  } else if (host.endsWith(".render.com")) {
+    ssl = { rejectUnauthorized: false };
+  } else if (host === "localhost" || host === "127.0.0.1" || host === "::1") {
+    ssl = undefined;
+  } else if (wantedSsl) {
+    ssl = { rejectUnauthorized: false };
+  }
+  return { connectionString: url.toString(), ssl };
+}
+
 let pool: Pool | null = null;
 function getPool(): Pool {
   if (pool) return pool;
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl:
-      process.env.DATABASE_URL?.includes("render.com") ||
-      process.env.DATABASE_URL?.includes("sslmode=require")
-        ? { rejectUnauthorized: false }
-        : undefined,
+    ...resolvePgConnection(process.env.DATABASE_URL),
     max: 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
@@ -117,12 +158,7 @@ let longPool: Pool | null = null;
 function getLongPool(): Pool {
   if (longPool) return longPool;
   longPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl:
-      process.env.DATABASE_URL?.includes("render.com") ||
-      process.env.DATABASE_URL?.includes("sslmode=require")
-        ? { rejectUnauthorized: false }
-        : undefined,
+    ...resolvePgConnection(process.env.DATABASE_URL),
     // 6 connections so the search path (3 parallel queries) and
     // detector workloads don't starve each other. Render's shared
     // replica gives us ~20-30 conns total; 10 fast + 6 long leaves
