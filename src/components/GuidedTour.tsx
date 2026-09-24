@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 /**
@@ -81,7 +81,10 @@ export interface GuidedTourProps {
 }
 
 export function GuidedTour({ corpusSummary }: GuidedTourProps) {
-  const STEPS = STEPS_TEMPLATE.map((st) => ({ ...st, body: st.body.replace("__CORPUS__", corpusSummary) }));
+  const STEPS = useMemo(
+    () => STEPS_TEMPLATE.map((st) => ({ ...st, body: st.body.replace("__CORPUS__", corpusSummary) })),
+    [corpusSummary],
+  );
   const [active, setActive] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
@@ -121,7 +124,7 @@ export function GuidedTour({ corpusSummary }: GuidedTourProps) {
     requestAnimationFrame(() => {
       setTargetRect(el.getBoundingClientRect());
     });
-  }, [stepIndex]);
+  }, [stepIndex, STEPS]);
 
   useEffect(() => {
     if (!active) return;
@@ -146,7 +149,7 @@ export function GuidedTour({ corpusSummary }: GuidedTourProps) {
     if (step?.path && pathname !== step.path) {
       router.push(step.path as never);
     }
-  }, [active, stepIndex, pathname, router]);
+  }, [active, stepIndex, pathname, router, STEPS]);
 
   function dismiss() {
     setActive(false);
