@@ -61,6 +61,31 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   }
 }
 
+/**
+ * Classify a failed query so callers can tell the user the truth: a
+ * statement/pool timeout ("the query took too long") is a very different
+ * situation from a connection failure ("the database host is gone").
+ * Before this existed every rejection was reported as "timed out — the
+ * database is busy", which is exactly wrong when the host is unreachable.
+ */
+export type DbFailureKind = "timeout" | "unreachable" | "error";
+
+const UNREACHABLE_CODES = new Set([
+  "ECONNREFUSED", "ECONNRESET", "ENOTFOUND", "EAI_AGAIN", "ETIMEDOUT", "EPIPE",
+  "08000", "08001", "08003", "08004", "08006", "57P01", "57P02", "57P03",
+]);
+const UNREACHABLE_RE =
+  /connection terminated|connection (refused|closed|reset|ended)|trying to connect|ssl connection has been closed|getaddrinfo|database system is (starting|shutting)|too many (clients|connections)|password authentication failed|does not exist$/i;
+
+export function classifyDbFailure(err: unknown): DbFailureKind {
+  const e = err as { code?: string; message?: string } | null;
+  const code = e?.code ?? "";
+  const msg = e?.message ?? String(err ?? "");
+  if (UNREACHABLE_CODES.has(code) || UNREACHABLE_RE.test(msg)) return "unreachable";
+  if (code === "57014" || /timeout|canceling statement/i.test(msg)) return "timeout";
+  return "error";
+}
+
 export async function withSearchPath<T>(
   schemas: ReadonlyArray<string>,
   fn: () => Promise<T>,
@@ -125,8 +150,19 @@ export async function longQuery<T extends QueryResultRow = QueryResultRow>(
 ): Promise<QueryResult<T>> {
   const client = await getLongPool().connect();
   try {
-    await client.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
-    return await client.query<T>({ text, values: params as unknown[] });
+    // SET LOCAL is a no-op outside a transaction block (Postgres only
+    // warns), so the per-query server-side guard must run inside one.
+    // READ ONLY doubles as a belt-and-braces guard for PROJECT-RULES R2.
+    await client.query("BEGIN READ ONLY");
+    try {
+      await client.query(`SET LOCAL statement_timeout = ${Math.max(1, Math.floor(timeoutMs))}`);
+      const result = await client.query<T>({ text, values: params as unknown[] });
+      await client.query("COMMIT");
+      return result;
+    } catch (err) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw err;
+    }
   } finally {
     client.release();
   }

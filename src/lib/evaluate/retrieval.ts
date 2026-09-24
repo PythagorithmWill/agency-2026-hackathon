@@ -1,4 +1,4 @@
-import { query, longQuery } from "../db/pool";
+import { query, longQuery, classifyDbFailure, type DbFailureKind } from "../db/pool";
 import type { ComparableRecord, DatasetSource } from "../types";
 import { generateMockComparables } from "./mockComparables";
 
@@ -424,6 +424,12 @@ export interface SearchResult {
   bySource: Record<DatasetSource, number>;
   latencyMs: number;
   retrievalMode: "keyword" | "hybrid";
+  /**
+   * Per-source failure kinds for sources whose query did NOT complete.
+   * Empty when every source answered. Lets the UI distinguish "the corpus
+   * has no matching rows" from "the corpus could not be queried".
+   */
+  sourceFailures: Partial<Record<DatasetSource, DbFailureKind>>;
 }
 
 /**
@@ -440,6 +446,7 @@ export async function searchCorpus(
     bySource: { fed: 0, ab_grants: 0, ab_contracts: 0, general: 0 },
     latencyMs: 0,
     retrievalMode: "keyword",
+    sourceFailures: {},
   };
 
   const tsq = tsqueryFor(queryText, "");
@@ -479,13 +486,17 @@ export async function searchCorpus(
   const abContractsRows =
     abContractsR.status === "fulfilled" ? abContractsR.value.rows : [];
 
+  const sourceFailures: SearchResult["sourceFailures"] = {};
   if (fedR.status === "rejected") {
+    sourceFailures.fed = classifyDbFailure(fedR.reason);
     console.warn("[search] fed query failed:", (fedR.reason as Error).message);
   }
   if (abGrantsR.status === "rejected") {
+    sourceFailures.ab_grants = classifyDbFailure(abGrantsR.reason);
     console.warn("[search] ab_grants query failed:", (abGrantsR.reason as Error).message);
   }
   if (abContractsR.status === "rejected") {
+    sourceFailures.ab_contracts = classifyDbFailure(abContractsR.reason);
     console.warn("[search] ab_contracts query failed:", (abContractsR.reason as Error).message);
   }
 
@@ -514,6 +525,7 @@ export async function searchCorpus(
     },
     latencyMs: Date.now() - start,
     retrievalMode: "keyword",
+    sourceFailures,
   };
 }
 

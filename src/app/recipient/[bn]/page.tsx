@@ -7,6 +7,7 @@ import {
   loadGoldenRecord,
   type GoldenRecordSummary,
 } from "@/lib/analytics/queries";
+import { classifyDbFailure, type DbFailureKind } from "@/lib/db/pool";
 import { AnimatedBar } from "@/components/viz/AnimatedBar";
 import { AnimatedAreaChart } from "@/components/viz/AnimatedAreaChart";
 
@@ -57,7 +58,7 @@ export default async function RecipientPage({
   // Short-circuit on identifiers that can't possibly match a corpus row.
   // Saves three sequential scans and renders the graceful panel in <50ms.
   if (isUnresolvableIdentifier(identifier)) {
-    return <NoProfilePanel identifier={identifier} contended={false} unresolvable />;
+    return <NoProfilePanel identifier={identifier} failure={null} unresolvable />;
   }
 
   // Federal-corpus reads: every query gets its own try/catch so a single
@@ -117,12 +118,20 @@ export default async function RecipientPage({
   // an inline calibrated panel rather than throwing notFound() (which the
   // dev overlay will sometimes surface as a crash) or letting an exception
   // escape to error.tsx. The user always lands on a usable page.
-  const anyQueryRejected =
-    profileR.status === "rejected" ||
-    byDeptR.status === "rejected" ||
-    agreementsR.status === "rejected" ||
-    seriesR.status === "rejected";
-  return <NoProfilePanel identifier={identifier} contended={anyQueryRejected} />;
+  const failures = [profileR, byDeptR, agreementsR, seriesR]
+    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+    .map((r) => classifyDbFailure(r.reason));
+  // "unreachable" dominates: if the host refused even one connection the
+  // right message is "data source down", not "query slow".
+  const failure: DbFailureKind | null =
+    failures.length === 0
+      ? null
+      : failures.includes("unreachable")
+        ? "unreachable"
+        : failures.includes("timeout")
+          ? "timeout"
+          : "error";
+  return <NoProfilePanel identifier={identifier} failure={failure} />;
 }
 
 /**
@@ -443,13 +452,22 @@ function PreJson({ value }: { value: Record<string, unknown> }) {
   );
 }
 
+const FAILURE_COPY: Record<DbFailureKind, string> = {
+  unreachable:
+    "Glassbox could not open a connection to the dataset host, so this recipient was never looked up. This is an infrastructure fault, not an empty result. Check the data source status link below, or try again once the host is back.",
+  timeout:
+    "The dataset query for this recipient exceeded its time budget — the database is under heavy load (possibly precomputing pattern detectors). Try again in a moment, or follow the links below to navigate the corpus another way.",
+  error:
+    "The dataset query for this recipient failed with an unexpected error. The corpus may have changed shape since this build. Check the data source status link below.",
+};
+
 function NoProfilePanel({
   identifier,
-  contended,
+  failure,
   unresolvable = false,
 }: {
   identifier: string;
-  contended: boolean;
+  failure: DbFailureKind | null;
   unresolvable?: boolean;
 }) {
   return (
@@ -464,8 +482,8 @@ function NoProfilePanel({
         <p className="mt-6 text-[var(--text-body-lg)] text-[var(--color-fg-muted)] leading-[1.5]">
           {unresolvable
             ? "This pattern match cites a publisher-aggregated row where the federal corpus stores a placeholder identifier (None / 0) instead of a real business number or legal name. Glassbox surfaces these matches because the dollar flows are real, but a per-recipient profile cannot be built from a placeholder. Use the search or pattern catalog to investigate the underlying agreement records."
-            : contended
-              ? "The dataset query for this recipient timed out — the database is currently busy precomputing pattern detectors. Try again in a moment, or follow the links below to navigate the corpus another way."
+            : failure
+              ? FAILURE_COPY[failure]
               : "The dataset shows no current-agreement rows in the federal corpus or cross-dataset golden record for this identifier. The match may have come from a non-federal source, or the identifier may be a name variant we have not yet linked."}
         </p>
         <div className="mt-6 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] leading-relaxed">
@@ -491,6 +509,14 @@ function NoProfilePanel({
           >
             Pattern catalog
           </Link>
+          {failure && (
+            <Link
+              href={"/api/health" as never}
+              className="px-4 py-2 rounded-full border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors text-[13px]"
+            >
+              Data source status
+            </Link>
+          )}
         </div>
       </div>
     </main>

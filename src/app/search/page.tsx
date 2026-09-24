@@ -32,9 +32,15 @@ export default async function SearchPage({
         bySource: { fed: 0, ab_grants: 0, ab_contracts: 0, general: 0 },
         latencyMs: 0,
         retrievalMode: "keyword" as const,
+        sourceFailures: {},
       };
 
-  const { records, bySource, latencyMs, retrievalMode } = result;
+  const { records, bySource, latencyMs, retrievalMode, sourceFailures } = result;
+  const failedSources = Object.keys(sourceFailures) as Array<keyof typeof sourceFailures>;
+  // Three sources are queried; if none answered, the corpus was never
+  // actually searched and "No matches" would be a lie.
+  const allSourcesFailed = failedSources.length >= 3;
+  const anyUnreachable = failedSources.some((s) => sourceFailures[s] === "unreachable");
 
   return (
     <main className="min-h-screen pt-16">
@@ -86,10 +92,50 @@ export default async function SearchPage({
                   <SourceBreakdown bySource={bySource} />
                 </div>
               )}
+              {records.length > 0 && failedSources.length > 0 && (
+                <p className="mt-3 max-w-[720px] text-[13px] leading-[1.5] text-[var(--color-warning,#b45309)]">
+                  Partial results: {failedSources.join(", ")}{" "}
+                  {failedSources.length === 1 ? "did not answer" : "did not answer"} (
+                  {anyUnreachable ? "data source unreachable" : "query timed out"}). Counts
+                  above reflect only the sources that responded.
+                </p>
+              )}
             </>
           )}
         </div>
       </section>
+
+      {q && records.length === 0 && allSourcesFailed && (
+        <section className="mx-auto max-w-[1080px] px-4 sm:px-6 py-16">
+          <div className="max-w-[760px] rounded-[16px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-8">
+            <div className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)]">
+              {anyUnreachable ? "Data source unreachable" : "Query timed out"}
+            </div>
+            <div className="mt-3 text-[clamp(28px,3.5vw,36px)] tracking-[-0.02em] font-semibold leading-[1.1]">
+              The corpus could not be searched.
+            </div>
+            <p className="mt-4 text-[15px] text-[var(--color-fg-muted)] leading-[1.55] max-w-[640px]">
+              {anyUnreachable
+                ? "Glassbox could not open a connection to the dataset host, so no search ran. This is an infrastructure fault, not an empty result — your query has not been evaluated against the corpus."
+                : "Every source query exceeded its time budget before returning. The database is likely under heavy load. Retry in a moment; a narrower query also helps."}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href={`/search?q=${encodeURIComponent(q)}` as never}
+                className="px-4 py-2 rounded-full border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors text-[13px]"
+              >
+                Retry search
+              </Link>
+              <Link
+                href={"/api/health" as never}
+                className="px-4 py-2 rounded-full border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors text-[13px]"
+              >
+                Data source status
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {q && records.length > 0 && (
         <section className="mx-auto max-w-[1080px] px-4 sm:px-6 py-16">
@@ -101,7 +147,7 @@ export default async function SearchPage({
         </section>
       )}
 
-      {q && records.length === 0 && (
+      {q && records.length === 0 && !allSourcesFailed && (
         <section className="mx-auto max-w-[1080px] px-4 sm:px-6 py-16">
           <div className="max-w-[760px] rounded-[16px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-8">
             <div className="text-[clamp(28px,3.5vw,36px)] tracking-[-0.02em] font-semibold leading-[1.1]">
