@@ -1,4 +1,5 @@
 import { query, longQuery } from "../db/pool";
+import { hasAppTable, forgetAppTable, isUndefinedTable } from "../db/features";
 import type {
   ConcentrationReport,
   TemporalSeries,
@@ -84,6 +85,34 @@ function fedCurrentCte(innerFilter = ""): string {
 const FED_CURRENT_CTE = fedCurrentCte();
 
 /**
+ * Derived-layer fast path. `app.agreement_current` (sql/migrations/
+ * 001_canonical.sql, built by scripts/refresh-derived.ts) is the F-3 CTE
+ * materialised: one row per F-1 key with the CURRENT value, built from the
+ * same base filter (agreement_value > 0 AND recipient_legal_name IS NOT
+ * NULL), so every aggregate below is identical to the CTE path — only
+ * faster (indexed, no 1.27M-row DISTINCT ON per request). Column map:
+ *   agreement_value → current_value · owner_org_title → department ·
+ *   prog_name_en → program · recipient_business_number → recipient_bn_raw ·
+ *   description_en → description · FED_FY_SQL → fiscal_year ·
+ *   COALESCE(bn, name) → recipient_key
+ * When the table is absent (or GLASSBOX_DISABLE_APP_TABLES=1) we run the
+ * CTE; if it vanishes mid-process (a refresh swap racing a request is
+ * harmless, but a dropped table is not) we forget the detection and fall
+ * back for this call.
+ */
+async function withCanonical<T>(fast: () => Promise<T>, slow: () => Promise<T>): Promise<T> {
+  if (await hasAppTable("agreement_current")) {
+    try {
+      return await fast();
+    } catch (err) {
+      if (!isUndefinedTable(err)) throw err;
+      forgetAppTable("agreement_current");
+    }
+  }
+  return slow();
+}
+
+/**
  * Federal fiscal year label (Apr 1 – Mar 31, labelled by END year) per
  * agency2026-data-skill "Year alignment convention": a start date of
  * 2023-10-01 is FY2024. Every fy_min / fy_max / fy filter in this module
@@ -165,12 +194,22 @@ export async function loadCorpusFacts(budget: Budget = "long"): Promise<CorpusFa
               (SELECT COUNT(*) FROM ab.ab_contracts)                  AS abc,
               (SELECT COUNT(*) FROM general.entity_golden_records)    AS golden`,
     ),
-    run(budget)<{ total: string | number | null }>(
-      `${FED_CURRENT_CTE}
-       SELECT SUM(agreement_value)::numeric AS total
-         FROM agreement_current
-        WHERE agreement_value >= 1
-          AND (description_en IS NULL OR btrim(description_en) = '')`,
+    withCanonical(
+      () =>
+        run(budget)<{ total: string | number | null }>(
+          `SELECT SUM(current_value)::numeric AS total
+             FROM app.agreement_current
+            WHERE current_value >= 1
+              AND (description IS NULL OR btrim(description) = '')`,
+        ),
+      () =>
+        run(budget)<{ total: string | number | null }>(
+          `${FED_CURRENT_CTE}
+           SELECT SUM(agreement_value)::numeric AS total
+             FROM agreement_current
+            WHERE agreement_value >= 1
+              AND (description_en IS NULL OR btrim(description_en) = '')`,
+        ),
     ),
   ]);
   const c = counts.rows[0];
@@ -184,7 +223,7 @@ export async function loadCorpusFacts(budget: Budget = "long"): Promise<CorpusFa
 }
 
 export async function loadOverviewStats(budget: Budget = "fast"): Promise<OverviewStats> {
-  const r = await run(budget)<{
+  type Row = {
     total: string | number | null;
     agreement_count: string | number | null;
     recipient_count: string | number | null;
@@ -192,18 +231,35 @@ export async function loadOverviewStats(budget: Budget = "fast"): Promise<Overvi
     program_count: string | number | null;
     fy_min: string | number | null;
     fy_max: string | number | null;
-  }>(
-    `${FED_CURRENT_CTE}
-     SELECT
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count,
-       COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
-       COUNT(DISTINCT owner_org_title) AS department_count,
-       COUNT(DISTINCT prog_name_en) AS program_count,
-       MIN(${FED_FY_SQL}) AS fy_min,
-       MAX(${FED_FY_SQL}) AS fy_max
-     FROM agreement_current
-     WHERE agreement_value >= 1`,
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT
+           SUM(current_value)::numeric AS total,
+           COUNT(*) AS agreement_count,
+           COUNT(DISTINCT recipient_key) AS recipient_count,
+           COUNT(DISTINCT department) AS department_count,
+           COUNT(DISTINCT program) AS program_count,
+           MIN(fiscal_year) AS fy_min,
+           MAX(fiscal_year) AS fy_max
+         FROM app.agreement_current
+         WHERE current_value >= 1`,
+      ),
+    () =>
+      run(budget)<Row>(
+        `${FED_CURRENT_CTE}
+         SELECT
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count,
+           COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
+           COUNT(DISTINCT owner_org_title) AS department_count,
+           COUNT(DISTINCT prog_name_en) AS program_count,
+           MIN(${FED_FY_SQL}) AS fy_min,
+           MAX(${FED_FY_SQL}) AS fy_max
+         FROM agreement_current
+         WHERE agreement_value >= 1`,
+      ),
   );
   const row = r.rows[0] ?? {
     total: 0,
@@ -257,39 +313,61 @@ export async function loadRecipientTotalsFed({
 } = {}): Promise<RecipientTotal[]> {
   const params: unknown[] = [];
   const filters: string[] = ["agreement_value >= 1"];
+  const fastFilters: string[] = ["current_value >= 1"];
 
   if (department) {
     params.push(department);
     filters.push(`(owner_org_title = $${params.length} OR owner_org_title ILIKE $${params.length} || '%')`);
+    fastFilters.push(`(department = $${params.length} OR department ILIKE $${params.length} || '%')`);
   }
   if (fyStart) {
     params.push(fyStart);
     filters.push(`${FED_FY_SQL} >= $${params.length}`);
+    fastFilters.push(`fiscal_year >= $${params.length}`);
   }
   if (fyEnd) {
     params.push(fyEnd);
     filters.push(`${FED_FY_SQL} <= $${params.length}`);
+    fastFilters.push(`fiscal_year <= $${params.length}`);
   }
   params.push(limit);
 
-  const r = await run(budget)<{
+  type Row = {
     recipient: string | null;
     bn: string | null;
     total: string | number | null;
     agreement_count: string | number | null;
-  }>(
-    `${FED_CURRENT_CTE}
-     SELECT
-       recipient_legal_name AS recipient,
-       recipient_business_number AS bn,
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count
-     FROM agreement_current
-     WHERE ${filters.join(" AND ")}
-     GROUP BY recipient_legal_name, recipient_business_number
-     ORDER BY total DESC
-     LIMIT $${params.length}`,
-    params,
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT
+           recipient_legal_name AS recipient,
+           recipient_bn_raw AS bn,
+           SUM(current_value)::numeric AS total,
+           COUNT(*) AS agreement_count
+         FROM app.agreement_current
+         WHERE ${fastFilters.join(" AND ")}
+         GROUP BY recipient_legal_name, recipient_bn_raw
+         ORDER BY total DESC
+         LIMIT $${params.length}`,
+        params,
+      ),
+    () =>
+      run(budget)<Row>(
+        `${FED_CURRENT_CTE}
+         SELECT
+           recipient_legal_name AS recipient,
+           recipient_business_number AS bn,
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count
+         FROM agreement_current
+         WHERE ${filters.join(" AND ")}
+         GROUP BY recipient_legal_name, recipient_business_number
+         ORDER BY total DESC
+         LIMIT $${params.length}`,
+        params,
+      ),
   );
 
   return r.rows
@@ -332,24 +410,36 @@ export interface DepartmentTotal {
 }
 
 export async function loadTopDepartmentsFed(limit = 25, budget: Budget = "fast"): Promise<DepartmentTotal[]> {
-  const r = await run(budget)<{
+  type Row = {
     department: string | null;
     total: string | number | null;
     agreement_count: string | number | null;
     recipient_count: string | number | null;
-  }>(
-    `${FED_CURRENT_CTE}
-     SELECT
-       owner_org_title AS department,
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count,
-       COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count
-     FROM agreement_current
-     WHERE owner_org_title IS NOT NULL
-     GROUP BY owner_org_title
-     ORDER BY total DESC
-     LIMIT $1`,
-    [limit],
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT department, total, agreement_count, recipient_count
+           FROM app.department_rollup
+          ORDER BY total DESC
+          LIMIT $1`,
+        [limit],
+      ),
+    () =>
+      run(budget)<Row>(
+        `${FED_CURRENT_CTE}
+         SELECT
+           owner_org_title AS department,
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count,
+           COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count
+         FROM agreement_current
+         WHERE owner_org_title IS NOT NULL
+         GROUP BY owner_org_title
+         ORDER BY total DESC
+         LIMIT $1`,
+        [limit],
+      ),
   );
   return r.rows.map((row) => ({
     department: row.department ?? "—",
@@ -370,26 +460,38 @@ export interface ProgramTotal {
 }
 
 export async function loadTopProgramsFed(limit = 25, budget: Budget = "fast"): Promise<ProgramTotal[]> {
-  const r = await run(budget)<{
+  type Row = {
     program: string | null;
     department: string | null;
     total: string | number | null;
     agreement_count: string | number | null;
     recipient_count: string | number | null;
-  }>(
-    `${FED_CURRENT_CTE}
-     SELECT
-       prog_name_en AS program,
-       owner_org_title AS department,
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count,
-       COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count
-     FROM agreement_current
-     WHERE prog_name_en IS NOT NULL
-     GROUP BY prog_name_en, owner_org_title
-     ORDER BY total DESC
-     LIMIT $1`,
-    [limit],
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT program, department, total, agreement_count, recipient_count
+           FROM app.program_rollup
+          ORDER BY total DESC
+          LIMIT $1`,
+        [limit],
+      ),
+    () =>
+      run(budget)<Row>(
+        `${FED_CURRENT_CTE}
+         SELECT
+           prog_name_en AS program,
+           owner_org_title AS department,
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count,
+           COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count
+         FROM agreement_current
+         WHERE prog_name_en IS NOT NULL
+         GROUP BY prog_name_en, owner_org_title
+         ORDER BY total DESC
+         LIMIT $1`,
+        [limit],
+      ),
   );
   return r.rows.map((row) => ({
     program: row.program ?? "—",
@@ -410,22 +512,38 @@ export interface ProvinceTotal {
 }
 
 export async function loadProvinceTotalsFed(budget: Budget = "fast"): Promise<ProvinceTotal[]> {
-  const r = await run(budget)<{
+  type Row = {
     province: string | null;
     total: string | number | null;
     agreement_count: string | number | null;
     recipient_count: string | number | null;
-  }>(
-    `${FED_CURRENT_CTE}
-     SELECT
-       recipient_province AS province,
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count,
-       COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count
-     FROM agreement_current
-     WHERE recipient_province IS NOT NULL
-     GROUP BY recipient_province
-     ORDER BY total DESC`,
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT
+           recipient_province AS province,
+           SUM(current_value)::numeric AS total,
+           COUNT(*) AS agreement_count,
+           COUNT(DISTINCT recipient_key) AS recipient_count
+         FROM app.agreement_current
+         WHERE recipient_province IS NOT NULL
+         GROUP BY recipient_province
+         ORDER BY total DESC`,
+      ),
+    () =>
+      run(budget)<Row>(
+        `${FED_CURRENT_CTE}
+         SELECT
+           recipient_province AS province,
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count,
+           COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count
+         FROM agreement_current
+         WHERE recipient_province IS NOT NULL
+         GROUP BY recipient_province
+         ORDER BY total DESC`,
+      ),
   );
   return r.rows.map((row) => ({
     province: row.province ?? "—",
@@ -447,9 +565,11 @@ export async function loadTemporalSeriesFed(opts: {
     "agreement_value >= 1",
     "agreement_start_date IS NOT NULL",
   ];
+  const fastFilters: string[] = ["current_value >= 1", "fiscal_year IS NOT NULL"];
   if (opts.department) {
     params.push(opts.department);
     filters.push(`(owner_org_title = $${params.length} OR owner_org_title ILIKE $${params.length} || '%')`);
+    fastFilters.push(`(department = $${params.length} OR department ILIKE $${params.length} || '%')`);
   }
   // The BN predicate is pushed INSIDE the F-3 CTE (see fedCurrentCte):
   // it is a function of the partition key so the result is identical,
@@ -460,27 +580,46 @@ export async function loadTemporalSeriesFed(opts: {
     params.push(opts.recipientBn);
     innerFilter = ` AND recipient_business_number = $${params.length}`;
     filters.push(`recipient_business_number = $${params.length}`);
+    fastFilters.push(`recipient_bn_raw = $${params.length}`);
   }
 
-  const r = await run(opts.budget ?? "fast")<{
+  type Row = {
     fy: string | number | null;
     total: string | number | null;
     recipient_count: string | number | null;
     program_count: string | number | null;
     agreement_count: string | number | null;
-  }>(
-    `${fedCurrentCte(innerFilter)}
-     SELECT
-       ${FED_FY_SQL} AS fy,
-       SUM(agreement_value)::numeric AS total,
-       COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
-       COUNT(DISTINCT prog_name_en) AS program_count,
-       COUNT(*) AS agreement_count
-     FROM agreement_current
-     WHERE ${filters.join(" AND ")}
-     GROUP BY 1
-     ORDER BY 1`,
-    params,
+  };
+  const r = await withCanonical(
+    () =>
+      run(opts.budget ?? "fast")<Row>(
+        `SELECT
+           fiscal_year AS fy,
+           SUM(current_value)::numeric AS total,
+           COUNT(DISTINCT recipient_key) AS recipient_count,
+           COUNT(DISTINCT program) AS program_count,
+           COUNT(*) AS agreement_count
+         FROM app.agreement_current
+         WHERE ${fastFilters.join(" AND ")}
+         GROUP BY 1
+         ORDER BY 1`,
+        params,
+      ),
+    () =>
+      run(opts.budget ?? "fast")<Row>(
+        `${fedCurrentCte(innerFilter)}
+         SELECT
+           ${FED_FY_SQL} AS fy,
+           SUM(agreement_value)::numeric AS total,
+           COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
+           COUNT(DISTINCT prog_name_en) AS program_count,
+           COUNT(*) AS agreement_count
+         FROM agreement_current
+         WHERE ${filters.join(" AND ")}
+         GROUP BY 1
+         ORDER BY 1`,
+        params,
+      ),
   );
 
   const points = r.rows
@@ -536,7 +675,7 @@ export async function loadRecentLargeFed(
   limit = 20,
   budget: Budget = "fast",
 ): Promise<RecentAgreement[]> {
-  const r = await run(budget)<{
+  type Row = {
     ref_number: string | null;
     recipient_legal_name: string | null;
     owner_org_title: string | null;
@@ -544,17 +683,33 @@ export async function loadRecentLargeFed(
     agreement_value: string | number | null;
     agreement_start_date: string | null;
     recipient_province: string | null;
-  }>(
-    `${FED_CURRENT_CTE}
-     SELECT
-       ref_number, recipient_legal_name, owner_org_title, prog_name_en,
-       agreement_value, agreement_start_date, recipient_province
-     FROM agreement_current
-     WHERE agreement_value >= $1
-       AND agreement_start_date IS NOT NULL
-     ORDER BY agreement_start_date::date DESC
-     LIMIT $2`,
-    [minAmount, limit],
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT
+           ref_number, recipient_legal_name, department AS owner_org_title, program AS prog_name_en,
+           current_value AS agreement_value, agreement_start_date, recipient_province
+         FROM app.agreement_current
+         WHERE current_value >= $1
+           AND agreement_start_date IS NOT NULL
+         ORDER BY agreement_start_date DESC
+         LIMIT $2`,
+        [minAmount, limit],
+      ),
+    () =>
+      run(budget)<Row>(
+        `${FED_CURRENT_CTE}
+         SELECT
+           ref_number, recipient_legal_name, owner_org_title, prog_name_en,
+           agreement_value, agreement_start_date, recipient_province
+         FROM agreement_current
+         WHERE agreement_value >= $1
+           AND agreement_start_date IS NOT NULL
+         ORDER BY agreement_start_date::date DESC
+         LIMIT $2`,
+        [minAmount, limit],
+      ),
   );
   return r.rows.map((row) => ({
     recordId: row.ref_number ?? "",
@@ -691,33 +846,15 @@ export async function loadDeptRecipientFlows(
   // recipients per department. Two-pass aggregation avoids scanning
   // the corpus twice — top_depts identifies the candidate set; the
   // window function picks top-M recipients per department.
-  const r = await run(budget)<{
+  type Row = {
     department: string | null;
     recipient: string | null;
     bn: string | null;
     total: string | number | null;
     agreement_count: string | number | null;
-  }>(
-    `WITH agreement_current AS (
-       SELECT DISTINCT ON (
-         ref_number,
-         COALESCE(recipient_business_number, recipient_legal_name, _id::text)
-       )
-         ref_number,
-         recipient_legal_name,
-         recipient_business_number,
-         owner_org_title,
-         agreement_value
-       FROM fed.grants_contributions
-       WHERE agreement_value > 0
-         AND recipient_legal_name IS NOT NULL
-         AND owner_org_title IS NOT NULL
-       ORDER BY
-         ref_number,
-         COALESCE(recipient_business_number, recipient_legal_name, _id::text),
-         NULLIF(amendment_number, '')::int DESC NULLS LAST,
-         _id DESC
-     ),
+  };
+  const flowsSql = (source: string) =>
+    `WITH agreement_current AS (${source}),
      top_depts AS (
        SELECT owner_org_title AS department,
               SUM(agreement_value)::numeric AS total
@@ -743,8 +880,38 @@ export async function loadDeptRecipientFlows(
      SELECT department, recipient, bn, total, agreement_count
        FROM dept_recip
       WHERE rn <= $2
-      ORDER BY department, total DESC`,
-    [topDepartments, topRecipientsPerDept],
+      ORDER BY department, total DESC`;
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        flowsSql(`SELECT ref_number, recipient_legal_name, recipient_bn_raw AS recipient_business_number,
+                         department AS owner_org_title, current_value AS agreement_value
+                    FROM app.agreement_current
+                   WHERE department IS NOT NULL`),
+        [topDepartments, topRecipientsPerDept],
+      ),
+    () =>
+      run(budget)<Row>(
+        flowsSql(`SELECT DISTINCT ON (
+                    ref_number,
+                    COALESCE(recipient_business_number, recipient_legal_name, _id::text)
+                  )
+                    ref_number,
+                    recipient_legal_name,
+                    recipient_business_number,
+                    owner_org_title,
+                    agreement_value
+                  FROM fed.grants_contributions
+                  WHERE agreement_value > 0
+                    AND recipient_legal_name IS NOT NULL
+                    AND owner_org_title IS NOT NULL
+                  ORDER BY
+                    ref_number,
+                    COALESCE(recipient_business_number, recipient_legal_name, _id::text),
+                    NULLIF(amendment_number, '')::int DESC NULLS LAST,
+                    _id DESC`),
+        [topDepartments, topRecipientsPerDept],
+      ),
   );
   return r.rows.map((row) => ({
     department: row.department ?? "—",
@@ -770,25 +937,36 @@ export async function loadDepartmentProfile(
   department: string,
   budget: Budget = "fast",
 ): Promise<DepartmentProfileRow | null> {
-  const r = await run(budget)<{
+  type Row = {
     total: string | number | null;
     agreement_count: string | number | null;
     recipient_count: string | number | null;
     program_count: string | number | null;
     fy_min: string | number | null;
     fy_max: string | number | null;
-  }>(
-    `${FED_CURRENT_CTE}
-     SELECT
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count,
-       COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
-       COUNT(DISTINCT prog_name_en) AS program_count,
-       MIN(${FED_FY_SQL}) AS fy_min,
-       MAX(${FED_FY_SQL}) AS fy_max
-     FROM agreement_current
-     WHERE owner_org_title = $1`,
-    [department],
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT total, agreement_count, recipient_count, program_count, fy_min, fy_max
+           FROM app.department_rollup
+          WHERE department = $1`,
+        [department],
+      ),
+    () =>
+      run(budget)<Row>(
+        `${FED_CURRENT_CTE}
+         SELECT
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count,
+           COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
+           COUNT(DISTINCT prog_name_en) AS program_count,
+           MIN(${FED_FY_SQL}) AS fy_min,
+           MAX(${FED_FY_SQL}) AS fy_max
+         FROM agreement_current
+         WHERE owner_org_title = $1`,
+        [department],
+      ),
   );
   const row = r.rows[0];
   if (!row || !row.agreement_count || Number(row.agreement_count) === 0) return null;
@@ -810,24 +988,42 @@ export async function loadDepartmentRecipients(
   limit = 25,
   budget: Budget = "fast",
 ): Promise<RecipientTotal[]> {
-  const r = await run(budget)<{
+  type Row = {
     recipient: string | null;
     bn: string | null;
     total: string | number | null;
     agreement_count: string | number | null;
-  }>(
-    `${FED_CURRENT_CTE}
-     SELECT
-       recipient_legal_name AS recipient,
-       recipient_business_number AS bn,
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count
-     FROM agreement_current
-     WHERE owner_org_title = $1
-     GROUP BY recipient_legal_name, recipient_business_number
-     ORDER BY total DESC
-     LIMIT $2`,
-    [department, limit],
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT
+           recipient_legal_name AS recipient,
+           recipient_bn_raw AS bn,
+           SUM(current_value)::numeric AS total,
+           COUNT(*) AS agreement_count
+         FROM app.agreement_current
+         WHERE department = $1
+         GROUP BY recipient_legal_name, recipient_bn_raw
+         ORDER BY total DESC
+         LIMIT $2`,
+        [department, limit],
+      ),
+    () =>
+      run(budget)<Row>(
+        `${FED_CURRENT_CTE}
+         SELECT
+           recipient_legal_name AS recipient,
+           recipient_business_number AS bn,
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count
+         FROM agreement_current
+         WHERE owner_org_title = $1
+         GROUP BY recipient_legal_name, recipient_business_number
+         ORDER BY total DESC
+         LIMIT $2`,
+        [department, limit],
+      ),
   );
   return r.rows.map((row) => ({
     recipient: row.recipient ?? "—",
@@ -842,22 +1038,35 @@ export async function loadDepartmentPrograms(
   limit = 25,
   budget: Budget = "fast",
 ): Promise<{ program: string; total: number; agreementCount: number }[]> {
-  const r = await run(budget)<{
+  type Row = {
     program: string | null;
     total: string | number | null;
     agreement_count: string | number | null;
-  }>(
-    `${FED_CURRENT_CTE}
-     SELECT
-       prog_name_en AS program,
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count
-     FROM agreement_current
-     WHERE owner_org_title = $1 AND prog_name_en IS NOT NULL
-     GROUP BY prog_name_en
-     ORDER BY total DESC
-     LIMIT $2`,
-    [department, limit],
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT program, total, agreement_count
+           FROM app.program_rollup
+          WHERE department = $1
+          ORDER BY total DESC
+          LIMIT $2`,
+        [department, limit],
+      ),
+    () =>
+      run(budget)<Row>(
+        `${FED_CURRENT_CTE}
+         SELECT
+           prog_name_en AS program,
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count
+         FROM agreement_current
+         WHERE owner_org_title = $1 AND prog_name_en IS NOT NULL
+         GROUP BY prog_name_en
+         ORDER BY total DESC
+         LIMIT $2`,
+        [department, limit],
+      ),
   );
   return r.rows.map((row) => ({
     program: row.program ?? "—",
@@ -987,6 +1196,8 @@ export async function loadGoldenRecord(
  */
 function recipientFilterClause(identifier: string): {
   clause: string;
+  /** Same predicate against app.agreement_current column names. */
+  fastClause: string;
   params: unknown[];
 } {
   const isBn = /^\d{9,}/.test(identifier);
@@ -1000,6 +1211,7 @@ function recipientFilterClause(identifier: string): {
     clause: isBn
       ? "recipient_business_number = $1"
       : "recipient_legal_name = $1 AND upper(trim(recipient_legal_name)) = upper(trim($1))",
+    fastClause: isBn ? "recipient_bn_raw = $1" : "recipient_legal_name = $1",
     params: [identifier],
   };
 }
@@ -1052,8 +1264,8 @@ export async function loadRecipientProfile(
   identifier: string,
   budget: Budget = "long",
 ): Promise<RecipientProfileRow | null> {
-  const { clause, params } = recipientFilterClause(identifier);
-  const r = await run(budget)<{
+  const { clause, fastClause, params } = recipientFilterClause(identifier);
+  type Row = {
     legal_name: string | null;
     bn: string | null;
     province: string | null;
@@ -1063,20 +1275,40 @@ export async function loadRecipientProfile(
     program_count: string | number | null;
     fy_min: string | number | null;
     fy_max: string | number | null;
-  }>(
-    `${recipientSliceCte(clause)}
-     SELECT
-       MAX(recipient_legal_name) AS legal_name,
-       MAX(recipient_business_number) AS bn,
-       MAX(recipient_province) AS province,
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count,
-       COUNT(DISTINCT owner_org_title) AS department_count,
-       COUNT(DISTINCT prog_name_en) AS program_count,
-       MIN(${FED_FY_SQL}) AS fy_min,
-       MAX(${FED_FY_SQL}) AS fy_max
-     FROM slice`,
-    params,
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT
+           MAX(recipient_legal_name) AS legal_name,
+           MAX(recipient_bn_raw) AS bn,
+           MAX(recipient_province) AS province,
+           SUM(current_value)::numeric AS total,
+           COUNT(*) AS agreement_count,
+           COUNT(DISTINCT department) AS department_count,
+           COUNT(DISTINCT program) AS program_count,
+           MIN(fiscal_year) AS fy_min,
+           MAX(fiscal_year) AS fy_max
+         FROM app.agreement_current
+         WHERE ${fastClause}`,
+        params,
+      ),
+    () =>
+      run(budget)<Row>(
+        `${recipientSliceCte(clause)}
+         SELECT
+           MAX(recipient_legal_name) AS legal_name,
+           MAX(recipient_business_number) AS bn,
+           MAX(recipient_province) AS province,
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count,
+           COUNT(DISTINCT owner_org_title) AS department_count,
+           COUNT(DISTINCT prog_name_en) AS program_count,
+           MIN(${FED_FY_SQL}) AS fy_min,
+           MAX(${FED_FY_SQL}) AS fy_max
+         FROM slice`,
+        params,
+      ),
   );
   const row = r.rows[0];
   if (!row || !row.agreement_count || Number(row.agreement_count) === 0) return null;
@@ -1099,22 +1331,38 @@ export async function loadRecipientByDepartment(
   identifier: string,
   budget: Budget = "long",
 ): Promise<{ department: string; total: number; agreementCount: number }[]> {
-  const { clause, params } = recipientFilterClause(identifier);
-  const r = await run(budget)<{
+  const { clause, fastClause, params } = recipientFilterClause(identifier);
+  type Row = {
     department: string | null;
     total: string | number | null;
     agreement_count: string | number | null;
-  }>(
-    `${recipientSliceCte(clause)}
-     SELECT
-       owner_org_title AS department,
-       SUM(agreement_value)::numeric AS total,
-       COUNT(*) AS agreement_count
-     FROM slice
-     WHERE owner_org_title IS NOT NULL
-     GROUP BY owner_org_title
-     ORDER BY total DESC`,
-    params,
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT
+           department,
+           SUM(current_value)::numeric AS total,
+           COUNT(*) AS agreement_count
+         FROM app.agreement_current
+         WHERE ${fastClause} AND department IS NOT NULL
+         GROUP BY department
+         ORDER BY total DESC`,
+        params,
+      ),
+    () =>
+      run(budget)<Row>(
+        `${recipientSliceCte(clause)}
+         SELECT
+           owner_org_title AS department,
+           SUM(agreement_value)::numeric AS total,
+           COUNT(*) AS agreement_count
+         FROM slice
+         WHERE owner_org_title IS NOT NULL
+         GROUP BY owner_org_title
+         ORDER BY total DESC`,
+        params,
+      ),
   );
   return r.rows.map((row) => ({
     department: row.department ?? "—",
@@ -1129,8 +1377,8 @@ export async function loadRecipientAgreements(
   limit = 50,
   budget: Budget = "long",
 ): Promise<RecentAgreement[]> {
-  const { clause, params } = recipientFilterClause(identifier);
-  const r = await run(budget)<{
+  const { clause, fastClause, params } = recipientFilterClause(identifier);
+  type Row = {
     ref_number: string | null;
     recipient_legal_name: string | null;
     owner_org_title: string | null;
@@ -1138,15 +1386,30 @@ export async function loadRecipientAgreements(
     agreement_value: string | number | null;
     agreement_start_date: string | null;
     recipient_province: string | null;
-  }>(
-    `${recipientSliceCte(clause)}
-     SELECT
-       ref_number, recipient_legal_name, owner_org_title, prog_name_en,
-       agreement_value, agreement_start_date, recipient_province
-     FROM slice
-     ORDER BY agreement_value DESC, agreement_start_date DESC NULLS LAST, ref_number
-     LIMIT $2`,
-    [...params, limit],
+  };
+  const r = await withCanonical(
+    () =>
+      run(budget)<Row>(
+        `SELECT
+           ref_number, recipient_legal_name, department AS owner_org_title, program AS prog_name_en,
+           current_value AS agreement_value, agreement_start_date, recipient_province
+         FROM app.agreement_current
+         WHERE ${fastClause}
+         ORDER BY current_value DESC, agreement_start_date DESC NULLS LAST, ref_number
+         LIMIT $2`,
+        [...params, limit],
+      ),
+    () =>
+      run(budget)<Row>(
+        `${recipientSliceCte(clause)}
+         SELECT
+           ref_number, recipient_legal_name, owner_org_title, prog_name_en,
+           agreement_value, agreement_start_date, recipient_province
+         FROM slice
+         ORDER BY agreement_value DESC, agreement_start_date DESC NULLS LAST, ref_number
+         LIMIT $2`,
+        [...params, limit],
+      ),
   );
   return r.rows.map((row) => ({
     recordId: row.ref_number ?? "",
