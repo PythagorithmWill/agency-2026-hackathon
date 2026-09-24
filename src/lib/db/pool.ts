@@ -30,6 +30,12 @@ function getPool(): Pool {
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
     query_timeout: 8_000,
+    // query_timeout only abandons the client-side wait; without a
+    // matching server-side statement_timeout the query keeps running
+    // on the shared Render instance after the page has already given
+    // up (verified: SHOW statement_timeout returned 0 before this).
+    // pg sends this as a session startup parameter.
+    statement_timeout: 8_000,
   });
   return pool;
 }
@@ -84,15 +90,6 @@ export function classifyDbFailure(err: unknown): DbFailureKind {
   if (UNREACHABLE_CODES.has(code) || UNREACHABLE_RE.test(msg)) return "unreachable";
   if (code === "57014" || /timeout|canceling statement/i.test(msg)) return "timeout";
   return "error";
-}
-
-export async function withSearchPath<T>(
-  schemas: ReadonlyArray<string>,
-  fn: () => Promise<T>,
-): Promise<T> {
-  const ordered = [...schemas, "public"].join(", ");
-  await getPool().query(`SET search_path TO ${ordered}`);
-  return fn();
 }
 
 export async function closePool(): Promise<void> {

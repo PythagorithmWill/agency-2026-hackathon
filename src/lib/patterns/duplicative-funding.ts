@@ -1,5 +1,6 @@
 import { longQuery } from "../db/pool";
 import { getPattern } from "./registry";
+import { normalizeBn } from "./identity";
 import {
   type PatternDetector,
   type PatternMatch,
@@ -110,7 +111,10 @@ function mapRowToMatch(row: DupRow): PatternMatch | null {
   if (fedRecords < FED_FLOOR || abRecords < AB_FLOOR) return null;
 
   const name = row.canonical_name ?? "Unknown entity";
-  const id = row.bn_root ?? String(row.id);
+  // Prefer the BN root; otherwise the canonical name, which the recipient
+  // page can resolve via fed name lookup or the golden-record fallback.
+  // A bare golden-record integer id resolves to nothing.
+  const id = normalizeBn(row.bn_root) ?? row.canonical_name ?? String(row.id);
 
   return {
     patternId: "duplicative-funding",

@@ -1,4 +1,5 @@
 import { query } from "./pool";
+import { FED_FY_SQL } from "../analytics/queries";
 import type { DatasetSource } from "../types";
 
 export type SourceStatus = "ok" | "degraded" | "down";
@@ -39,8 +40,10 @@ async function fedCheck(): Promise<SourceHealth> {
   try {
     const { value, ms } = await timed(async () => {
       const r = await query<{ rows: number; latest_fy: number | null }>(
+        // latest_fy is a federal fiscal-year label (Apr–Mar, end year)
+        // per agency2026-data-skill, same expression as analytics/queries.
         `SELECT COUNT(*)::int AS rows,
-                EXTRACT(YEAR FROM MAX(agreement_start_date))::int AS latest_fy
+                MAX(${FED_FY_SQL})::int AS latest_fy
            FROM fed.grants_contributions`,
       );
       return r.rows[0];

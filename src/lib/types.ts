@@ -98,7 +98,6 @@ export interface ProofToken {
   };
 
   disclaimers: string[];
-  rerunUrl?: string;
   verifyUrl?: string;
   downloadUrl?: string;
 }
@@ -127,7 +126,12 @@ export interface ComparableRecord {
   agreementValue: number;
   description: string;
   similarity: number; // 0-1
-  retrievalReason: "semantic" | "keyword" | "hybrid";
+  /**
+   * How the record was retrieved. "mock" marks the deterministic
+   * synthetic fallback used when live retrieval returned nothing — it
+   * is NOT corpus data and must be surfaced as such (see buildResult).
+   */
+  retrievalReason: "semantic" | "keyword" | "hybrid" | "mock";
 }
 
 export interface AwardeeConcentration {

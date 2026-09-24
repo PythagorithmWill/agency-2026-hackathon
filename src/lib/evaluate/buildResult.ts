@@ -6,6 +6,7 @@ import type {
 import { calibrationFlags } from "../gov/validators";
 import { buildAwardeeConcentration } from "./mockComparables";
 import { retrieveComparables } from "./retrieval";
+import { loadCorpusAsOfDate } from "../analytics/queries";
 import { scoreSubmission } from "../suitability/engine";
 import { hashEvidence, makeProofId, sealProofToken, standardDisclaimers } from "../proof";
 
@@ -22,14 +23,23 @@ import { hashEvidence, makeProofId, sealProofToken, standardDisclaimers } from "
 export async function buildEvaluationResult(
   submission: DraftSubmission,
 ): Promise<EvaluationResult> {
-  const comparables = await retrieveComparables(
-    submission.draftText,
-    submission.workingTitle,
-    submission.anticipatedAmount,
-    submission.awardingDepartment,
-  );
+  const [comparables, dataAsOf] = await Promise.all([
+    retrieveComparables(
+      submission.draftText,
+      submission.workingTitle,
+      submission.anticipatedAmount,
+      submission.awardingDepartment,
+    ),
+    // "Data current as of" is derived from the corpus (latest non-future
+    // agreement_start_date), never hard-coded — it ships in every token.
+    loadCorpusAsOfDate(),
+  ]);
   const awardeeConcentration = buildAwardeeConcentration(comparables);
   const flags = calibrationFlags(submission.draftText);
+  // Live retrieval fell through to the deterministic mock set. The result
+  // still renders (demo resilience) but the proof token must say so: the
+  // input tier fails and a disclaimer names the substitution.
+  const usedMock = comparables.some((c) => c.retrievalReason === "mock");
 
   const suitability = scoreSubmission({
     draft: submission,
@@ -74,16 +84,16 @@ export async function buildEvaluationResult(
       scoreScale: "0-30",
       scoreLabel: suitability.verdict,
     },
-    evidence: comparables.slice(0, 8).map((c, i) => ({
+    evidence: comparables.slice(0, 8).map((c) => ({
       source: c.sourceDataset,
       rowId: c.recordId,
       field: "similarity",
       value: c.similarity,
-      asOf: "2026-04-22",
+      asOf: dataAsOf,
     })),
     tiers: {
       input: {
-        passed: true,
+        passed: !usedMock,
         tier: 1,
         filtersApplied: [
           "F-3 max-amendment CTE",
@@ -91,7 +101,9 @@ export async function buildEvaluationResult(
           "A-10 roll-up exclusion (AB)",
         ],
         knownDataIssuesRespected: ["F-1", "F-3", "A-13", "A-10"],
-        rejected: [],
+        rejected: usedMock
+          ? ["Live corpus retrieval returned no rows; comparables are synthetic placeholders, not public records."]
+          : [],
       },
       contextual: {
         passed: true,
@@ -123,8 +135,14 @@ export async function buildEvaluationResult(
         logRef: `decisions.md#${evaluationId}`,
       },
     },
-    disclaimers: standardDisclaimers("2026-04-22"),
-    rerunUrl: `/proof/rerun/${proofId}`,
+    disclaimers: usedMock
+      ? [
+          "Comparable records are synthetic placeholders — the live corpus query returned no rows. Do not cite them.",
+          ...standardDisclaimers(dataAsOf),
+        ]
+      : standardDisclaimers(dataAsOf),
+    // No rerunUrl: there is no /proof/rerun route. Re-evaluation is
+    // POST /api/draft/evaluate with the same submission (embedded above).
     verifyUrl: `/verify/${proofId}`,
     downloadUrl: `/api/proof/${proofId}/download`,
   });

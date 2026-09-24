@@ -1,5 +1,7 @@
 import { EvaluateForm } from "@/components/EvaluateForm";
 
+export const metadata = { title: "Evaluate a draft — Glassbox" };
+
 export default async function EvaluatePage({
   searchParams,
 }: {

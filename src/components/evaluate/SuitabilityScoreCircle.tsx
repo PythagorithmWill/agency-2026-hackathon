@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { CountUp } from "../motion/CountUp";
 import type { SuitabilityScore } from "@/lib/types";
 
 /**
@@ -56,7 +55,7 @@ export function SuitabilityScoreCircle({
           display,
           startDeg: -135 + i * 90,
           endDeg: -135 + (i + 1) * 90,
-          color: pickArcColor(display, d.inverted ? value : 10 - value),
+          color: pickArcColor(display),
         };
       }),
     [score],
@@ -66,12 +65,36 @@ export function SuitabilityScoreCircle({
   const inView = useInView(ref, { once: true, margin: "-100px" });
   const reduce = useReducedMotion();
 
+  // Composite count-up rendered as plain SVG text. An HTML <span> (the
+  // shared CountUp component) cannot live inside <text>: the HTML parser
+  // breaks out of the SVG on SSR, which caused a hydration mismatch and an
+  // invisible score. Driven by the wrapper's inView so it starts when the
+  // circle scrolls into view.
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    if (reduce) {
+      setShown(composite);
+      return;
+    }
+    const durationMs = 1500;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 5);
+      setShown(eased * composite);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, reduce, composite]);
+
   return (
     <div ref={ref} className="relative w-full max-w-[480px] mx-auto">
       <motion.svg
         viewBox="-120 -120 240 240"
         width="100%"
-        height="auto"
         animate={
           reduce
             ? undefined
@@ -86,12 +109,12 @@ export function SuitabilityScoreCircle({
         {arcs.map((arc, i) => {
           const r = 92 - i * 14; // concentric inward
           const fraction = arc.display / 10;
-          const angleRange = 90 * fraction;
-          const start = polar(r, arc.startDeg + 4);
-          const end = polar(r, arc.startDeg + 4 + angleRange);
-          const largeArc = angleRange > 180 ? 1 : 0;
-          const path = `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`;
-          const fullPath = `M ${polar(r, arc.startDeg + 4).x} ${polar(r, arc.startDeg + 4).y} A ${r} ${r} 0 0 1 ${polar(r, arc.endDeg - 4).x} ${polar(r, arc.endDeg - 4).y}`;
+          const a0 = polar(r, arc.startDeg + 4);
+          const a1 = polar(r, arc.endDeg - 4);
+          // Coordinates are rounded: Node and browser Math.cos/sin print
+          // different trailing digits, which produced a hydration mismatch
+          // on the `d` attribute.
+          const fullPath = `M ${a0.x} ${a0.y} A ${r} ${r} 0 0 1 ${a1.x} ${a1.y}`;
           const animationLength = 220;
           const targetOffset = animationLength * (1 - fraction);
           return (
@@ -141,13 +164,9 @@ export function SuitabilityScoreCircle({
           fontSize="60"
           fill={verdictColor}
         >
-          {hover ? (
-            arcs.find((a) => a.id === hover)!.display.toFixed(0)
-          ) : (
-            <tspan>
-              <CountUp to={composite} durationMs={1500} startOnView />
-            </tspan>
-          )}
+          {hover
+            ? arcs.find((a) => a.id === hover)!.display.toFixed(0)
+            : shown.toFixed(0)}
         </text>
         <text
           x="0"
@@ -201,12 +220,12 @@ export function SuitabilityScoreCircle({
   );
 }
 
-function polar(r: number, deg: number): { x: number; y: number } {
+function polar(r: number, deg: number): { x: string; y: string } {
   const rad = (deg * Math.PI) / 180;
-  return { x: Math.cos(rad) * r, y: Math.sin(rad) * r };
+  return { x: (Math.cos(rad) * r).toFixed(2), y: (Math.sin(rad) * r).toFixed(2) };
 }
 
-function pickArcColor(display: number, raw: number): string {
+function pickArcColor(display: number): string {
   if (display >= 7) return "var(--color-accent)";
   if (display >= 4) return "var(--color-accent-warn)";
   return "var(--color-accent-fail)";

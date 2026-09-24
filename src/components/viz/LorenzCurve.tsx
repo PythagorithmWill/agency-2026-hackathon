@@ -134,7 +134,7 @@ export function LorenzCurve({
           textAnchor="end"
           style={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-accent)" }}
         >
-          Gini = {gini.toFixed(2)}
+          Gini = {Number.isFinite(gini) ? gini.toFixed(2) : "—"}
         </text>
       </svg>
     </div>

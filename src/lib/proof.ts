@@ -25,10 +25,13 @@ export function hashEvidence(evidence: ReadonlyArray<unknown>): string {
 }
 
 /**
- * Compute the token hash last and append it. We strip the hash field itself
- * from the input so the hash covers everything else and is verifiable.
+ * Canonical hash of a token with tiers.audit.tokenHash blanked. Used by
+ * sealProofToken to stamp the hash and by verifyProofTokenHash to check it.
+ * Key order is whatever the token carries — sealing and verifying must see
+ * the same object shape, which they do because the store hands back the
+ * sealed object unchanged.
  */
-export function sealProofToken(token: ProofToken): ProofToken {
+export function computeProofTokenHash(token: ProofToken): string {
   const { tiers, ...rest } = token;
   const { audit, ...nonAuditTiers } = tiers;
   const auditWithoutHash = { ...audit, tokenHash: "" };
@@ -36,14 +39,37 @@ export function sealProofToken(token: ProofToken): ProofToken {
     ...rest,
     tiers: { ...nonAuditTiers, audit: auditWithoutHash },
   });
-  const tokenHash = `sha256:${createHash("sha256").update(canonical).digest("hex")}`;
+  return `sha256:${createHash("sha256").update(canonical).digest("hex")}`;
+}
+
+/**
+ * Compute the token hash last and append it. We strip the hash field itself
+ * from the input so the hash covers everything else and is verifiable.
+ */
+export function sealProofToken(token: ProofToken): ProofToken {
+  const tokenHash = computeProofTokenHash(token);
   return {
     ...token,
     tiers: {
-      ...tiers,
-      audit: { ...audit, tokenHash },
+      ...token.tiers,
+      audit: { ...token.tiers.audit, tokenHash },
     },
   };
+}
+
+/**
+ * Tamper check: recompute the canonical hash and compare it with the one
+ * stamped in tiers.audit.tokenHash. Any change to a sealed field (finding,
+ * evidence, tier results, disclaimers, …) yields a mismatch.
+ */
+export function verifyProofTokenHash(token: ProofToken): {
+  ok: boolean;
+  expected: string;
+  actual: string;
+} {
+  const expected = computeProofTokenHash(token);
+  const actual = token.tiers?.audit?.tokenHash ?? "";
+  return { ok: expected === actual, expected, actual };
 }
 
 /**

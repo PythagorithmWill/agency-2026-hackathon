@@ -141,7 +141,7 @@ export default async function SearchPage({
         <section className="mx-auto max-w-[1080px] px-4 sm:px-6 py-16">
           <div className="max-w-[760px] space-y-4">
             {records.map((r, i) => (
-              <SimilarRecordCard key={`${r.sourceDataset}-${r.recordId}`} record={r} index={i} />
+              <SimilarRecordCard key={`${r.sourceDataset}-${r.recordId}-${i}`} record={r} index={i} />
             ))}
           </div>
         </section>

@@ -66,6 +66,15 @@ describe("zombie-recipients — mapping", () => {
     expect(m?.subject.id).toBe("OLD ORG");
   });
 
+  it("falls back to legal_name when the stored BN is a placeholder token", () => {
+    for (const bn of ["None", "0", "", "null", "-", "000000000"]) {
+      const m = _mapZombieForTest({ ...baseRow, recipient_business_number: bn });
+      expect(m?.subject.id, bn).toBe("OLD ORG");
+      expect(m?.matchId, bn).toMatch(/^zombie-recipients:OLD ORG:/);
+      expect(m?.calibratedSummary, bn).not.toMatch(/BN /);
+    }
+  });
+
   it("evidence array cites fed.grants_contributions", () => {
     const m = _mapZombieForTest(baseRow);
     expect(m?.evidence.every((e) => e.source === "fed.grants_contributions")).toBe(true);

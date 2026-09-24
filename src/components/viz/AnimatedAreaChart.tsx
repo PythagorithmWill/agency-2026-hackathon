@@ -46,7 +46,7 @@ export function AnimatedAreaChart({
     ...forecast.flatMap((p) => [p.lowerBound, p.upperBound, p.predicted]),
   ];
 
-  if (allXs.length < 2) {
+  if (allXs.length < 2 || historical.length === 0) {
     return (
       <div className="font-[var(--font-mono)] text-[11px] text-[var(--color-fg-subtle)] py-8">
         Insufficient series for forecasting.

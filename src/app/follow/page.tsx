@@ -20,7 +20,7 @@ export default function FollowLanding() {
             Follow the money<span className="text-[var(--color-accent)]">.</span>
           </h1>
           <p className="mt-8 mx-auto max-w-[820px] text-[clamp(20px,2vw,26px)] italic text-[var(--color-fg-muted)] leading-[1.4]">
-            Twelve named patterns across federal and Alberta provincial spending. Each surfaces
+            {PATTERNS.length} named patterns across federal and Alberta provincial spending. Each surfaces
             specific records that match. Each output cites every source row.
           </p>
           <p className="mt-6 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">

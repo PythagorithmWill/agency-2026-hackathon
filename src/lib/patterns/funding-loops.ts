@@ -1,5 +1,6 @@
 import { query } from "../db/pool";
 import { getPattern } from "./registry";
+import { normalizeBn } from "./identity";
 import {
   type PatternDetector,
   type PatternMatch,
@@ -115,12 +116,13 @@ function mapToMatch(row: LoopUniverseRow): PatternMatch | null {
   const score = Number(row.score) || 0;
   if (score < ATTENTION_THRESHOLD) return null;
   const shape = loopShape(row);
+  const bn = normalizeBn(row.bn);
   return {
     patternId: "funding-loops",
-    matchId: `funding-loops:${row.bn ?? row.legal_name}`,
+    matchId: `funding-loops:${bn ?? row.legal_name}`,
     subject: {
       type: "recipient",
-      id: row.bn ?? row.legal_name ?? "unknown",
+      id: bn ?? row.legal_name ?? "unknown",
       canonicalName: row.legal_name ?? "Unknown entity",
     },
     evidence: [

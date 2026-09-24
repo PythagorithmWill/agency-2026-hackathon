@@ -646,6 +646,12 @@ export async function retrieveComparables(
   ].sort((a, b) => b.similarity - a.similarity);
 }
 
+function dateToIso(v: string | Date | null): string | null {
+  if (v == null) return null;
+  if (typeof v === "string") return v;
+  return isNaN(v.getTime()) ? null : v.toISOString();
+}
+
 function normRank(rank: string | number, max: number): number {
   return Math.max(0, Math.min(1, (Number(rank) || 0) / max));
 }
@@ -720,9 +726,15 @@ export async function loadRecord(
 }
 
 /**
- * Federal amendment chain — all amendments for a given ref_number, ordered
- * by amendment_number ASC. Used by /record/fed/[recordId] to render the
+ * Federal amendment chain — all amendments for ONE agreement, ordered by
+ * amendment_number ASC. Used by /record/fed/[recordId] to render the
  * timeline. Returns empty array for non-federal sources.
+ *
+ * ref_number alone is not an agreement key (KNOWN-DATA-ISSUES F-1:
+ * 41K ref_numbers are shared by unrelated recipients). The chain is
+ * restricted to the F-1 key (ref_number, COALESCE(bn, legal_name, _id))
+ * of the same partition `loadRecord` renders — both pick the first key
+ * in sort order — so the timeline never mixes two recipients' values.
  */
 export interface AmendmentEvent {
   amendmentNumber: number;
@@ -739,19 +751,27 @@ export async function loadAmendmentChain(
   try {
     const r = await query<{
       amendment_number: string | null;
-      amendment_date: string | null;
+      amendment_date: string | Date | null;
       agreement_value: string | number | null;
       description_en: string | null;
     }>(
-      `SELECT amendment_number, amendment_date, agreement_value, description_en
-         FROM fed.grants_contributions
-        WHERE ref_number = $1
+      `WITH keyed AS (
+         SELECT amendment_number, amendment_date, agreement_value, description_en, _id,
+                COALESCE(recipient_business_number, recipient_legal_name, _id::text) AS agreement_key
+           FROM fed.grants_contributions
+          WHERE ref_number = $1
+       )
+       SELECT amendment_number, amendment_date, agreement_value, description_en
+         FROM keyed
+        WHERE agreement_key = (SELECT MIN(agreement_key) FROM keyed)
         ORDER BY NULLIF(amendment_number, '')::int ASC NULLS FIRST, _id ASC`,
       [recordId],
     );
     return r.rows.map((row) => ({
       amendmentNumber: Number(row.amendment_number) || 0,
-      date: row.amendment_date,
+      // pg returns DATE columns as JS Date instances; the declared type is
+      // string | null, and consumers call .slice() on it.
+      date: dateToIso(row.amendment_date),
       agreementValue: Number(row.agreement_value) || 0,
       description: row.description_en,
     }));

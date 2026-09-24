@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { listLiveDetectors } from "@/lib/patterns/detectors";
-import { loadSnapshot } from "@/lib/analytics/snapshot";
 import {
-  buildRecommendations,
   CATEGORY_LABELS,
   PRIORITY_LABELS,
   patternsBehind,
   type Recommendation,
 } from "@/lib/recommendations/build";
-import type { PatternMatch } from "@/lib/patterns/types";
+import { loadAllRecommendations } from "./load";
 
 export const revalidate = 1800;
 
@@ -32,26 +29,6 @@ const RISK_COLOR: Record<"low" | "moderate" | "high", string> = {
   moderate: "var(--color-accent-warn)",
   low: "var(--color-fg-muted)",
 };
-
-async function loadAllRecommendations(): Promise<Recommendation[]> {
-  const snap = await loadSnapshot();
-  const detectors = listLiveDetectors();
-  const matchesByPattern: Record<string, PatternMatch[]> = {};
-  if (snap?.patternMatches) {
-    for (const d of detectors) {
-      const slug = d.pattern.id;
-      matchesByPattern[slug] = (snap.patternMatches[slug] as PatternMatch[]) ?? [];
-    }
-  }
-  return buildRecommendations({
-    fundingLoops: matchesByPattern["funding-loops"] ?? [],
-    ghostCapacity: matchesByPattern["ghost-capacity"] ?? [],
-    zombieRecipients: matchesByPattern["zombie-recipients"] ?? [],
-    soleSourceCreep: matchesByPattern["sole-source-creep"] ?? [],
-    vendorConcentration: matchesByPattern["vendor-concentration"] ?? [],
-    amendmentDrift: matchesByPattern["amendment-purpose-drift"] ?? [],
-  });
-}
 
 export async function generateMetadata({
   params,

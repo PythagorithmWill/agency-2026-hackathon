@@ -197,6 +197,7 @@ export function SiteHeader() {
           borderTop: menuOpen ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
         }}
         aria-hidden={!menuOpen}
+        inert={!menuOpen}
       >
         <nav className="px-4 sm:px-6 py-4 flex flex-col gap-1 font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-muted)]">
           {navLinks.map((link) => (

@@ -149,7 +149,7 @@ export function generateMockComparables(
     // Per-record variance keyed on hash + index
     const variance = ((seed >> ((i * 3) % 30)) & 0xff) / 1280;
     s = Math.max(0.25, Math.min(0.95, s + variance - 0.1));
-    return { ...r, similarity: s, retrievalReason: "hybrid" as const };
+    return { ...r, similarity: s, retrievalReason: "mock" as const };
   }).sort((a, b) => b.similarity - a.similarity);
 }
 

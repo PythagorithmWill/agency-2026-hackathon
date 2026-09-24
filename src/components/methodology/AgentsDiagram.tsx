@@ -59,7 +59,7 @@ export function AgentsDiagram() {
               stroke="var(--color-border-strong)"
               strokeWidth="1"
               strokeLinecap="round"
-              initial={{ strokeDasharray: len, strokeDashoffset: len }}
+              initial={reduce ? false : { strokeDasharray: len, strokeDashoffset: len }}
               whileInView={reduce ? undefined : { strokeDashoffset: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.4 + i * 0.08, duration: 0.7, ease }}

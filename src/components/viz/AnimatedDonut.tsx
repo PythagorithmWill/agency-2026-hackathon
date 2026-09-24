@@ -38,13 +38,14 @@ export function AnimatedDonut({
   centerSubtext,
 }: Props) {
   const reduce = useReducedMotion();
-  const total = slices.reduce((s, x) => s + Math.max(0, x.value), 0);
+  const safe = (v: number) => (Number.isFinite(v) ? Math.max(0, v) : 0);
+  const total = slices.reduce((s, x) => s + safe(x.value), 0);
   const radius = (size - thickness) / 2;
   const circumference = 2 * Math.PI * radius;
 
   let cumulativeFraction = 0;
   const arcs = slices.map((s, i) => {
-    const fraction = total > 0 ? Math.max(0, s.value) / total : 0;
+    const fraction = total > 0 ? safe(s.value) / total : 0;
     const dash = fraction * circumference;
     const gap = circumference - dash;
     const offset = -cumulativeFraction * circumference;

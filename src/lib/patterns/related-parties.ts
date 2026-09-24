@@ -1,5 +1,6 @@
 import { longQuery } from "../db/pool";
 import { getPattern } from "./registry";
+import { normalizeBn } from "./identity";
 import {
   type PatternDetector,
   type PatternMatch,
@@ -91,7 +92,10 @@ function mapRowToMatch(row: RelatedRow): PatternMatch | null {
   if (linkCount < LINK_FLOOR || sources.length < 2) return null;
 
   const name = row.canonical_name ?? "Unknown entity";
-  const id = row.bn_root ?? String(row.id);
+  // Prefer the BN root; otherwise the canonical name, which the recipient
+  // page can resolve via fed name lookup or the golden-record fallback.
+  // A bare golden-record integer id resolves to nothing.
+  const id = normalizeBn(row.bn_root) ?? row.canonical_name ?? String(row.id);
   const summary = row.source_summary ?? {};
   const summaryParts = Object.entries(summary)
     .sort(([, a], [, b]) => Number(b) - Number(a))

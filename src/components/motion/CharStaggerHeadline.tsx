@@ -36,6 +36,14 @@ export function CharStaggerHeadline({
 
   const chars = Array.from(text);
   const ease = [0.16, 1, 0.3, 1] as const;
+  // Group characters by word so the line can only break at the spaces
+  // between words. With every character as its own inline-block the
+  // browser wrapped mid-word ("expan" / "sion").
+  const words: Array<Array<{ c: string; i: number }>> = [[]];
+  chars.forEach((c, i) => {
+    if (c === " ") words.push([]);
+    else words[words.length - 1].push({ c, i });
+  });
 
   const Tag = motion[as] as typeof motion.h1;
 
@@ -55,28 +63,31 @@ export function CharStaggerHeadline({
       }}
       aria-label={text}
     >
-      {chars.map((c, i) => {
-        const isAccent = accentLast && i === chars.length - 1;
-        return (
-          <motion.span
-            key={i}
-            aria-hidden="true"
-            className="inline-block"
-            style={isAccent ? { color: "var(--color-accent)" } : undefined}
-            variants={{
-              hidden: { opacity: 0, y: 12, scale: isAccent ? 0.8 : 1 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                scale: 1,
-                transition: { duration: charDurationMs / 1000, ease },
-              },
-            }}
-          >
-            {c === " " ? " " : c}
-          </motion.span>
-        );
-      })}
+      {words.map((word, w) => (
+        <span key={w} aria-hidden="true" className="inline-block whitespace-nowrap">
+          {word.map(({ c, i }) => {
+            const isAccent = accentLast && i === chars.length - 1;
+            return (
+              <motion.span
+                key={i}
+                className="inline-block"
+                style={isAccent ? { color: "var(--color-accent)" } : undefined}
+                variants={{
+                  hidden: { opacity: 0, y: 12, scale: isAccent ? 0.8 : 1 },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    transition: { duration: charDurationMs / 1000, ease },
+                  },
+                }}
+              >
+                {c}
+              </motion.span>
+            );
+          })}
+        </span>
+      )).flatMap((el, w) => (w > 0 ? [" ", el] : [el]))}
     </Tag>
   );
 }

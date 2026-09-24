@@ -65,6 +65,8 @@ export function GlassboxWordmark({
   return (
     <span
       className={className}
+      role="img"
+      aria-label="glassbox"
       style={{
         fontFamily: "var(--font-sans)",
         fontWeight: 600,
@@ -76,7 +78,7 @@ export function GlassboxWordmark({
       }}
     >
       {/* "glassb" */}
-      <span>glassb</span>
+      <span aria-hidden>glassb</span>
       {/* "o" → 3D wireframe cube */}
       <span
         aria-hidden
@@ -91,7 +93,7 @@ export function GlassboxWordmark({
         <CubeWireframe animateDraw={animateDraw} />
       </span>
       {/* "x" */}
-      <span>x</span>
+      <span aria-hidden>x</span>
     </span>
   );
 }
@@ -129,8 +131,7 @@ function CubeWireframe({ animateDraw = false }: { animateDraw?: boolean }) {
       strokeWidth={stroke}
       strokeLinecap="round"
       strokeLinejoin="round"
-      role="img"
-      aria-label="cube"
+      aria-hidden="true"
     >
       {/* Front face square */}
       <path d="M 18 38 L 18 88 L 68 88 L 68 38 Z" className={animateDraw ? "cube-draw cube-draw-1" : undefined} />

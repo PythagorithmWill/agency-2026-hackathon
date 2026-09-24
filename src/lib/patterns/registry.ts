@@ -54,7 +54,7 @@ export const PATTERNS: PatternDef[] = [
     definition:
       "The dataset shows entities receiving substantial federal funding with no recorded business identity — recipients the federal government cannot independently identify.",
     signal:
-      "recipient_business_number IS NULL · is_amendment = false · total funding ≥ $500K. Severity scales by total $ and departmental spread.",
+      "recipient_business_number IS NULL or a placeholder ('0', all-zeros, '-', 'n/a', 'none') · is_amendment = false · total funding ≥ $500K · publisher batch-report rows excluded. Severity scales by total $ and departmental spread.",
     attribution: "BOTH",
     status: "live",
     order: 2,
@@ -78,7 +78,7 @@ export const PATTERNS: PatternDef[] = [
     definition:
       "The dataset shows contracts that started small and grew at least threefold through amendments — surfacing procurement relationships that may have outgrown their original justification.",
     signal:
-      "original_value ≥ $100K · final/original ≥ 3.0 · ≥ 1 amendment row (is_amendment = true)",
+      "agreement_value is cumulative (F-3): original = amendment-0 row value ≥ $100K · final = latest-amendment row value · final/original ≥ 3.0 · ≥ 1 amendment row · chains keyed by (ref_number, BN|legal name) per F-1",
     attribution: "BOTH",
     status: "live",
     order: 4,

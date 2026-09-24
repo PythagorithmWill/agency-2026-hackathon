@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { findProofTokenById } from "@/lib/proofRegistry";
 import { proofTokenCompleteness, type Violation } from "@/lib/gov/validators";
+import { verifyProofTokenHash } from "@/lib/proof";
+
+export const metadata = { title: "Verify audit token — Glassbox" };
 
 export default async function VerifyPage({
   params,
@@ -12,10 +15,24 @@ export default async function VerifyPage({
   const found = findProofTokenById(decoded);
   if (!found) notFound();
 
-  const violations: Violation[] = proofTokenCompleteness(found.token);
+  // Structural completeness (PYTH-GOV check 3) AND a recomputed hash: a
+  // token whose sealed fields changed after issue must not read PASSED.
+  const hashCheck = verifyProofTokenHash(found.token);
+  const violations: Violation[] = [
+    ...proofTokenCompleteness(found.token),
+    ...(hashCheck.ok
+      ? []
+      : [
+          {
+            type: "HASH_MISMATCH" as const,
+            detail: `tokenHash does not match the canonical token (stamped ${hashCheck.actual.slice(0, 23)}…, recomputed ${hashCheck.expected.slice(0, 23)}…)`,
+          },
+        ]),
+  ];
   const verifiedAt = new Date().toISOString();
   const passed = violations.length === 0;
   const tierGates = [
+    { label: "Integrity (hash)", passed: hashCheck.ok, detail: hashCheck.ok ? `Recomputed ${hashCheck.expected.slice(0, 23)}… matches stamped tokenHash` : "Recomputed hash differs from stamped tokenHash" },
     { label: "Input (Tier 1)", passed: found.token.tiers.input.passed, detail: `Filters: ${found.token.tiers.input.filtersApplied.join(", ")}` },
     { label: "Context (Tier 2)", passed: found.token.tiers.contextual.passed, detail: `Model: ${found.token.tiers.contextual.model} · prompt ${found.token.tiers.contextual.promptVersion}` },
     { label: "Output (Tier 3)", passed: found.token.tiers.output.passed, detail: `${found.token.tiers.output.citationCount} citations · max-quote ${found.token.tiers.output.quoteWordCountMax} words · calibration ${found.token.tiers.output.calibrationCheck}` },

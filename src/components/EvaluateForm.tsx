@@ -20,6 +20,10 @@ const DEPARTMENTS = [
 export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
   const router = useRouter();
   const [working, start] = useTransition();
+  // True while the POST is in flight. `working` only covers the router
+  // transition after the response, so without this a second click during
+  // the fetch created a second evaluation.
+  const [submitting, setSubmitting] = useState(false);
   const [draftText, setDraftText] = useState(initialDraft);
   const [workingTitle, setWorkingTitle] = useState("");
   const [anticipatedAmount, setAnticipatedAmount] = useState<string>("");
@@ -41,7 +45,8 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
     if (!draftOK) return `Draft needs at least 40 characters (currently ${draftLen}).`;
     return null;
   })();
-  const canSubmit = validation === null && !working;
+  const busy = working || submitting;
+  const canSubmit = validation === null && !busy;
 
   const onSubmit = async () => {
     setSubmitError(null);
@@ -56,6 +61,7 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
       anticipatedAmount: Number(anticipatedAmount.replace(/[^0-9.]/g, "")) || 0,
       anticipatedFiscalYear: fiscalYear,
     };
+    setSubmitting(true);
     let res: Response;
     try {
       res = await fetch("/api/draft/evaluate", {
@@ -65,6 +71,7 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
       });
     } catch (e) {
       setSubmitError(`Network error: ${(e as Error).message}`);
+      setSubmitting(false);
       return;
     }
     if (!res.ok) {
@@ -76,11 +83,23 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
         /* ignore */
       }
       setSubmitError(msg);
+      setSubmitting(false);
       return;
     }
-    const data = (await res.json()) as { evaluationId: string };
+    let data: { evaluationId?: string };
+    try {
+      data = (await res.json()) as { evaluationId?: string };
+    } catch {
+      data = {};
+    }
+    if (!data.evaluationId) {
+      setSubmitError("Evaluate API returned no evaluation id.");
+      setSubmitting(false);
+      return;
+    }
+    const id = data.evaluationId;
     start(() => {
-      router.push((`/evaluate/${data.evaluationId}`) as never);
+      router.push((`/evaluate/${id}`) as never);
     });
   };
 
@@ -207,7 +226,7 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
             disabled={!canSubmit}
             className="group inline-flex items-center gap-3 px-7 h-14 rounded-[16px] bg-[var(--color-accent)] text-[var(--color-bg)] text-[var(--text-body)] font-semibold hover:opacity-90 transition disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {working ? "Evaluating…" : "Evaluate draft"}
+            {busy ? "Evaluating…" : "Evaluate draft"}
             <span aria-hidden className="transition-transform group-hover:translate-x-2">
               →
             </span>

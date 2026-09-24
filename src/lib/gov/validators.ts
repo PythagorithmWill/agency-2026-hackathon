@@ -6,7 +6,8 @@ export type ViolationType =
   | "PROOF_INCOMPLETE"
   | "QUOTE_TOO_LONG"
   | "QUOTE_REUSED"
-  | "LOW_CONFIDENCE_ENTITY";
+  | "LOW_CONFIDENCE_ENTITY"
+  | "HASH_MISMATCH";
 
 export interface Violation {
   type: ViolationType;

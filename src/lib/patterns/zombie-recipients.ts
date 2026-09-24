@@ -1,5 +1,6 @@
 import { longQuery } from "../db/pool";
 import { getPattern } from "./registry";
+import { normalizeBn } from "./identity";
 import {
   type PatternDetector,
   type PatternMatch,
@@ -124,7 +125,9 @@ function mapRowToMatch(row: ZombieRow): PatternMatch | null {
     (Date.now() - new Date(lastGrantIso).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
 
   const name = row.recipient_legal_name ?? "Unknown recipient";
-  const bn = row.recipient_business_number;
+  // Placeholder BNs ("None", "0", "-", …) are treated as absent so the
+  // subject id falls back to the legal name (see ./identity.ts).
+  const bn = normalizeBn(row.recipient_business_number);
 
   // matchId must be unique across rows. Multiple recipients can share
   // a name AND have null BN (publisher-aggregated rows), so include

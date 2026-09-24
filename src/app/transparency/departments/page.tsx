@@ -1,4 +1,5 @@
 import { loadSnapshot } from "@/lib/analytics/snapshot";
+import { deptSlug } from "@/app/department/[slug]/slug";
 import { DashboardTabs } from "@/components/transparency/DashboardTabs";
 import { AnimatedBar } from "@/components/viz/AnimatedBar";
 
@@ -35,6 +36,7 @@ export default async function DepartmentsTab() {
               rows={departments.map((d) => ({
                 label: d.department,
                 value: d.total,
+                href: `/department/${deptSlug(d.department)}`,
                 sublabel: `${d.agreementCount.toLocaleString("en-CA")} agreements · ${d.recipientCount.toLocaleString("en-CA")} recipients · ${((d.total / totalSpend) * 100).toFixed(1)}% of top-${departments.length}`,
               }))}
               format="currency-compact"

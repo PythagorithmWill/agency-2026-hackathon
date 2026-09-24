@@ -1,5 +1,6 @@
 import { longQuery } from "../db/pool";
 import { getPattern } from "./registry";
+import { nullLikeBnSql } from "./identity";
 import {
   type PatternDetector,
   type PatternMatch,
@@ -20,11 +21,20 @@ import {
  * the federal government cannot independently identify.
  *
  * Match condition:
- *   recipient_business_number IS NULL or empty
+ *   recipient_business_number IS NULL, empty, or a publisher placeholder
+ *     ("0", "000000000", "-", "n/a", "none", … — see identity.ts; the
+ *     corpus stores 18.5K rows with the literal "0")
  *   total federal received ≥ $500K
  *   is_amendment = false (only original-agreement rows)
  *   ≥ 1 distinct funding department
+ *
+ * Excluded: the publisher's own aggregate rows filed under the literal
+ * recipient name "batch report | rapport en lots" — that is a reporting
+ * artefact, not an entity.
  */
+
+/** Lower-cased prefixes of recipient_legal_name that are reporting artefacts, not entities. */
+const EXCLUDED_NAME_PREFIXES = ["batch report"];
 
 interface GhostRow {
   recipient_legal_name: string | null;
@@ -78,6 +88,10 @@ export const ghostCapacityDetector: PatternDetector = {
       params.push(filters.subjectId);
       extra = ` AND recipient_legal_name = $${params.length}`;
     }
+    for (const prefix of EXCLUDED_NAME_PREFIXES) {
+      params.push(`${prefix}%`);
+      extra += ` AND lower(recipient_legal_name) NOT LIKE $${params.length}`;
+    }
     params.push(limit);
 
     const r = await longQuery<GhostRow>(
@@ -92,7 +106,7 @@ export const ghostCapacityDetector: PatternDetector = {
               MAX(agreement_start_date) AS last_grant
          FROM fed.grants_contributions
         WHERE is_amendment = false
-          AND (recipient_business_number IS NULL OR recipient_business_number = '')
+          AND ${nullLikeBnSql("recipient_business_number")}
           AND recipient_legal_name IS NOT NULL
           AND agreement_value > 0${extra}
         GROUP BY recipient_legal_name
@@ -152,7 +166,7 @@ function mapRowToMatch(row: GhostRow): PatternMatch | null {
         source: "fed.grants_contributions",
         rowId: name,
         field: "recipient_business_number",
-        value: null, // explicitly null is the signal
+        value: null, // null or a placeholder token — absence is the signal
       },
       {
         source: "fed.grants_contributions",

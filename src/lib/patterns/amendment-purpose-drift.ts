@@ -15,8 +15,11 @@ import {
  * current description is below 0.30. Pure observation — Glassbox makes
  * no causal claim about why the descriptions diverged.
  *
- * SQL pulls per-ref_number first/last description pairs in a single
- * window query; Jaccard is computed in JS.
+ * SQL pulls per-agreement first/last description pairs in a single
+ * window query; Jaccard is computed in JS. Agreements are keyed by the
+ * F-1 key (ref_number, COALESCE(bn, legal_name, _id)) — ref_number alone
+ * collides across unrelated recipients (KNOWN-DATA-ISSUES F-1), which
+ * would pair one recipient's original with another's amendment.
  */
 
 interface DriftRow {
@@ -64,6 +67,7 @@ export const amendmentPurposeDriftDetector: PatternDetector = {
       `WITH ranked AS (
          SELECT
            ref_number,
+           COALESCE(recipient_business_number, recipient_legal_name, _id::text) AS agreement_key,
            recipient_legal_name,
            owner_org_title,
            description_en,
@@ -71,14 +75,16 @@ export const amendmentPurposeDriftDetector: PatternDetector = {
            NULLIF(amendment_number, '')::int AS amend_n,
            _id,
            ROW_NUMBER() OVER (
-             PARTITION BY ref_number
+             PARTITION BY ref_number, COALESCE(recipient_business_number, recipient_legal_name, _id::text)
              ORDER BY NULLIF(amendment_number, '')::int ASC NULLS FIRST, _id ASC
            ) AS rn_first,
            ROW_NUMBER() OVER (
-             PARTITION BY ref_number
+             PARTITION BY ref_number, COALESCE(recipient_business_number, recipient_legal_name, _id::text)
              ORDER BY NULLIF(amendment_number, '')::int DESC NULLS LAST, _id DESC
            ) AS rn_last,
-           COUNT(*) OVER (PARTITION BY ref_number) AS amendment_count
+           COUNT(*) OVER (
+             PARTITION BY ref_number, COALESCE(recipient_business_number, recipient_legal_name, _id::text)
+           ) AS amendment_count
          FROM fed.grants_contributions
          WHERE ref_number IS NOT NULL
            AND description_en IS NOT NULL
@@ -86,7 +92,7 @@ export const amendmentPurposeDriftDetector: PatternDetector = {
            AND agreement_value > 0
        ),
        initial AS (
-         SELECT ref_number, recipient_legal_name, owner_org_title,
+         SELECT ref_number, agreement_key, recipient_legal_name, owner_org_title,
                 description_en AS initial_description,
                 agreement_value AS initial_value,
                 amendment_count
@@ -94,7 +100,7 @@ export const amendmentPurposeDriftDetector: PatternDetector = {
           WHERE rn_first = 1 AND amendment_count >= 3
        ),
        current AS (
-         SELECT ref_number,
+         SELECT ref_number, agreement_key,
                 description_en AS current_description,
                 agreement_value AS current_value
            FROM ranked
@@ -104,7 +110,7 @@ export const amendmentPurposeDriftDetector: PatternDetector = {
               i.initial_description, c.current_description,
               i.amendment_count, i.initial_value, c.current_value
          FROM initial i
-         JOIN current c USING (ref_number)
+         JOIN current c USING (ref_number, agreement_key)
         WHERE c.current_description IS NOT NULL
           AND length(c.current_description) >= 60
           ${extra}

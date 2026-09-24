@@ -6,6 +6,7 @@ import type {
 } from "../types/spending";
 import { computeConcentration, type RecipientTotal } from "./concentration";
 import { forecastForward } from "./temporal";
+import { loadSnapshot } from "./snapshot";
 
 /** Selector for which pool budget to use. */
 type Budget = "fast" | "long";
@@ -43,7 +44,18 @@ function toIsoOrNull(v: unknown): string | null {
 
 /* ─── shared CTE fragments ───────────────────────────────────────── */
 
-const FED_CURRENT_CTE = `
+/**
+ * F-3 max-amendment CTE. `innerFilter` is appended to the WHERE clause
+ * of the DISTINCT ON scan. ONLY push a predicate inside when it is a
+ * function of the partition key — i.e. `recipient_business_number = X`.
+ * Because the key's second component is COALESCE(bn, name, _id), every
+ * row of a partition whose bn = X has bn = X, so pre-filtering on bn
+ * leaves those partitions intact and the winning row unchanged.
+ * Predicates on owner_org_title / prog_name_en / dates are NOT safe to
+ * push (they are not part of the key and can differ across amendments).
+ */
+function fedCurrentCte(innerFilter = ""): string {
+  return `
   WITH agreement_current AS (
     SELECT DISTINCT ON (
       ref_number,
@@ -60,7 +72,7 @@ const FED_CURRENT_CTE = `
       description_en
     FROM fed.grants_contributions
     WHERE agreement_value > 0
-      AND recipient_legal_name IS NOT NULL
+      AND recipient_legal_name IS NOT NULL${innerFilter}
     ORDER BY
       ref_number,
       COALESCE(recipient_business_number, recipient_legal_name, _id::text),
@@ -68,6 +80,56 @@ const FED_CURRENT_CTE = `
       _id DESC
   )
 `;
+}
+const FED_CURRENT_CTE = fedCurrentCte();
+
+/**
+ * Federal fiscal year label (Apr 1 – Mar 31, labelled by END year) per
+ * agency2026-data-skill "Year alignment convention": a start date of
+ * 2023-10-01 is FY2024. Every fy_min / fy_max / fy filter in this module
+ * must use this expression — a bare EXTRACT(YEAR …) is a calendar year
+ * and is off by one for April–December starts.
+ */
+export const FED_FY_SQL = `(EXTRACT(YEAR FROM agreement_start_date::date)::int +
+         CASE WHEN EXTRACT(MONTH FROM agreement_start_date::date) >= 4 THEN 1 ELSE 0 END)`;
+
+/* ─── corpus as-of date ──────────────────────────────────────────── */
+
+let corpusAsOfCache: { value: string; fetchedAt: number } | null = null;
+const CORPUS_AS_OF_TTL_MS = 60 * 60 * 1000;
+
+/**
+ * "Data current as of" date for proof tokens: the latest
+ * agreement_start_date in the federal corpus that is not in the future
+ * (publishers file forward-dated agreements; the max start date alone
+ * reads 2027). Served from idx_fed_gc_start_date (backward index scan,
+ * ~1ms) and memoised for an hour because it only moves on a corpus
+ * refresh. Falls back to the analytics snapshot's generation date, then
+ * to a literal "unknown" — never to a hard-coded date.
+ */
+export async function loadCorpusAsOfDate(): Promise<string> {
+  if (corpusAsOfCache && Date.now() - corpusAsOfCache.fetchedAt < CORPUS_AS_OF_TTL_MS) {
+    return corpusAsOfCache.value;
+  }
+  try {
+    const r = await query<{ as_of: string | Date | null }>(
+      `SELECT MAX(agreement_start_date)::text AS as_of
+         FROM fed.grants_contributions
+        WHERE agreement_start_date <= CURRENT_DATE`,
+    );
+    const iso = toIsoOrNull(r.rows[0]?.as_of);
+    if (iso) {
+      const value = iso.slice(0, 10);
+      corpusAsOfCache = { value, fetchedAt: Date.now() };
+      return value;
+    }
+  } catch (err) {
+    console.warn("[corpusAsOf] query failed, falling back to snapshot:", (err as Error).message);
+  }
+  const snap = await loadSnapshot();
+  if (snap?.generatedAt) return `${snap.generatedAt.slice(0, 10)} (analytics snapshot)`;
+  return "unknown";
+}
 
 /* ─── overview-level stats ───────────────────────────────────────── */
 
@@ -97,8 +159,8 @@ export async function loadOverviewStats(budget: Budget = "fast"): Promise<Overvi
        COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
        COUNT(DISTINCT owner_org_title) AS department_count,
        COUNT(DISTINCT prog_name_en) AS program_count,
-       MIN(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_min,
-       MAX(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_max
+       MIN(${FED_FY_SQL}) AS fy_min,
+       MAX(${FED_FY_SQL}) AS fy_max
      FROM agreement_current
      WHERE agreement_value >= 1`,
   );
@@ -154,11 +216,11 @@ export async function loadRecipientTotalsFed({
   }
   if (fyStart) {
     params.push(fyStart);
-    filters.push(`EXTRACT(YEAR FROM agreement_start_date::date) >= $${params.length}`);
+    filters.push(`${FED_FY_SQL} >= $${params.length}`);
   }
   if (fyEnd) {
     params.push(fyEnd);
-    filters.push(`EXTRACT(YEAR FROM agreement_start_date::date) <= $${params.length}`);
+    filters.push(`${FED_FY_SQL} <= $${params.length}`);
   }
   params.push(limit);
 
@@ -341,8 +403,14 @@ export async function loadTemporalSeriesFed(opts: {
     params.push(opts.department);
     filters.push(`(owner_org_title = $${params.length} OR owner_org_title ILIKE $${params.length} || '%')`);
   }
+  // The BN predicate is pushed INSIDE the F-3 CTE (see fedCurrentCte):
+  // it is a function of the partition key so the result is identical,
+  // but the DISTINCT ON sort runs over ~400 rows instead of 1.26M
+  // (measured 4.3–5.8s → sub-second for BN 108162330).
+  let innerFilter = "";
   if (opts.recipientBn) {
     params.push(opts.recipientBn);
+    innerFilter = ` AND recipient_business_number = $${params.length}`;
     filters.push(`recipient_business_number = $${params.length}`);
   }
 
@@ -353,11 +421,9 @@ export async function loadTemporalSeriesFed(opts: {
     program_count: string | number | null;
     agreement_count: string | number | null;
   }>(
-    `${FED_CURRENT_CTE}
+    `${fedCurrentCte(innerFilter)}
      SELECT
-       EXTRACT(YEAR FROM agreement_start_date::date)::int +
-         CASE WHEN EXTRACT(MONTH FROM agreement_start_date::date) >= 4 THEN 1 ELSE 0 END
-         AS fy,
+       ${FED_FY_SQL} AS fy,
        SUM(agreement_value)::numeric AS total,
        COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
        COUNT(DISTINCT prog_name_en) AS program_count,
@@ -470,6 +536,15 @@ export interface AmendmentGrowthRow {
  * and at least 2 amendments. Capped to the top N by current value.
  *
  * Pure SQL window aggregation rather than per-record fetch + JS loop.
+ *
+ * Chains are partitioned by the F-1 key (ref_number, COALESCE(bn,
+ * legal_name, _id)) — the same key the F-3 CTE uses — because
+ * ref_number alone collides across unrelated recipients (41K cases).
+ * Partitioning by ref_number only produced e.g. GC-2018-Q4-00021 as
+ * "$1.3M → $371M, ×286" when the rows belong to three different
+ * recipients, and emitted the same agreement three times when the
+ * recipient's name was spelled differently across amendments.
+ * Recipient / department are taken from the latest amendment row.
  */
 export async function scanAmendmentGrowthFed(
   threshold = 2.0,
@@ -487,6 +562,7 @@ export async function scanAmendmentGrowthFed(
     `WITH chain AS (
        SELECT
          ref_number,
+         COALESCE(recipient_business_number, recipient_legal_name, _id::text) AS agreement_key,
          recipient_legal_name,
          owner_org_title,
          agreement_value,
@@ -499,22 +575,23 @@ export async function scanAmendmentGrowthFed(
      ranked AS (
        SELECT
          ref_number, recipient_legal_name, owner_org_title, agreement_value, amend_n,
-         FIRST_VALUE(agreement_value) OVER (
-           PARTITION BY ref_number
-           ORDER BY amend_n ASC NULLS FIRST, _id ASC
-         ) AS initial_value,
-         FIRST_VALUE(agreement_value) OVER (
-           PARTITION BY ref_number
-           ORDER BY amend_n DESC NULLS LAST, _id DESC
-         ) AS current_value,
-         COUNT(*) OVER (PARTITION BY ref_number) AS amendment_count
+         FIRST_VALUE(agreement_value) OVER w_asc AS initial_value,
+         FIRST_VALUE(agreement_value) OVER w_desc AS current_value,
+         COUNT(*) OVER (PARTITION BY ref_number, agreement_key) AS amendment_count,
+         ROW_NUMBER() OVER w_desc AS rn
        FROM chain
+       WINDOW
+         w_asc AS (PARTITION BY ref_number, agreement_key
+                   ORDER BY amend_n ASC NULLS FIRST, _id ASC),
+         w_desc AS (PARTITION BY ref_number, agreement_key
+                    ORDER BY amend_n DESC NULLS LAST, _id DESC)
      )
-     SELECT DISTINCT
+     SELECT
        ref_number, recipient_legal_name, owner_org_title,
        initial_value, current_value, amendment_count
      FROM ranked
-     WHERE amendment_count >= 2
+     WHERE rn = 1
+       AND amendment_count >= 2
        AND initial_value > 100000
        AND current_value >= initial_value * $1
      ORDER BY current_value DESC
@@ -659,8 +736,8 @@ export async function loadDepartmentProfile(
        COUNT(*) AS agreement_count,
        COUNT(DISTINCT COALESCE(recipient_business_number, recipient_legal_name)) AS recipient_count,
        COUNT(DISTINCT prog_name_en) AS program_count,
-       MIN(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_min,
-       MAX(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_max
+       MIN(${FED_FY_SQL}) AS fy_min,
+       MAX(${FED_FY_SQL}) AS fy_max
      FROM agreement_current
      WHERE owner_org_title = $1`,
     [department],
@@ -796,9 +873,13 @@ export async function loadGoldenRecord(
   identifier: string,
   budget: Budget = "fast",
 ): Promise<GoldenRecordSummary | null> {
-  // identifier may be a full BN ("129253308RR0001") or a 9-digit root
-  // ("129253308") or a free-text legal name. Try BN matches first; fall
-  // back to canonical_name match.
+  // identifier may be a full BN ("129253308RR0001", "108162330RT0001")
+  // or a 9-digit root ("129253308") or a free-text legal name. Try BN
+  // matches first; fall back to canonical_name match. Any CRA program
+  // account suffix (RR/RT/RP/RM/RC + 4 digits) is stripped to reach the
+  // root — bn_variants on the golden record typically lists only the
+  // RR variant, so "108162330RT0001" found nothing when only RR was
+  // stripped (verified against the live corpus).
   const bnLooking = /^\d{9,}/.test(identifier);
   const r = await run(budget)<GoldenRow>(
     bnLooking
@@ -820,7 +901,7 @@ export async function loadGoldenRecord(
              OR norm_name = upper($1)
           ORDER BY source_link_count DESC NULLS LAST
           LIMIT 1`,
-    [bnLooking ? identifier.replace(/RR\d+$/i, "") : identifier],
+    [bnLooking ? identifier.trim().replace(/\s*[A-Z]{2}\s*\d{4}$/i, "") : identifier],
   );
   const row = r.rows[0];
   if (!row) return null;
@@ -861,22 +942,63 @@ function recipientFilterClause(identifier: string): {
   params: unknown[];
 } {
   const isBn = /^\d{9,}/.test(identifier);
+  // Name lookups: the live corpus has a btree on
+  // upper(trim(recipient_legal_name)) (idx_fed_gc_upper_trim_name) but
+  // none on the raw column. The upper/trim equality is implied by the
+  // exact equality, so AND-ing it changes nothing about the result set
+  // while letting the planner use the index instead of a 1.27M-row seq
+  // scan. There is no index on recipient_business_number at all.
   return {
     clause: isBn
       ? "recipient_business_number = $1"
-      : "recipient_legal_name = $1",
+      : "recipient_legal_name = $1 AND upper(trim(recipient_legal_name)) = upper(trim($1))",
     params: [identifier],
   };
 }
 
 /**
- * Recipient queries hit `is_amendment = false` rows directly. The F-3
- * max-amendment dedup CTE is unnecessary here: each ref_number's original
- * row(s) carry the canonical agreement totals, and the amendment delta
- * rows would only inflate the sum if included. Dropping the CTE turns
- * three 30s+ queries into three sub-second sequential scans on the
- * BN-filtered slice (~hundreds of rows for even the biggest recipients).
+ * Recipient queries: filter the corpus to the recipient's slice FIRST
+ * (BN equality, or the index-backed name equality), then apply the F-3
+ * max-amendment DISTINCT ON within that slice. agreement_value is
+ * CUMULATIVE per amendment row (F-3: 20.54M → 36.24M → 36.24M restates
+ * the running total), so "current commitment" = the latest amendment
+ * row per F-1 key — the same definition the overview / department pages
+ * use, which makes recipient totals reconcile with them. The earlier
+ * `is_amendment = false` shortcut reported the ORIGINAL commitment
+ * (BN 108162330: $713.3M vs $737.7M current).
+ *
+ * For a BN predicate the slice is provably identical to the global CTE
+ * (BN is part of the partition key). For a name predicate, agreements
+ * whose amendments were filed under a different spelling of the name
+ * are seen only through the rows that carry the requested spelling —
+ * inherent to a name lookup; BN is the authoritative anchor.
  */
+function recipientSliceCte(clause: string): string {
+  return `
+  WITH slice AS (
+    SELECT DISTINCT ON (
+      ref_number,
+      COALESCE(recipient_business_number, recipient_legal_name, _id::text)
+    )
+      ref_number,
+      recipient_legal_name,
+      recipient_business_number,
+      recipient_province,
+      owner_org_title,
+      prog_name_en,
+      agreement_value,
+      agreement_start_date
+    FROM fed.grants_contributions
+    WHERE ${clause}
+      AND agreement_value > 0
+      AND recipient_legal_name IS NOT NULL
+    ORDER BY
+      ref_number,
+      COALESCE(recipient_business_number, recipient_legal_name, _id::text),
+      NULLIF(amendment_number, '')::int DESC NULLS LAST,
+      _id DESC
+  )`;
+}
 
 export async function loadRecipientProfile(
   identifier: string,
@@ -894,20 +1016,18 @@ export async function loadRecipientProfile(
     fy_min: string | number | null;
     fy_max: string | number | null;
   }>(
-    `SELECT
+    `${recipientSliceCte(clause)}
+     SELECT
        MAX(recipient_legal_name) AS legal_name,
        MAX(recipient_business_number) AS bn,
        MAX(recipient_province) AS province,
        SUM(agreement_value)::numeric AS total,
-       COUNT(DISTINCT ref_number) AS agreement_count,
+       COUNT(*) AS agreement_count,
        COUNT(DISTINCT owner_org_title) AS department_count,
        COUNT(DISTINCT prog_name_en) AS program_count,
-       MIN(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_min,
-       MAX(EXTRACT(YEAR FROM agreement_start_date::date)) AS fy_max
-     FROM fed.grants_contributions
-     WHERE ${clause}
-       AND is_amendment = false
-       AND agreement_value > 0`,
+       MIN(${FED_FY_SQL}) AS fy_min,
+       MAX(${FED_FY_SQL}) AS fy_max
+     FROM slice`,
     params,
   );
   const row = r.rows[0];
@@ -937,15 +1057,13 @@ export async function loadRecipientByDepartment(
     total: string | number | null;
     agreement_count: string | number | null;
   }>(
-    `SELECT
+    `${recipientSliceCte(clause)}
+     SELECT
        owner_org_title AS department,
        SUM(agreement_value)::numeric AS total,
-       COUNT(DISTINCT ref_number) AS agreement_count
-     FROM fed.grants_contributions
-     WHERE ${clause}
-       AND is_amendment = false
-       AND agreement_value > 0
-       AND owner_org_title IS NOT NULL
+       COUNT(*) AS agreement_count
+     FROM slice
+     WHERE owner_org_title IS NOT NULL
      GROUP BY owner_org_title
      ORDER BY total DESC`,
     params,
@@ -957,6 +1075,7 @@ export async function loadRecipientByDepartment(
   }));
 }
 
+/** Top-N agreements for a recipient by CURRENT (latest-amendment) value, descending. */
 export async function loadRecipientAgreements(
   identifier: string,
   limit = 50,
@@ -972,14 +1091,12 @@ export async function loadRecipientAgreements(
     agreement_start_date: string | null;
     recipient_province: string | null;
   }>(
-    `SELECT DISTINCT ON (ref_number)
+    `${recipientSliceCte(clause)}
+     SELECT
        ref_number, recipient_legal_name, owner_org_title, prog_name_en,
        agreement_value, agreement_start_date, recipient_province
-     FROM fed.grants_contributions
-     WHERE ${clause}
-       AND is_amendment = false
-       AND agreement_value > 0
-     ORDER BY ref_number, agreement_value DESC
+     FROM slice
+     ORDER BY agreement_value DESC, agreement_start_date DESC NULLS LAST, ref_number
      LIMIT $2`,
     [...params, limit],
   );

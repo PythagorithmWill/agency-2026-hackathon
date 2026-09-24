@@ -37,7 +37,12 @@ async function walkFiles(dir: string, exts: string[]): Promise<string[]> {
 }
 
 function toRoutePattern(absPagePath: string, suffix: string): string {
-  const rel = absPagePath.slice(APP_DIR.length).replace(suffix, "") || "/";
+  // Route groups — "(list)" segments — organise files without affecting
+  // the URL, so strip them before building the pattern.
+  const rel = absPagePath
+    .slice(APP_DIR.length)
+    .replace(suffix, "")
+    .replace(/\/\([^/]+\)/g, "");
   return rel === "" ? "/" : rel;
 }
 
@@ -67,7 +72,24 @@ async function loadAppRoutes(): Promise<RegExp[]> {
   return patterns.map(patternToRegex);
 }
 
-const HREF_RE = /href=(?:\{[`"']|["'])([^`"'\s}]+)/g;
+// Matches JSX `href="/x"`, `href={"/x"}`, `href={`/x/${id}`}` AND object
+// literal `href: "/x"` (the recommendations link arrays in src/lib).
+const HREF_RE = /href\s*(?:=\s*\{?|:)\s*[`"']([^`"'\s]+)/g;
+
+/**
+ * Template-literal hrefs have each `${…}` interpolation replaced by a
+ * placeholder segment, so `/api/proof/${id}/download` is checked as
+ * `/api/proof/x/download`. Previously every `${…}` href was skipped,
+ * which is exactly where an `as never` cast can hide a dead route.
+ * Nested braces inside an interpolation can't be parsed by regex; those
+ * (rare) hrefs are skipped rather than mis-reported.
+ */
+function normaliseTemplateHref(raw: string): string | null {
+  if (!raw.includes("${")) return raw;
+  const replaced = raw.replace(/\$\{[^{}]*\}/g, "x");
+  if (replaced.includes("${")) return null;
+  return replaced;
+}
 
 async function extractInternalHrefs(): Promise<{ href: string; file: string }[]> {
   const files = await walkFiles(SRC_DIR, [".tsx", ".ts"]);
@@ -77,8 +99,8 @@ async function extractInternalHrefs(): Promise<{ href: string; file: string }[]>
     const content = await fs.readFile(f, "utf8");
     let m: RegExpExecArray | null;
     while ((m = HREF_RE.exec(content))) {
-      const raw = m[1];
-      if (!raw || raw.includes("${")) continue;
+      const raw = normaliseTemplateHref(m[1] ?? "");
+      if (!raw) continue;
       out.push({ href: raw, file: path.relative(PROJECT_ROOT, f) });
     }
   }

@@ -42,8 +42,14 @@ export function AmendmentTimeline({ events }: { events: AmendmentEvent[] }) {
   const data = useMemo(() => {
     if (events.length === 0) return null;
     const maxValue = Math.max(...events.map((e) => e.agreementValue), 1);
+    // Unparseable dates yield NaN, which would poison min/max and every x.
+    const toTime = (d: AmendmentEvent["date"]): number | null => {
+      if (!d) return null;
+      const t = new Date(d).getTime();
+      return Number.isFinite(t) ? t : null;
+    };
     const dates = events
-      .map((e) => (e.date ? new Date(e.date).getTime() : null))
+      .map((e) => toTime(e.date))
       .filter((d): d is number => d !== null);
     const minDate = dates.length > 0 ? Math.min(...dates) : Date.now();
     const maxDate = dates.length > 0 ? Math.max(...dates) : Date.now();
@@ -56,7 +62,7 @@ export function AmendmentTimeline({ events }: { events: AmendmentEvent[] }) {
     const innerH = h - margin.top - margin.bottom;
 
     const points = events.map((e, i) => {
-      const t = e.date ? new Date(e.date).getTime() : minDate;
+      const t = toTime(e.date) ?? minDate;
       const x = margin.left + ((t - minDate) / dateSpan) * innerW;
       const y =
         margin.top +
@@ -76,7 +82,7 @@ export function AmendmentTimeline({ events }: { events: AmendmentEvent[] }) {
     );
   }
 
-  const { points, w, h, margin, innerW, innerH, maxValue } = data;
+  const { points, w, h, margin, innerH, maxValue } = data;
   const lineD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
   return (

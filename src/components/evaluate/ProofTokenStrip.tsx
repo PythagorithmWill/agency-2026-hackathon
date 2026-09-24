@@ -130,7 +130,7 @@ function DrawCheck({ color }: { color: string }) {
     >
       <motion.path
         d="M5 12.5l4 4 10-10"
-        initial={{ pathLength: 0 }}
+        initial={reduce ? false : { pathLength: 0 }}
         whileInView={reduce ? undefined : { pathLength: 1 }}
         viewport={{ once: true }}
         transition={{ delay: 0.3, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}

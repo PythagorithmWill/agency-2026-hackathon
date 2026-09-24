@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 /**
  * Lightweight guided tour. Renders a full-page dimmer with a cutout
@@ -79,6 +80,8 @@ export function GuidedTour() {
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Show the tour automatically on first visit. The localStorage flag is
   // set whenever the user finishes or skips. Returning visitors only see
@@ -125,22 +128,19 @@ export function GuidedTour() {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll, true);
     };
-  }, [active, recalc]);
+  }, [active, recalc, pathname]);
 
-  // Navigate when a step has a path and we're not already there.
+  // Navigate when a step has a path and we're not already there. Goes
+  // through the app router: a raw pushState + popstate only changed the
+  // URL bar (Next's patched history keeps the current page rendered), so
+  // relaunching the tour from /follow showed "/" with /follow's content.
   useEffect(() => {
     if (!active) return;
     const step = STEPS[stepIndex];
-    if (step?.path && window.location.pathname !== step.path) {
-      // Soft client-side nav by setting the URL — the layout components
-      // re-render via Next's app router. We don't import next/navigation
-      // here because GuidedTour can be mounted before the router is
-      // ready; a vanilla pushState + popstate dispatch is sufficient
-      // for the tour's needs.
-      window.history.pushState({}, "", step.path);
-      window.dispatchEvent(new PopStateEvent("popstate"));
+    if (step?.path && pathname !== step.path) {
+      router.push(step.path as never);
     }
-  }, [active, stepIndex]);
+  }, [active, stepIndex, pathname, router]);
 
   function dismiss() {
     setActive(false);

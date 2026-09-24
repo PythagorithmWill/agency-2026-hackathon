@@ -39,7 +39,6 @@ export function SourceBreakdown({
       {present.map((s, i) => {
         const n = bySource[s] ?? 0;
         const label = LABEL[s];
-        const labelText = `${n} ${label}${n === 1 && label.endsWith("s") ? label.slice(0, -1) : label}`;
         // Singularize: "8 federal grants" / "1 federal grant"
         const display = n === 1
           ? `${n} ${label.replace(/s$/, "")}`

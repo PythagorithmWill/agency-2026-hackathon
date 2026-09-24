@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { loadEvaluation } from "@/lib/evaluate/store";
 import { EvaluationView } from "@/components/evaluate/EvaluationView";
 
+export const metadata = { title: "Evaluation — Glassbox" };
+
 export default async function EvaluationResultPage({
   params,
 }: {

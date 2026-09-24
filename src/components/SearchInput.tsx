@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export type SearchMode = "search" | "evaluate";
 
@@ -14,9 +13,8 @@ export type SearchMode = "search" | "evaluate";
  *   - Search → /search?q=<encoded>
  *   - Evaluate → /evaluate?draft=<encoded> (form pre-fills the textarea)
  *
- * The submit path uses router.push first, with a window.location.assign
- * fallback so the navigation always lands even if a transition or
- * hydration race swallows the router call.
+ * Submit is a native GET form (action="/search", name="q") so navigation
+ * lands even if hydration or a transition swallows JS handlers.
  */
 export function SearchInput({
   initialMode = "search",
@@ -25,33 +23,8 @@ export function SearchInput({
   initialMode?: SearchMode;
   initialQuery?: string;
 }) {
-  const router = useRouter();
   const [mode, setMode] = useState<SearchMode>(initialMode);
   const [query, setQuery] = useState(initialQuery);
-
-  const onSubmit = () => {
-    const q = query.trim();
-    if (!q) return;
-    const target =
-      mode === "search"
-        ? `/search?q=${encodeURIComponent(q)}`
-        : `/evaluate?draft=${encodeURIComponent(q)}`;
-    try {
-      router.push(target as never);
-    } catch {
-      // ignore — fall through to hard nav
-    }
-    // Hard fallback: if the soft client-side push doesn't land in 250ms,
-    // force a real navigation. This unblocks any rare hydration/transition
-    // edge case so the search button is never a dead end.
-    if (typeof window !== "undefined") {
-      window.setTimeout(() => {
-        if (window.location.pathname + window.location.search !== target) {
-          window.location.assign(target);
-        }
-      }, 250);
-    }
-  };
 
   return (
     <div className="mx-auto max-w-[720px] w-full" data-tour-id="tour-search">

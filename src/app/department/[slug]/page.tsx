@@ -5,6 +5,7 @@ import { loadSnapshot } from "@/lib/analytics/snapshot";
 import { AnimatedBar } from "@/components/viz/AnimatedBar";
 import { AnimatedAreaChart } from "@/components/viz/AnimatedAreaChart";
 import { LorenzCurve } from "@/components/viz/LorenzCurve";
+import { deptSlug } from "./slug";
 
 const compactDollar = (v: number) => {
   if (v >= 1e9) return `$${(v / 1e9).toFixed(1)}B`;
@@ -17,15 +18,8 @@ const compactDollar = (v: number) => {
  * Department detail page. Reads from the snapshot's per-department
  * profile cache (top 15 departments). For long-tail departments, only
  * the snapshot's topDepartments summary stats are available; the page
- * gracefully degrades to those.
+ * gracefully degrades to those. Slug validation (404) lives in layout.tsx.
  */
-function deptSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const snap = await loadSnapshot();

@@ -114,7 +114,7 @@ export default async function RecordPage({
             <div className="mt-8 max-w-[760px] space-y-4">
               {related.map((r, i) => (
                 <SimilarRecordCard
-                  key={`${r.sourceDataset}-${r.recordId}`}
+                  key={`${r.sourceDataset}-${r.recordId}-${i}`}
                   record={r}
                   index={i}
                 />
