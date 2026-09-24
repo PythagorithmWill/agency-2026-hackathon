@@ -2,34 +2,44 @@
 
 import { CountUp } from "../motion/CountUp";
 
-const STATS = [
-  {
-    label: "Federal spend with no public description",
-    value: 71.5,
-    format: (n: number) => `$${n.toFixed(1)}B`,
-  },
-  {
-    label: "Federal grants & contributions records",
-    value: 1.27,
-    format: (n: number) => `${n.toFixed(2)}M`,
-  },
-  {
-    label: "Alberta provincial records",
-    value: 47,
-    format: (n: number) => `${n.toFixed(0)}K`,
-  },
-  {
-    label: "Validation tiers per output",
-    value: 4,
-    format: (n: number) => n.toFixed(0),
-  },
-] as const;
+export interface ByTheNumbersProps {
+  /** Federal current-agreement value with no public description, in dollars. */
+  noDescriptionSpendFed: number;
+  fedRows: number;
+  abRows: number;
+}
+
+function buildStats(p: ByTheNumbersProps) {
+  return [
+    {
+      label: "Federal spend with no public description",
+      value: p.noDescriptionSpendFed / 1e9,
+      format: (n: number) => `$${n.toFixed(1)}B`,
+    },
+    {
+      label: "Federal grants & contributions records",
+      value: p.fedRows / 1e6,
+      format: (n: number) => `${n.toFixed(2)}M`,
+    },
+    {
+      label: "Alberta provincial records",
+      value: p.abRows / 1e6,
+      format: (n: number) => `${n.toFixed(2)}M`,
+    },
+    {
+      label: "Validation tiers per output",
+      value: 4,
+      format: (n: number) => n.toFixed(0),
+    },
+  ] as const;
+}
 
 /**
  * Stats strip. CSS-keyframe reveal — was framer-motion whileInView,
  * which crashed React's removeChild path on route navigation.
  */
-export function ByTheNumbers() {
+export function ByTheNumbers(props: ByTheNumbersProps) {
+  const STATS = buildStats(props);
   return (
     <section className="border-y border-[var(--color-border-strong)] py-16 sm:py-24">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 md:px-16">

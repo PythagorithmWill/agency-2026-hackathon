@@ -3,6 +3,7 @@ import { searchCorpusCached } from "@/lib/evaluate/search-cache";
 import { SimilarRecordCard } from "@/components/evaluate/SimilarRecordCard";
 import { SearchEditBar } from "@/components/SearchEditBar";
 import { SourceBreakdown } from "@/components/SourceBreakdown";
+import { getCorpusStats } from "@/lib/analytics/corpusStats";
 
 const EXAMPLES = [
   "indigenous broadband",
@@ -24,6 +25,7 @@ export default async function SearchPage({
   const rawQ = typeof sp.q === "string" ? sp.q : "";
   const rawDept = typeof sp.dept === "string" ? sp.dept : undefined;
   const q = rawQ.trim();
+  const corpus = await getCorpusStats();
 
   const result = q
     ? await searchCorpusCached(q, rawDept)
@@ -56,8 +58,8 @@ export default async function SearchPage({
           {!q && (
             <div className="mt-6 max-w-[720px]">
               <p className="text-[16px] leading-[24px] text-[var(--color-fg-muted)]">
-                Search the federal grants corpus (1.27M records) and the
-                Alberta provincial corpus (2.05M records) by topic, recipient,
+                Search the federal grants corpus ({corpus.fmt.fedRows} records) and the
+                Alberta provincial corpus ({corpus.fmt.abRows} records) by topic, recipient,
                 or program. Hybrid keyword retrieval, ranked across sources,
                 with every result citing its source row.
               </p>
@@ -155,7 +157,7 @@ export default async function SearchPage({
             </div>
             <p className="mt-4 text-[15px] text-[var(--color-fg-muted)] leading-[1.55] max-w-[640px]">
               Glassbox searched the federal grants &amp; contributions corpus
-              (1.27M records) and Alberta provincial sources (2.05M records)
+              ({corpus.fmt.fedRows} records) and Alberta provincial sources ({corpus.fmt.abRows} records)
               for descriptions matching your query, with ts_rank ordering and
               landmine guards applied. No agreement description matched.
             </p>

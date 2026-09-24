@@ -8,8 +8,10 @@ import { AuditTrailSection } from "@/components/home/AuditTrailSection";
 import { ByTheNumbers } from "@/components/home/ByTheNumbers";
 import { MethodologyPreview } from "@/components/home/MethodologyPreview";
 import { HomepageFooter } from "@/components/home/HomepageFooter";
+import { getCorpusStats } from "@/lib/analytics/corpusStats";
 
-export default function Home() {
+export default async function Home() {
+  const corpus = await getCorpusStats();
   return (
     <main className="min-h-screen">
       <Hero />
@@ -20,7 +22,7 @@ export default function Home() {
         <FollowTheMoneySection />
       </ScrollReveal>
       <ScrollReveal>
-        <ExplainerCards />
+        <ExplainerCards fedRows={corpus.fmt.fedRows} abRows={corpus.fmt.abRows} />
       </ScrollReveal>
       <ScrollReveal>
         <ThreeChecksViz />
@@ -29,7 +31,11 @@ export default function Home() {
         <AuditTrailSection />
       </ScrollReveal>
       <ScrollReveal>
-        <ByTheNumbers />
+        <ByTheNumbers
+          noDescriptionSpendFed={corpus.noDescriptionSpendFed}
+          fedRows={corpus.fedRows}
+          abRows={corpus.abRows}
+        />
       </ScrollReveal>
       <ScrollReveal>
         <MethodologyPreview />

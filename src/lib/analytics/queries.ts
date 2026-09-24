@@ -140,6 +140,47 @@ export interface OverviewStats {
   departmentCountFed: number;
   programCountFed: number;
   fyRangeFed: { start: number; end: number };
+  /**
+   * Corpus-level facts used in site copy ("1.27M federal records…").
+   * Optional so snapshots built before 2026-09-24 still load; the UI
+   * falls back to lib/analytics/corpusStats.ts constants when absent.
+   */
+  corpus?: CorpusFacts;
+}
+
+export interface CorpusFacts {
+  fedRows: number;
+  abGrantsRows: number;
+  abContractsRows: number;
+  goldenRecords: number;
+  /** Current-agreement federal value with no English description on file. */
+  noDescriptionSpendFed: number;
+}
+
+export async function loadCorpusFacts(budget: Budget = "long"): Promise<CorpusFacts> {
+  const [counts, noDesc] = await Promise.all([
+    run(budget)<{ fed: string; abg: string; abc: string; golden: string }>(
+      `SELECT (SELECT COUNT(*) FROM fed.grants_contributions)        AS fed,
+              (SELECT COUNT(*) FROM ab.ab_grants)                     AS abg,
+              (SELECT COUNT(*) FROM ab.ab_contracts)                  AS abc,
+              (SELECT COUNT(*) FROM general.entity_golden_records)    AS golden`,
+    ),
+    run(budget)<{ total: string | number | null }>(
+      `${FED_CURRENT_CTE}
+       SELECT SUM(agreement_value)::numeric AS total
+         FROM agreement_current
+        WHERE agreement_value >= 1
+          AND (description_en IS NULL OR btrim(description_en) = '')`,
+    ),
+  ]);
+  const c = counts.rows[0];
+  return {
+    fedRows: Number(c?.fed) || 0,
+    abGrantsRows: Number(c?.abg) || 0,
+    abContractsRows: Number(c?.abc) || 0,
+    goldenRecords: Number(c?.golden) || 0,
+    noDescriptionSpendFed: Number(noDesc.rows[0]?.total) || 0,
+  };
 }
 
 export async function loadOverviewStats(budget: Budget = "fast"): Promise<OverviewStats> {
@@ -173,7 +214,14 @@ export async function loadOverviewStats(budget: Budget = "fast"): Promise<Overvi
     fy_min: 0,
     fy_max: 0,
   };
+  let corpus: CorpusFacts | undefined;
+  try {
+    corpus = await loadCorpusFacts(budget);
+  } catch (err) {
+    console.warn("[overview] corpus facts unavailable:", (err as Error).message);
+  }
   return {
+    corpus,
     totalSpendFed: Number(row.total) || 0,
     agreementCountFed: Number(row.agreement_count) || 0,
     recipientCountFed: Number(row.recipient_count) || 0,

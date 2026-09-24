@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { GuidedTour } from "@/components/GuidedTour";
+import { getCorpusStats } from "@/lib/analytics/corpusStats";
 import "./globals.css";
 
 const inter = Inter({
@@ -50,9 +51,10 @@ export const viewport: Viewport = {
   themeColor: "#0a0a0a",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const corpus = await getCorpusStats();
   return (
     <html lang="en" className={`${inter.variable} ${jbMono.variable} dark`}>
       <head>
@@ -88,7 +90,9 @@ export default function RootLayout({
       >
         <SiteHeader />
         {children}
-        <GuidedTour />
+        <GuidedTour
+          corpusSummary={`${corpus.fmt.fedRows} federal grants & contributions, ${corpus.fmt.abRows} Alberta provincial records, ${corpus.fmt.goldenRecords} cross-dataset entities.`}
+        />
       </body>
     </html>
   );

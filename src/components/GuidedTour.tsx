@@ -28,13 +28,13 @@ interface Step {
   body: string;
 }
 
-const STEPS: Step[] = [
+const STEPS_TEMPLATE: Step[] = [
   {
     targetId: null,
     path: "/",
     title: "Welcome to Glassbox",
     body:
-      "A transparency platform for Canadian government spending. 1.27M federal grants & contributions, 2.05M Alberta provincial records, 851K cross-dataset entities. Every figure cites a source row. The tour takes ~90 seconds.",
+      "A transparency platform for Canadian government spending. __CORPUS__ Every figure cites a source row. The tour takes ~90 seconds.",
   },
   {
     targetId: "tour-search",
@@ -75,7 +75,13 @@ const STEPS: Step[] = [
   },
 ];
 
-export function GuidedTour() {
+export interface GuidedTourProps {
+  /** e.g. "1.33M federal grants & contributions, 2.05M Alberta provincial records, 851K cross-dataset entities." */
+  corpusSummary: string;
+}
+
+export function GuidedTour({ corpusSummary }: GuidedTourProps) {
+  const STEPS = STEPS_TEMPLATE.map((st) => ({ ...st, body: st.body.replace("__CORPUS__", corpusSummary) }));
   const [active, setActive] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);

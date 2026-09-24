@@ -3,7 +3,7 @@
  * with staggered delays. No framer-motion (its whileInView observers
  * raced with route navigation and crashed React's removeChild path).
  */
-export function ExplainerCards() {
+export function ExplainerCards({ fedRows, abRows }: { fedRows: string; abRows: string }) {
   return (
     <section className="mx-auto max-w-[1200px] px-4 sm:px-6 md:px-16 py-20 sm:py-28 md:py-32">
       <div style={{ animation: "glassbox-fade-up 0.6s ease-out both" }}>
@@ -19,7 +19,7 @@ export function ExplainerCards() {
         <Card
           index={0}
           title="Search the corpus"
-          body="Query 1.27M federal records and 2.5M Alberta provincial records by topic, recipient, or program. Hybrid retrieval — keyword and semantic — every result is auditable to its source row."
+          body={`Query ${fedRows} federal records and ${abRows} Alberta provincial records by topic, recipient, or program. Hybrid retrieval — keyword and semantic — every result is auditable to its source row.`}
           glyph={<MagnifierGlyph />}
         />
         <Card
