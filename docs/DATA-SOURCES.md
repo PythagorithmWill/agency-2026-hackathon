@@ -50,8 +50,8 @@ normalisers). Both are unit-tested in `src/lib/sources/__tests__/`.
 | Licence | Open Government Licence – Canada (`ca-ogl-lgo`) |
 | Refresh | Departments publish quarterly (`reporting_period` = `YYYY-YYYY-Qn`); the CSV is rebuilt daily. Re-run the loader; upsert on the natural key. |
 | Natural key | `(owner_org, reference_number)` — verified 0 duplicates in the first 350,000 rows and enforced as the primary key on load |
-| Row counts | local: _pending_ · RDS: _pending_ |
-| Runtime | local ≈10,000 rows/s (3,000-row smoke = 0.3 s); full: _pending_ |
+| Row counts | local: **1,313,272** (equals the record count of an independent Python `csv` pass; 99 `owner_org`s; 244,117 sole-source rows; 213,124 amendment rows; 1,100,234 distinct procurements) · RDS: _pending (COPY sync queued)_ |
+| Runtime | local full load 136.3 s (≈9,600 rows/s, 2,000-row batches). Download from open.canada.ca ran at 12–40 KB/s for most of the session (≈30 min for 641 MB); the loader resumes with `curl -C -`. |
 
 Column mapping is 1:1 with the schema plus derived `vendor_name_norm`
 (`upper(trim())`, whitespace collapsed), `vendor_postal_code` (A1A1A1),
@@ -66,10 +66,13 @@ Indexes: `vendor_name_norm`, `upper(trim(vendor_name))`, `vendor_postal_code`,
 
 ### Amendment semantics (evidence)
 
-Analysed on the first 350,001 rows (partial download, 2026-09-24 18:2x):
+Analysed on the full 2026-09-24 file (1,313,272 records; the file has
+1,386,539 physical lines because comment fields contain newlines):
 
-* `instrument_type`: `C` 165,326 · `A` 59,610 · `SOSA` 3,718 · blank 121,346
-  (pre-2020 rows predate the field).
+* `instrument_type`: `C` 684,066 · `A` 204,629 · `SOSA` 69,985 · blank 354,592
+  (pre-2020 rows predate the field). `solicitation_procedure`: `TC` 417,896 ·
+  `TN` 244,117 · `OB` 166,156 · `ST` 31,893 · `AC` 11,185 · blank 442,025.
+* `(owner_org, reference_number)` is unique across all 1,313,272 records.
 * Amendments are **separate rows** sharing `procurement_id` with the original.
   On an `A` row, `contract_value` is the **cumulative total to date** and
   `amendment_value` is **that amendment's delta**. Example
@@ -77,13 +80,15 @@ Analysed on the first 350,001 rows (partial download, 2026-09-24 18:2x):
   187,460.47 → 200,682.60 while `amendment_value` is 65,991.63 / 24,012.50 /
   55,633.55 / 13,222.13 and `original_value` stays 23,226.73 — successive
   differences of `contract_value` equal the `amendment_value` deltas.
-* Of 1,500 procurements with ≥3 rows: in 2,628 rows `contract_value =
-  original_value + amendment_value` exactly (single-amendment shape); among
-  multi-amendment groups 632 satisfy `last contract_value = original +
-  Σ amendment_value` (delta semantics), 103 look cumulative-in-amendment
-  (`last = original + last amendment_value`), 591 are inconsistent (department
-  data-quality noise, e.g. an `A` row whose first cumulative value does not
-  reconcile).
+* Across 1,087,185 procurement groups, 767,038 rows satisfy `contract_value =
+  original_value + amendment_value` exactly (the single-row / first-amendment
+  shape). Among the 37,361 procurements with ≥2 `A` rows: **21,789 (58%)
+  reconcile as deltas** (`last contract_value = original + Σ amendment_value`),
+  3,848 (10%) only reconcile if `amendment_value` were cumulative (`last =
+  original + last amendment_value`), and 11,724 (31%) reconcile neither way
+  (departmental data-quality noise: restated originals, missing rows, an `A`
+  row whose cumulative value does not carry forward). The earlier 350k-row
+  sample gave the same proportions (632 / 103 / 591).
 * Consequence (same as the F-3 grants lesson): **never `SUM(contract_value)`
   across rows** — that double-counts every amendment. The current value of a
   procurement is the `contract_value` of its latest row. `fedc.contracts_current`
@@ -97,6 +102,12 @@ Analysed on the first 350,001 rows (partial download, 2026-09-24 18:2x):
 * `soleSourceShareByDepartment(fy, { minContracts? })` — count and value share of `TN` per `owner_org`.
 * `vendorConcentrationByDepartment(fy, { minVendors? })` — top-vendor share and HHI of current value.
 * `amendmentGrowthByVendor(name, { minRatio?, limit? })` — procurements whose current value ≥ ratio × original.
+
+Measured on the full local table: `contractsByVendor` (exact) 235 ms,
+`soleSourceShareByDepartment` 617 ms (79 departments for 2023-24),
+`vendorConcentrationByDepartment` 483 ms, `amendmentGrowthByVendor` 82 ms —
+all inside the 8 s request-path pool timeout. `{ fuzzy:true }` is a
+sequential scan (≈2.2 s); use it from precompute paths only.
 
 Known quirks: `vendor_postal_code` and `buyer_name` are sparsely populated
 before 2020; `number_of_bids` is blank for most rows; `vendor_name` spelling
@@ -141,8 +152,8 @@ institutions`) that `lobbyingByClient()` / `lobbyingByRegistrant()` in
 | Licence | Open Government Licence – Canada (`ca-ogl-lgo`) |
 | Refresh | Elections Canada regenerates the zip weekly (zip banner: "created at 2026-09-19 4:26:26 AM"). Ordering may change between snapshots → reload with `--truncate`. |
 | Natural key | `src_line` (line number in the published file). The file carries no contribution id and identical rows are legitimate; `row_hash` (md5 of the raw row) is stored for drift checks. The loader resumes from `max(src_line)`. |
-| Row counts | local: _pending_ · RDS: _pending_ |
-| Runtime | local ≈13,000 rows/s; full: _pending_ |
+| Row counts | local: **6,262,427** (= 6,262,428 file lines − header, exact) · RDS: **6,262,427** (equal) |
+| Runtime | local full load 650.7 s (≈9,600 rows/s, 2,000-row batches) after a 5,000-row smoke; RDS COPY sync ≈35 min for the 6.26 M rows (single psql pipe, ≈1 MB/s uplink) |
 
 Columns follow the source header (`political_entity`, `recipient_id`,
 `recipient`, `recipient_party`, `electoral_district`, `electoral_event`,
@@ -156,8 +167,13 @@ Indexes on name (norm and `upper(trim())`), postal code, FSA, recipient,
 party, date, `(upper(last), upper(first))`.
 
 Known quirks: individuals are written `"LAST, FIRST"` upper-case; contributions
-"received prior to January 1, 2004" have no `received_date`; city spelling is
-free text (`Shebrooke`).
+"received prior to January 1, 2004" have no `received_date` (31,795 rows);
+41,156 rows are exact duplicates of another row (legitimate repeat gifts —
+hence the line-number key); 37 rows carry a future `received_date` (max
+2051-01-04, a source typo); city spelling is free text (`Shebrooke`). Entity
+mix: registered parties 5,039,117 · associations 572,543 · leadership
+contestants 494,789 · candidates 140,837 · nomination contestants 15,141.
+Monetary total ≈ $1.263 B.
 
 Helpers (`src/lib/sources/elections.ts`): `contributionsByName(name, { postalCode?, limit? })`
 (tries `FIRST LAST` and `LAST, FIRST` forms via `nameVariants()`),
@@ -175,8 +191,8 @@ Helpers (`src/lib/sources/elections.ts`): `contributionsByName(name, { postalCod
 | Licence | Open Government Licence – Canada (`ca-ogl-lgo`) |
 | Refresh | Daily rebuild. Upsert on `corporation_number`; `source_file` records which file a row came from (a corporation that dissolves moves files). |
 | Natural key | `corporation_number` |
-| Row counts | local: _pending_ · RDS: _pending_ |
-| Runtime | local ≈30,000 rows/s; full: _pending_ |
+| Row counts | local: **1,568,531** = 645,102 + 51,107 + 829,749 + 42,573, each equal to its file's line count − header · RDS: **1,568,531** (equal) |
+| Runtime | local full load ≈55 s for all four files (≈30,000 rows/s); RDS COPY sync 442.6 s for 395 MB (≈3,300 rows/s); `glassbox_app` granted USAGE/SELECT on `corp` |
 
 18 columns: corporation number, business number (kept as 9-digit BN or NULL —
 about 98% populated for active CBCA, ~33% for dissolved), two name forms,
