@@ -67,6 +67,28 @@ export interface VendorAmendmentGrowthRow {
   amendments: number;
 }
 
+/**
+ * Latest-row-per-procurement over a pre-filtered subset of fedc.contracts.
+ * The fedc.contracts_current view has the same shape, but Postgres cannot push
+ * a vendor or fiscal-year predicate through its DISTINCT ON, so every query
+ * would sort the whole table (~2.5 s on 842k rows). Filtering first is safe
+ * because vendor_name_norm, contract_date and fiscal_year are properties of
+ * the award and are constant across a procurement's rows.
+ */
+function currentCte(where: string): string {
+  return `cur AS (
+    SELECT DISTINCT ON (owner_org, COALESCE(procurement_id, reference_number))
+      owner_org, owner_org_title, COALESCE(procurement_id, reference_number) AS procurement_key,
+      procurement_id, reference_number, vendor_name, vendor_name_norm, vendor_postal_code, vendor_fsa,
+      contract_date, fiscal_year, delivery_date, contract_value AS current_value, original_value,
+      commodity_type, commodity_code, description_en, solicitation_procedure, limited_tendering_reason,
+      number_of_bids, instrument_type, reporting_period
+    FROM fedc.contracts
+    WHERE ${where}
+    ORDER BY owner_org, COALESCE(procurement_id, reference_number),
+             reporting_period DESC NULLS LAST, contract_date DESC NULLS LAST, reference_number DESC)`;
+}
+
 const num = (v: unknown): number => (v == null ? 0 : Number(v));
 const numOrNull = (v: unknown): number | null => (v == null ? null : Number(v));
 
@@ -93,12 +115,12 @@ export async function contractsByVendor(
   const limit = Math.min(Math.max(opts.limit ?? 500, 1), 5000);
   const where = opts.fuzzy ? "vendor_name_norm LIKE '%' || $1 || '%'" : "vendor_name_norm = $1";
   const r = await query<Record<string, unknown>>(
-    `SELECT owner_org, owner_org_title, procurement_key, reference_number, vendor_name, vendor_postal_code,
+    `WITH ${currentCte(where)}
+     SELECT owner_org, owner_org_title, procurement_key, reference_number, vendor_name, vendor_postal_code,
             contract_date::text AS contract_date, fiscal_year, delivery_date::text AS delivery_date,
             current_value, original_value, commodity_type, commodity_code, description_en,
             solicitation_procedure, limited_tendering_reason, number_of_bids, instrument_type
-       FROM fedc.contracts_current
-      WHERE ${where}
+       FROM cur
       ORDER BY contract_date DESC NULLS LAST
       LIMIT $2`,
     [key, limit],
@@ -120,13 +142,13 @@ export async function soleSourceShareByDepartment(
   if (!fiscalYear || !(await hasTable("fedc.contracts"))) return EMPTY();
   const minContracts = Math.max(opts.minContracts ?? 20, 1);
   const r = await query<Record<string, unknown>>(
-    `SELECT owner_org, max(owner_org_title) AS owner_org_title, fiscal_year,
+    `WITH ${currentCte("fiscal_year = $1")}
+     SELECT owner_org, max(owner_org_title) AS owner_org_title, fiscal_year,
             count(*)::int AS contracts,
             count(*) FILTER (WHERE solicitation_procedure = 'TN')::int AS sole_source_contracts,
             COALESCE(sum(current_value), 0) AS total_value,
             COALESCE(sum(current_value) FILTER (WHERE solicitation_procedure = 'TN'), 0) AS sole_source_value
-       FROM fedc.contracts_current
-      WHERE fiscal_year = $1
+       FROM cur
       GROUP BY owner_org, fiscal_year
      HAVING count(*) >= $2
       ORDER BY sole_source_value DESC`,
@@ -163,11 +185,12 @@ export async function vendorConcentrationByDepartment(
   if (!fiscalYear || !(await hasTable("fedc.contracts"))) return EMPTY();
   const minVendors = Math.max(opts.minVendors ?? 5, 1);
   const r = await query<Record<string, unknown>>(
-    `WITH v AS (
+    `WITH ${currentCte("fiscal_year = $1 AND vendor_name_norm IS NOT NULL")},
+      v AS (
         SELECT owner_org, max(owner_org_title) AS owner_org_title, fiscal_year, vendor_name_norm,
                sum(current_value) AS value
-          FROM fedc.contracts_current
-         WHERE fiscal_year = $1 AND vendor_name_norm IS NOT NULL AND current_value > 0
+          FROM cur
+         WHERE current_value > 0
          GROUP BY owner_org, fiscal_year, vendor_name_norm),
       d AS (
         SELECT owner_org, max(owner_org_title) AS owner_org_title, fiscal_year,
@@ -214,7 +237,8 @@ export async function amendmentGrowthByVendor(
   const minRatio = Math.max(opts.minRatio ?? 1.5, 1);
   const limit = Math.min(Math.max(opts.limit ?? 200, 1), 2000);
   const r = await query<Record<string, unknown>>(
-    `WITH a AS (
+    `WITH ${currentCte("vendor_name_norm = $1")},
+      a AS (
         SELECT owner_org, COALESCE(procurement_id, reference_number) AS procurement_key,
                count(*) FILTER (WHERE is_amendment)::int AS amendments
           FROM fedc.contracts WHERE vendor_name_norm = $1
@@ -222,8 +246,8 @@ export async function amendmentGrowthByVendor(
      SELECT c.owner_org, c.procurement_key, c.vendor_name, c.original_value, c.current_value,
             CASE WHEN c.original_value > 0 THEN c.current_value / c.original_value END AS growth_ratio,
             a.amendments
-       FROM fedc.contracts_current c JOIN a USING (owner_org, procurement_key)
-      WHERE c.vendor_name_norm = $1 AND c.original_value > 0 AND c.current_value / c.original_value >= $2
+       FROM cur c JOIN a USING (owner_org, procurement_key)
+      WHERE c.original_value > 0 AND c.current_value / c.original_value >= $2
       ORDER BY growth_ratio DESC
       LIMIT $3`,
     [key, minRatio, limit],
