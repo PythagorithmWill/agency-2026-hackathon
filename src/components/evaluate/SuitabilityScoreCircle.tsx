@@ -5,13 +5,20 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 import type { SuitabilityScore } from "@/lib/types";
 
 /**
- * S2 — Circular suitability score visualization. Center holds composite
- * score; four arcs around it draw to their values over 1200ms with
- * 80ms stagger. Hover any arc: replace center number with that
- * dimension; floating card explains.
+ * S2 — Circular suitability score visualization.
  *
- * This is the single most photographed visual in the demo. Built with
- * vanilla SVG + CSS animation — no D3, no Three.js, no library.
+ * Three layers, outside-in:
+ *   1. A radial tick scale: 60 ticks at 6°, every 10th taller. Lit ticks =
+ *      composite / 30 of the ring, starting at 12 o'clock and running
+ *      clockwise; unlit ticks are subdued. This is the composite gauge.
+ *   2. Four dimension arcs on ONE ring, each a 90° sector (minus a gap),
+ *      drawing to their value over 1200ms with 80ms stagger. Hover any arc
+ *      (or its legend row) to read that dimension in the centre.
+ *   3. The composite number, with the "suitability" caption BELOW it —
+ *      never behind it.
+ *
+ * Vanilla SVG + CSS transitions. No HTML inside the SVG (an HTML <span>
+ * inside <text> broke hydration and blanked the score once before).
  */
 type DimId =
   | "uniqueness"
@@ -26,6 +33,15 @@ const DIMS: ReadonlyArray<{ id: DimId; label: string; inverted?: boolean }> = [
   { id: "languageCalibration", label: "Language calibration" },
 ];
 
+const TICK_COUNT = 60;
+const TICK_STEP_DEG = 360 / TICK_COUNT;
+const TICK_R_OUTER = 112;
+const TICK_R_MINOR = 106;
+const TICK_R_MAJOR = 102;
+const ARC_R = 86;
+const ARC_GAP_DEG = 5;
+const COMPOSITE_MAX = 30;
+
 export function SuitabilityScoreCircle({
   score,
   explanation,
@@ -34,7 +50,7 @@ export function SuitabilityScoreCircle({
   explanation: SuitabilityScore["perComponentExplanation"];
 }) {
   const [hover, setHover] = useState<DimId | null>(null);
-  const composite = score.composite;
+  const composite = clamp(Number(score.composite), 0, COMPOSITE_MAX);
   const verdictColor =
     score.verdict === "PROCEED"
       ? "var(--color-accent)"
@@ -42,34 +58,46 @@ export function SuitabilityScoreCircle({
         ? "var(--color-accent-warn)"
         : "var(--color-accent-fail)";
 
-  // Arc geometry — four concentric quarter-arcs, each occupying 90 degrees
-  // of a unit circle starting at -135deg (top-left) clockwise.
   const arcs = useMemo(
     () =>
       DIMS.map((d, i) => {
-        const value = score[d.id] as number;
+        const value = clamp(Number(score[d.id]), 0, 10);
         const display = d.inverted ? 10 - value : value;
         return {
           ...d,
           value,
           display,
-          startDeg: -135 + i * 90,
-          endDeg: -135 + (i + 1) * 90,
+          startDeg: -90 + i * 90,
+          endDeg: -90 + (i + 1) * 90,
           color: pickArcColor(display),
         };
       }),
     [score],
   );
 
+  // Tick geometry is static; only the lit/unlit state depends on the score.
+  const ticks = useMemo(
+    () =>
+      Array.from({ length: TICK_COUNT }, (_, i) => {
+        const deg = -90 + i * TICK_STEP_DEG;
+        const major = i % 10 === 0;
+        return {
+          i,
+          major,
+          a: polar(major ? TICK_R_MAJOR : TICK_R_MINOR, deg),
+          b: polar(TICK_R_OUTER, deg),
+        };
+      }),
+    [],
+  );
+  const litCount = Math.round((composite / COMPOSITE_MAX) * TICK_COUNT);
+
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
   const reduce = useReducedMotion();
+  const settled = reduce || inView;
 
-  // Composite count-up rendered as plain SVG text. An HTML <span> (the
-  // shared CountUp component) cannot live inside <text>: the HTML parser
-  // breaks out of the SVG on SSR, which caused a hydration mismatch and an
-  // invisible score. Driven by the wrapper's inView so it starts when the
-  // circle scrolls into view.
+  // Composite count-up rendered as plain SVG text (see header comment).
   const [shown, setShown] = useState(0);
   useEffect(() => {
     if (!inView) return;
@@ -90,93 +118,118 @@ export function SuitabilityScoreCircle({
     return () => cancelAnimationFrame(raf);
   }, [inView, reduce, composite]);
 
+  const hovered = hover ? arcs.find((a) => a.id === hover) : null;
+  const centreNumber = hovered ? hovered.display.toFixed(0) : shown.toFixed(0);
+  const centreColor = hovered ? hovered.color : verdictColor;
+
   return (
     <div ref={ref} className="relative w-full max-w-[480px] mx-auto">
       <motion.svg
         viewBox="-120 -120 240 240"
         width="100%"
+        role="img"
+        aria-label={`Suitability score ${composite.toFixed(0)} of ${COMPOSITE_MAX}`}
         animate={
           reduce
             ? undefined
             : inView
               ? { scale: [1, 1.02, 1], transition: { delay: 1.2, duration: 0.4, ease: [0.16, 1, 0.3, 1] } }
               : { scale: 1 }
-        }>
-        {/* Background ring */}
-        <circle cx="0" cy="0" r="100" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+        }
+      >
+        {/* 1. Radial tick scale — the composite gauge */}
+        <g strokeLinecap="round" aria-hidden>
+          {ticks.map((t) => {
+            const lit = settled && t.i < litCount;
+            return (
+              <line
+                key={t.i}
+                x1={t.a.x}
+                y1={t.a.y}
+                x2={t.b.x}
+                y2={t.b.y}
+                stroke={lit ? verdictColor : "rgba(255,255,255,0.14)"}
+                strokeWidth={t.major ? 2 : 1.25}
+                style={{
+                  opacity: lit ? 1 : t.major ? 0.9 : 0.6,
+                  transition: reduce
+                    ? undefined
+                    : `stroke 350ms ease-out ${t.i * 14}ms, opacity 350ms ease-out ${t.i * 14}ms`,
+                }}
+              />
+            );
+          })}
+        </g>
 
-        {/* Four arcs — each a 90-degree slice */}
+        {/* Hairline ring separating the scale from the dimension arcs */}
+        <circle cx="0" cy="0" r="96" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+
+        {/* 2. Four dimension arcs on a single ring */}
         {arcs.map((arc, i) => {
-          const r = 92 - i * 14; // concentric inward
           const fraction = arc.display / 10;
-          const a0 = polar(r, arc.startDeg + 4);
-          const a1 = polar(r, arc.endDeg - 4);
+          const a0 = polar(ARC_R, arc.startDeg + ARC_GAP_DEG);
+          const a1 = polar(ARC_R, arc.endDeg - ARC_GAP_DEG);
           // Coordinates are rounded: Node and browser Math.cos/sin print
           // different trailing digits, which produced a hydration mismatch
           // on the `d` attribute.
-          const fullPath = `M ${a0.x} ${a0.y} A ${r} ${r} 0 0 1 ${a1.x} ${a1.y}`;
-          const animationLength = 220;
-          const targetOffset = animationLength * (1 - fraction);
+          const fullPath = `M ${a0.x} ${a0.y} A ${ARC_R} ${ARC_R} 0 0 1 ${a1.x} ${a1.y}`;
+          const arcLength = Math.ceil(((90 - 2 * ARC_GAP_DEG) / 360) * 2 * Math.PI * ARC_R) + 2;
+          const targetOffset = arcLength * (1 - fraction);
+          const dim = hover !== null && hover !== arc.id;
           return (
-            <g key={arc.id} onMouseEnter={() => setHover(arc.id)} onMouseLeave={() => setHover(null)}>
+            <g
+              key={arc.id}
+              onMouseEnter={() => setHover(arc.id)}
+              onMouseLeave={() => setHover(null)}
+              style={{ opacity: dim ? 0.35 : 1, transition: "opacity 200ms ease-out" }}
+            >
               {/* Track */}
-              <path d={fullPath} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="6" strokeLinecap="round" />
-              {/* Filled arc with stroke-dasharray draw-on */}
+              <path d={fullPath} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" strokeLinecap="round" />
+              {/* Fill — stroke-dasharray draw-on */}
               <path
                 d={fullPath}
                 fill="none"
                 stroke={arc.color}
-                strokeWidth="6"
+                strokeWidth="5"
                 strokeLinecap="round"
                 style={{
-                  strokeDasharray: animationLength,
-                  strokeDashoffset: reduce
-                    ? targetOffset
-                    : inView
-                      ? targetOffset
-                      : animationLength,
-                  transition: `stroke-dashoffset 1200ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 80}ms`,
+                  strokeDasharray: arcLength,
+                  strokeDashoffset: settled ? targetOffset : arcLength,
+                  transition: reduce
+                    ? undefined
+                    : `stroke-dashoffset 1200ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 80}ms`,
                 }}
               />
+              {/* Wide invisible hit area so the thin arc is easy to hover */}
+              <path d={fullPath} fill="none" stroke="transparent" strokeWidth="18" />
             </g>
           );
         })}
 
-        {/* Center text */}
+        {/* 3. Centre: number, then caption BELOW it */}
         <text
           x="0"
-          y="-2"
-          textAnchor="middle"
-          fontFamily="var(--font-mono)"
-          fontSize="10"
-          fill="var(--color-fg-subtle)"
-          letterSpacing="0.12em"
-          style={{ textTransform: "uppercase" }}
-        >
-          {hover ? DIMS.find((d) => d.id === hover)?.label : "Suitability"}
-        </text>
-        <text
-          x="0"
-          y="32"
+          y="14"
           textAnchor="middle"
           fontFamily="var(--font-display)"
           fontWeight="600"
-          fontSize="60"
-          fill={verdictColor}
+          fontSize="56"
+          letterSpacing="-0.03em"
+          fill={centreColor}
+          style={{ transition: "fill 200ms ease-out" }}
         >
-          {hover
-            ? arcs.find((a) => a.id === hover)!.display.toFixed(0)
-            : shown.toFixed(0)}
+          {centreNumber}
         </text>
         <text
           x="0"
-          y="52"
+          y="34"
           textAnchor="middle"
           fontFamily="var(--font-mono)"
-          fontSize="11"
+          fontSize="8.5"
           fill="var(--color-fg-subtle)"
+          letterSpacing="0.14em"
         >
-          {hover ? "/ 10" : "/ 30"}
+          {hovered ? `${hovered.label.toUpperCase()} · / 10` : `SUITABILITY · / ${COMPOSITE_MAX}`}
         </text>
       </motion.svg>
 
@@ -218,6 +271,11 @@ export function SuitabilityScoreCircle({
       )}
     </div>
   );
+}
+
+function clamp(n: number, lo: number, hi: number): number {
+  if (!Number.isFinite(n)) return lo;
+  return Math.min(hi, Math.max(lo, n));
 }
 
 function polar(r: number, deg: number): { x: string; y: string } {
