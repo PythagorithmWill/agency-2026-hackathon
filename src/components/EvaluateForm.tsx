@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { calibrationFlags } from "@/lib/gov/validators";
 
@@ -16,6 +16,19 @@ const DEPARTMENTS = [
   "Global Affairs Canada",
   "Health Canada",
 ];
+
+const UPLOAD_ACCEPT = ".txt,.md,.docx,.pdf";
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+/** Mirrors MAX_DRAFT_LENGTH in /api/draft/evaluate. */
+const MAX_DRAFT_LENGTH = 20_000;
+
+interface ExtractResponse {
+  text: string;
+  kind: "txt" | "md" | "docx" | "pdf";
+  chars: number;
+  truncated: boolean;
+  fileName: string;
+}
 
 export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
   const router = useRouter();
@@ -33,6 +46,14 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
   const flags = useMemo(() => calibrationFlags(draftText), [draftText]);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Upload-a-file path: the file goes to /api/draft/extract, the text comes
+  // back into the (still editable) textarea. Nothing about the paste flow
+  // changes — the textarea is the single source of truth for draftText.
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [uploaded, setUploaded] = useState<ExtractResponse | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   // Show what's blocking submit so the button isn't a dead end. The API
   // requires workingTitle non-empty AND draftText >= 40 chars; surface
   // both before the user clicks.
@@ -45,8 +66,50 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
     if (!draftOK) return `Draft needs at least 40 characters (currently ${draftLen}).`;
     return null;
   })();
-  const busy = working || submitting;
+  const busy = working || submitting || extracting;
   const canSubmit = validation === null && !busy;
+
+  const onFile = async (file: File | undefined) => {
+    setUploadError(null);
+    if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadError(`${file.name} is larger than 5 MB.`);
+      return;
+    }
+    const body = new FormData();
+    body.append("file", file, file.name);
+    setExtracting(true);
+    try {
+      const res = await fetch("/api/draft/extract", { method: "POST", body });
+      let data: Partial<ExtractResponse> & { error?: string } = {};
+      try {
+        data = (await res.json()) as typeof data;
+      } catch {
+        /* non-JSON error body */
+      }
+      if (!res.ok || typeof data.text !== "string") {
+        setUploadError(data.error ?? `Could not read ${file.name} (${res.status}).`);
+        return;
+      }
+      setDraftText(data.text);
+      setUploaded({
+        text: data.text,
+        kind: data.kind ?? "txt",
+        chars: data.chars ?? data.text.length,
+        truncated: Boolean(data.truncated),
+        fileName: data.fileName ?? file.name,
+      });
+      if (!workingTitle.trim()) {
+        setWorkingTitle(file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim());
+      }
+    } catch (e) {
+      setUploadError(`Network error: ${(e as Error).message}`);
+    } finally {
+      setExtracting(false);
+      // Allow re-selecting the same file.
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  };
 
   const onSubmit = async () => {
     setSubmitError(null);
@@ -184,11 +247,58 @@ export function EvaluateForm({ initialDraft = "" }: { initialDraft?: string }) {
         {/* Draft text */}
         <Field
           label="Draft text"
-          hint="Paste the body of the draft solicitation. As you type, the calibrated-language sweep runs in real time."
+          hint="Paste the body of the draft solicitation, or upload a file. As you type, the calibrated-language sweep runs in real time."
         >
+          <div className="mb-3 flex items-center justify-between gap-4 flex-wrap">
+            <label
+              className={
+                "inline-flex items-center gap-2 rounded-[8px] border border-[var(--color-border-strong)] px-3 py-1.5 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-fg)] transition-colors " +
+                (extracting ? "opacity-50 cursor-wait" : "cursor-pointer hover:border-[var(--color-fg)]")
+              }
+            >
+              <input
+                ref={fileInput}
+                type="file"
+                accept={UPLOAD_ACCEPT}
+                disabled={extracting}
+                onChange={(e) => onFile(e.target.files?.[0])}
+                className="sr-only"
+                data-testid="draft-file"
+              />
+              {extracting ? "Reading file…" : "Upload a draft file"}
+              <span aria-hidden>↑</span>
+            </label>
+            <span className="font-[var(--font-mono)] text-[11px] uppercase tracking-[0.06em] text-[var(--color-fg-subtle)]">
+              .txt · .md · .docx · .pdf · max 5 MB
+            </span>
+          </div>
+          {uploaded && (
+            <div
+              data-testid="upload-status"
+              className="mb-3 rounded-[8px] border border-[var(--color-accent)]/30 bg-[var(--color-bg-elev-1)] px-3 py-2 font-[var(--font-mono)] text-[11px] uppercase tracking-[0.06em] text-[var(--color-fg-muted)]"
+            >
+              <span className="text-[var(--color-accent)]">{uploaded.fileName}</span> · {uploaded.kind} ·{" "}
+              {uploaded.chars.toLocaleString("en-CA")} chars extracted
+              {uploaded.truncated && (
+                <span className="text-[var(--color-accent-warn)]">
+                  {" "}· cut at the {MAX_DRAFT_LENGTH.toLocaleString("en-CA")}-char draft limit
+                </span>
+              )}
+              {" "}· edit below before evaluating
+            </div>
+          )}
+          {uploadError && (
+            <div
+              role="alert"
+              className="mb-3 rounded-[8px] border border-[var(--color-accent-fail)]/40 bg-[var(--color-bg-elev-1)] px-3 py-2 text-[12px] text-[var(--color-accent-fail)]"
+            >
+              {uploadError}
+            </div>
+          )}
           <textarea
             value={draftText}
             onChange={(e) => setDraftText(e.target.value)}
+            maxLength={MAX_DRAFT_LENGTH}
             rows={12}
             required
             placeholder="Funding to expand fixed-wireless broadband across northern communities. The recipient will deliver…"
