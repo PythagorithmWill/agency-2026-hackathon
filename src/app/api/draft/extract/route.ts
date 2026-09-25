@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { createRequire } from "node:module";
-import { readFile } from "node:fs/promises";
 import mammoth from "mammoth";
 
 export const dynamic = "force-dynamic";
@@ -133,47 +131,16 @@ async function extractText(kind: ExtractKind, bytes: Uint8Array): Promise<string
       return r.value;
     }
     case "pdf": {
-      // Loaded lazily: pdfjs pulls in a sizeable worker bundle we do not
-      // want on the module graph of every other request. The worker is
-      // handed over as a data: URL (pdf-parse/worker) because the bundled
-      // route cannot resolve pdf.worker.mjs from .next/server/chunks.
-      const { PDFParse } = await import("pdf-parse");
-      PDFParse.setWorker(await pdfWorkerDataUrl());
-      const parser = new PDFParse({ data: bytes });
-      try {
-        // Default pageJoiner injects "-- N of M --" markers into the prose.
-        const r = await parser.getText({ pageJoiner: "\n\n" });
-        return r.text;
-      } finally {
-        await parser.destroy().catch(() => undefined);
-      }
+      // unpdf: a serverless-oriented pdfjs build that needs neither a worker
+      // file nor a native canvas binding. (pdf-parse + pdfjs worker failed on
+      // the Amplify runtime with "DOMMatrix is not defined" / worker lookup.)
+      const { extractText } = await import("unpdf");
+      const { text } = await extractText(new Uint8Array(bytes), { mergePages: true });
+      return String(text ?? "");
     }
   }
 }
 
-let workerDataUrl: Promise<string> | undefined;
-
-/**
- * pdfjs's "fake worker" imports pdf.worker.mjs relative to its own module
- * URL, which inside the bundled route points at a chunk that does not
- * exist. Hand it the worker as a data: URL instead (pdf-parse/worker does
- * the same, but drags in a native canvas binding we do not need). If the
- * file cannot be found the caller's catch turns it into the 422 message.
- */
-function pdfWorkerDataUrl(): Promise<string> {
-  if (!workerDataUrl) {
-    workerDataUrl = (async () => {
-      const req = createRequire(`${process.cwd()}/package.json`);
-      const file = req.resolve("pdfjs-dist/legacy/build/pdf.worker.min.mjs");
-      const src = await readFile(file);
-      return `data:text/javascript;base64,${src.toString("base64")}`;
-    })();
-    workerDataUrl.catch(() => {
-      workerDataUrl = undefined; // retry next time rather than cache a failure
-    });
-  }
-  return workerDataUrl;
-}
 
 /** Normalise line endings, strip control characters, collapse blank runs. */
 function normalise(text: string): string {

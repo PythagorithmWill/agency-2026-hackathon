@@ -62,7 +62,7 @@ so the screen and the download never disagree.
 ### `POST /api/draft/extract`
 
 - Accepts `.txt`/`.md` (UTF-8), `.docx` (via `mammoth`), `.pdf` (via
-  `pdf-parse`, text layer only — scanned PDFs return 422).
+  `unpdf`, text layer only — scanned PDFs return 422).
 - Validates server side: size ≤ 5 MB (`413`), extension (`415`), and magic
   bytes — `PK\x03\x04` for docx, `%PDF` for pdf, no NUL bytes for text
   (`415`). Extraction failures return `422` with a plain-language message
@@ -97,10 +97,10 @@ so the screen and the download never disagree.
 
 ## Dependencies
 
-`docx` (Word generation), `mammoth` (docx → text), `pdf-parse` (pdf → text).
-`pdf-parse` runs pdfjs in-process; the route hands it the worker as a `data:`
+`docx` (Word generation), `mammoth` (docx → text), `unpdf` (pdf → text).
+`unpdf` runs pdfjs in-process; the route hands it the worker as a `data:`
 URL built from `pdfjs-dist/legacy/build/pdf.worker.min.mjs`, because the
 bundled route cannot resolve the worker from `.next/server/chunks`. If that
 file is not present in a deployment, PDFs degrade to the 422 message above
 and every other type still works. The robust production alternative is
-`serverExternalPackages: ["pdf-parse", "pdfjs-dist"]` in `next.config.ts`.
+`serverExternalPackages: ["unpdf", "pdfjs-dist"]` in `next.config.ts`.
