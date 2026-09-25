@@ -154,10 +154,11 @@ export function EvaluationView({ result }: { result: EvaluationResult }) {
         {/* Section 4 — Language audit */}
         <Reveal>
           <SectionLabel number="04">Calibrated language review</SectionLabel>
-          <div className="mt-8 max-w-[840px]">
+          <div className="mt-8">
             <LanguageAuditView
               draftText={submission.draftText}
               flags={calibrationFlags}
+              evaluationId={result.evaluationId}
             />
           </div>
         </Reveal>

@@ -271,8 +271,10 @@ export function buildCalibratedDraft(
     let start = c.start;
     let end = c.end;
     if (c.action === "remove") {
-      if (draftText[end] === " ") end += 1;
-      else if (draftText[start - 1] === " " && start - 1 >= cursor) start -= 1;
+      // Prefer eating the preceding space so a footnote marker rendered at
+      // the removal point sits on the previous word: "a² $4M", not "a ²$4M".
+      if (draftText[start - 1] === " " && start - 1 >= cursor) start -= 1;
+      else if (draftText[end] === " ") end += 1;
     }
     if (start > cursor) segments.push({ text: draftText.slice(cursor, start) });
     if (c.action === "manual") {
