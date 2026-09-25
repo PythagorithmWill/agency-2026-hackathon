@@ -59,6 +59,17 @@ function ensureTable(): Promise<boolean> {
       return false;
     }
     try {
+      // If the table already exists (e.g. created by the admin role during a
+      // load), do NOT run DDL: "CREATE ... IF NOT EXISTS" still requires
+      // ownership and would throw "must be owner of table", which used to
+      // silently disable persistence even though INSERT/SELECT were fine.
+      const exists = await query<{ ok: string | null }>(
+        `SELECT to_regclass('${TABLE}')::text AS ok`,
+      );
+      if (exists.rows[0]?.ok) {
+        await query(`SELECT 1 FROM ${TABLE} LIMIT 1`); // proves SELECT privilege
+        return true;
+      }
       await query(
         `CREATE TABLE IF NOT EXISTS ${TABLE} (
            evaluation_id text PRIMARY KEY,
@@ -67,9 +78,11 @@ function ensureTable(): Promise<boolean> {
            result        jsonb NOT NULL
          )`,
       );
-      await query(
-        `CREATE INDEX IF NOT EXISTS evaluations_proof_id_idx ON ${TABLE} (proof_id)`,
-      );
+      try {
+        await query(`CREATE INDEX IF NOT EXISTS evaluations_proof_id_idx ON ${TABLE} (proof_id)`);
+      } catch (err) {
+        console.warn("[store] index not created (non-fatal):", (err as Error).message);
+      }
       return true;
     } catch (err) {
       console.warn(
