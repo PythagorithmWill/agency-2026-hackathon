@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   // pdf-parse/pdfjs must stay external: Turbopack cannot resolve pdfjs's
   // worker chunk and the bundled copy pulls a native canvas binding.
   serverExternalPackages: ["pdf-parse", "pdfjs-dist"],
+  // The extract route hands pdfjs its worker as a data: URL read from this
+  // file at runtime; it is not statically imported, so trace it explicitly
+  // or the standalone bundle (what Amplify deploys) lacks it → PDFs 422.
+  outputFileTracingIncludes: {
+    "/api/draft/extract": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs"],
+  },
   /**
    * Disabled because React 19 strict mode double-mounts every component,
    * and Turbopack's reconciler hits a "removeChild on a detached node"
