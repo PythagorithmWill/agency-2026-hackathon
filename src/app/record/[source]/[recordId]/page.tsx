@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
-import { loadRecord, loadAmendmentChain } from "@/lib/evaluate/retrieval";
-import { searchCorpusCached } from "@/lib/evaluate/search-cache";
+import Link from "next/link";
+import { loadRecord, loadAmendmentChain, loadRelatedRecords } from "@/lib/evaluate/retrieval";
 import { corpusCached } from "@/lib/cache";
 
 const loadRecordCached = corpusCached(loadRecord, "record");
 const loadAmendmentChainCached = corpusCached(loadAmendmentChain, "amendment-chain");
+const loadRelatedCached = corpusCached(loadRelatedRecords, "related-records");
 import { SourceBadge, getSourceLabel } from "@/components/SourceBadge";
-import { SimilarRecordCard } from "@/components/evaluate/SimilarRecordCard";
 import { AmendmentTimeline } from "@/components/record/AmendmentTimeline";
 import type { DatasetSource } from "@/lib/types";
 
@@ -40,13 +40,16 @@ export default async function RecordPage({
   ]);
   if (!record) notFound();
 
-  // Related records: same retrieval engine, query keyed on the recipient name
-  const relatedQuery = record.recipientLegalName.split(/[|·]/)[0].trim();
-  const related = relatedQuery
-    ? (await searchCorpusCached(relatedQuery)).records
-        .filter((r) => !(r.sourceDataset === source && r.recordId === recordId))
-        .slice(0, 5)
-    : [];
+  // Related records by explicit relationship (same recipient / same program).
+  const related = await loadRelatedCached(source, {
+    recordId,
+    recipientLegalName: record.recipientLegalName,
+    recipientBn: record.recipientBn,
+    awardingDept: record.awardingDept,
+    programCode: record.programCode,
+  });
+  const current = amendments.length > 0 ? amendments[amendments.length - 1] : null;
+  const original = amendments.length > 0 ? amendments[0] : null;
 
   const isFed = source === "fed";
 
@@ -91,17 +94,57 @@ export default async function RecordPage({
             <h2 className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
               Amendment chain · {amendments.length} {amendments.length === 1 ? "entry" : "entries"}
             </h2>
-            <p className="mt-3 text-[14px] text-[var(--color-fg-muted)] leading-[20px] max-w-[640px]">
-              The agreement_value column on
-              <code className="font-[var(--font-mono)] mx-1.5">fed.grants_contributions</code>
-              is cumulative — naive
-              <code className="font-[var(--font-mono)] mx-1.5">SUM</code>
-              triple-counts amendments. The header above shows the
-              F-3-corrected current commitment. The timeline below shows
-              every amendment in the chain.
+            <p className="mt-3 text-[14px] text-[var(--color-fg-muted)] leading-[20px] max-w-[680px]">
+              Each notch is one published row for this agreement: #0 is the original
+              (placed at its start date) and each later notch is an amendment (placed at
+              its amendment date). The height is the agreement&apos;s <b>total value as of
+              that row</b> — the source column is cumulative, not a change amount — so the
+              line reads as the commitment over time and the right-most notch is the current
+              commitment shown in the header.
+              {original && current && amendments.length > 1 && (
+                <>
+                  {" "}For this agreement: {cad.format(original.agreementValue)} at start,{" "}
+                  {cad.format(current.agreementValue)} after amendment #{current.amendmentNumber}
+                  {" "}({current.agreementValue >= original.agreementValue ? "+" : "−"}
+                  {cad.format(Math.abs(current.agreementValue - original.agreementValue))}).
+                </>
+              )}
             </p>
             <div className="mt-8">
               <AmendmentTimeline events={amendments} />
+            </div>
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full min-w-[560px] text-[13px]">
+                <thead className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] border-b border-[var(--color-border)]">
+                  <tr>
+                    <th className="text-left py-2">Row</th>
+                    <th className="text-left py-2">Date</th>
+                    <th className="text-right py-2">Total value as of row</th>
+                    <th className="text-right py-2">Change vs previous</th>
+                    <th className="text-left py-2 pl-4">Description on this row</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {amendments.map((a, i) => {
+                    const prev = i > 0 ? amendments[i - 1] : null;
+                    const delta = prev ? a.agreementValue - prev.agreementValue : null;
+                    return (
+                      <tr key={`${a.amendmentNumber}-${i}`} className="border-b border-[var(--color-border)] last:border-0">
+                        <td className="py-2 font-[var(--font-mono)]">{i === 0 ? "#0 original" : `#${a.amendmentNumber} amendment`}</td>
+                        <td className="py-2 font-[var(--font-mono)] text-[var(--color-fg-muted)]">
+                          {a.date ? a.date.slice(0, 10) : "—"}
+                          {a.dateKind === "start" && <span className="ml-1 text-[var(--color-fg-subtle)]">(start date)</span>}
+                        </td>
+                        <td className="py-2 text-right font-[var(--font-mono)] tabular-nums">{cad.format(a.agreementValue)}</td>
+                        <td className="py-2 text-right font-[var(--font-mono)] tabular-nums text-[var(--color-fg-muted)]">
+                          {delta === null ? "—" : `${delta >= 0 ? "+" : "−"}${cad.format(Math.abs(delta))}`}
+                        </td>
+                        <td className="py-2 pl-4 text-[var(--color-fg-muted)] max-w-[380px] truncate">{a.description ?? "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </section>
         )}
@@ -110,21 +153,48 @@ export default async function RecordPage({
         {related.length > 0 && (
           <section className="mt-24 border-t border-[var(--color-border)] pt-12">
             <h2 className="font-[var(--font-mono)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
-              Related records · {related.length}
+              Related records · {related.reduce((n, g) => n + g.records.length, 0)}
             </h2>
-            <p className="mt-3 text-[14px] text-[var(--color-fg-muted)] leading-[20px] max-w-[640px]">
-              Closest matches by recipient name across federal and Alberta
-              provincial corpora.
+            <p className="mt-3 text-[14px] text-[var(--color-fg-muted)] leading-[20px] max-w-[680px]">
+              Records are related by an explicit link in the data, stated for each group
+              below — never by text similarity. Values are each agreement&apos;s current
+              commitment (latest amendment).
             </p>
-            <div className="mt-8 max-w-[760px] space-y-4">
-              {related.map((r, i) => (
-                <SimilarRecordCard
-                  key={`${r.sourceDataset}-${r.recordId}-${i}`}
-                  record={r}
-                  index={i}
-                />
-              ))}
-            </div>
+            {related.map((g) => (
+              <div key={g.basis} className="mt-8">
+                <h3 className="text-[14px] text-[var(--color-fg)]">{g.reason}</h3>
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full min-w-[600px] text-[13px]">
+                    <thead className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.08em] text-[var(--color-fg-subtle)] border-b border-[var(--color-border)]">
+                      <tr>
+                        <th className="text-left py-2">Ref</th>
+                        {g.basis === "same-program" && <th className="text-left py-2">Recipient</th>}
+                        <th className="text-left py-2">{g.basis === "same-recipient" ? "Department · program" : "Fiscal year"}</th>
+                        <th className="text-right py-2">Current value</th>
+                        <th className="text-left py-2 pl-4">FY</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {g.records.map((r) => (
+                        <tr key={`${r.sourceDataset}-${r.recordId}`} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-elev-2)]/40">
+                          <td className="py-2 font-[var(--font-mono)] text-[11px]">
+                            <Link href={`/record/${rawSource}/${encodeURIComponent(r.recordId)}` as never} className="text-[var(--color-accent)] hover:underline">
+                              {r.recordId}
+                            </Link>
+                          </td>
+                          {g.basis === "same-program" && <td className="py-2 pr-4 max-w-[260px] truncate">{r.recipientLegalName}</td>}
+                          <td className="py-2 pr-4 max-w-[320px] truncate text-[var(--color-fg-muted)]">
+                            {g.basis === "same-recipient" ? `${r.awardingDept}${r.programCode ? ` · ${r.programCode}` : ""}` : (r.fiscalYear ? `FY${r.fiscalYear}` : "—")}
+                          </td>
+                          <td className="py-2 text-right font-[var(--font-mono)] tabular-nums">{cad.format(r.agreementValue)}</td>
+                          <td className="py-2 pl-4 font-[var(--font-mono)] text-[var(--color-fg-muted)]">{r.fiscalYear ? `FY${r.fiscalYear}` : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
           </section>
         )}
 

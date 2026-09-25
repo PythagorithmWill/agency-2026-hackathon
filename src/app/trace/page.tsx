@@ -1,8 +1,10 @@
+import { getCorpusStats } from "@/lib/analytics/corpusStats";
 import Link from "next/link";
 
 export const metadata = { title: "Built on Alberta TRACE — Glassbox" };
 
-export default function TracePage() {
+export default async function TracePage() {
+  const corpus = await getCorpusStats();
   return (
     <main className="min-h-screen pt-16">
       <section className="relative border-b border-[var(--color-border)] overflow-hidden">
@@ -62,7 +64,7 @@ export default function TracePage() {
           <ul className="list-disc pl-5 space-y-2 marker:text-[var(--color-fg-subtle)]">
             <li>
               <b>Federal corpus expansion.</b> TRACE is built on Alberta provincial data; Glassbox
-              extends every TRACE-derived pattern to the 1.27 M-row federal grants &amp;
+              extends every TRACE-derived pattern to the {corpus.fmt.fedRows}-row federal grants &amp;
               contributions corpus.
             </li>
             <li>

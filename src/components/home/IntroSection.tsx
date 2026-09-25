@@ -9,7 +9,16 @@
  * in src/app/page.tsx. No framer-motion (see project rule against
  * mount-time framer animations).
  */
-export function IntroSection() {
+export interface IntroStats {
+  fedRows: string;
+  abRows: string;
+  goldenRecords: string;
+  fundingLoops: string;
+  patterns: string;
+  detectorsLive: string;
+}
+
+export function IntroSection({ stats }: { stats: IntroStats }) {
   return (
     <section className="border-t border-[var(--color-border)]">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 md:px-16 py-20 sm:py-28 md:py-40">
@@ -51,12 +60,12 @@ export function IntroSection() {
             </p>
 
             <ul className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6 border-t border-[var(--color-border)]">
-              <Stat label="Federal records" value="1.27 M" />
-              <Stat label="Alberta records" value="2.05 M" />
-              <Stat label="Canonical entities" value="851 K" />
-              <Stat label="Funding loops" value="5.8 K" />
-              <Stat label="Named patterns" value="12" />
-              <Stat label="Detectors live" value="6" />
+              <Stat label="Federal records" value={stats.fedRows} />
+              <Stat label="Alberta records" value={stats.abRows} />
+              <Stat label="Canonical entities" value={stats.goldenRecords} />
+              <Stat label="Funding loops flagged" value={stats.fundingLoops} />
+              <Stat label="Named patterns" value={stats.patterns} />
+              <Stat label="Detectors live" value={stats.detectorsLive} />
             </ul>
           </div>
         </div>

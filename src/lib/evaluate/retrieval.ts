@@ -738,7 +738,11 @@ export async function loadRecord(
  */
 export interface AmendmentEvent {
   amendmentNumber: number;
+  /** amendment_date for amendments; agreement_start_date for the original (#0). */
   date: string | null;
+  /** Which column `date` came from, so the UI can label the original honestly. */
+  dateKind: "amendment" | "start" | "none";
+  /** CUMULATIVE agreement value as published on this row (F-3). */
   agreementValue: number;
   description: string | null;
 }
@@ -752,31 +756,167 @@ export async function loadAmendmentChain(
     const r = await query<{
       amendment_number: string | null;
       amendment_date: string | Date | null;
+      agreement_start_date: string | Date | null;
       agreement_value: string | number | null;
       description_en: string | null;
     }>(
       `WITH keyed AS (
-         SELECT amendment_number, amendment_date, agreement_value, description_en, _id,
+         SELECT amendment_number, amendment_date, agreement_start_date, agreement_value, description_en, _id,
                 COALESCE(recipient_business_number, recipient_legal_name, _id::text) AS agreement_key
            FROM fed.grants_contributions
           WHERE ref_number = $1
        )
-       SELECT amendment_number, amendment_date, agreement_value, description_en
+       SELECT amendment_number, amendment_date, agreement_start_date, agreement_value, description_en
          FROM keyed
         WHERE agreement_key = (SELECT MIN(agreement_key) FROM keyed)
         ORDER BY NULLIF(amendment_number, '')::int ASC NULLS FIRST, _id ASC`,
       [recordId],
     );
-    return r.rows.map((row) => ({
-      amendmentNumber: Number(row.amendment_number) || 0,
+    return r.rows.map((row) => {
       // pg returns DATE columns as JS Date instances; the declared type is
       // string | null, and consumers call .slice() on it.
-      date: dateToIso(row.amendment_date),
-      agreementValue: Number(row.agreement_value) || 0,
-      description: row.description_en,
-    }));
+      const amend = dateToIso(row.amendment_date);
+      const start = dateToIso(row.agreement_start_date);
+      return {
+        amendmentNumber: Number(row.amendment_number) || 0,
+        date: amend ?? start,
+        dateKind: amend ? "amendment" : start ? "start" : "none",
+        agreementValue: Number(row.agreement_value) || 0,
+        description: row.description_en,
+      } as AmendmentEvent;
+    });
   } catch (err) {
     console.warn("[loadAmendmentChain] failed:", (err as Error).message);
     return [];
   }
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Related records — by an EXPLICIT relationship, not text similarity.
+   The previous implementation ran the corpus search with the recipient's
+   name as the query, i.e. "records whose DESCRIPTION contains words from
+   this recipient's name", which surfaced unrelated agreements that merely
+   mentioned "systems" or "foundation". Now: (a) other current agreements
+   of the same recipient (by business number when present, else exact legal
+   name), (b) other recipients funded under the same program by the same
+   department. Each group states its reason.
+   ───────────────────────────────────────────────────────────────────── */
+
+export interface RelatedGroup {
+  reason: string;
+  basis: "same-recipient" | "same-program";
+  records: ComparableRecord[];
+}
+
+const FED_CURRENT_ROW = `
+  SELECT DISTINCT ON (ref_number)
+         ref_number, recipient_legal_name, recipient_business_number, recipient_province,
+         owner_org_title, prog_name_en, agreement_value, agreement_start_date, description_en
+    FROM fed.grants_contributions
+   WHERE ref_number <> $1 AND agreement_value > 0 AND __FILTER__
+   ORDER BY ref_number, NULLIF(amendment_number, '')::int DESC NULLS LAST, _id DESC`;
+
+function fyOf(iso: string | null): number {
+  if (!iso) return 0;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return 0;
+  return d.getUTCFullYear() + (d.getUTCMonth() + 1 >= 4 ? 1 : 0);
+}
+
+export async function loadRelatedRecords(
+  source: DatasetSource,
+  record: { recordId: string; recipientLegalName: string; recipientBn: string | null; awardingDept: string; programCode: string | null },
+): Promise<RelatedGroup[]> {
+  const groups: RelatedGroup[] = [];
+  const bn = record.recipientBn && /^\d{9}/.test(record.recipientBn) ? record.recipientBn : null;
+  const name = record.recipientLegalName.trim();
+  try {
+    if (source === "fed") {
+      type Row = {
+        ref_number: string; recipient_legal_name: string | null; recipient_business_number: string | null;
+        recipient_province: string | null; owner_org_title: string | null; prog_name_en: string | null;
+        agreement_value: string | number | null; agreement_start_date: string | Date | null; description_en: string | null;
+      };
+      const toRec = (row: Row): ComparableRecord => ({
+        recordId: row.ref_number,
+        sourceDataset: "fed",
+        recipientLegalName: row.recipient_legal_name ?? "—",
+        recipientBn: row.recipient_business_number,
+        recipientProvince: row.recipient_province,
+        awardingDept: row.owner_org_title ?? "—",
+        programCode: row.prog_name_en,
+        fiscalYear: fyOf(dateToIso(row.agreement_start_date)),
+        agreementValue: Number(row.agreement_value) || 0,
+        description: row.description_en ?? "",
+        similarity: 1,
+        retrievalReason: "keyword",
+      });
+      const recipientFilter = bn ? "recipient_business_number = $2" : "recipient_legal_name = $2";
+      const sameRecipient = await longQuery<Row>(
+        `SELECT * FROM (${FED_CURRENT_ROW.replace("__FILTER__", recipientFilter)}) cur
+          ORDER BY agreement_start_date DESC NULLS LAST LIMIT 6`,
+        [record.recordId, bn ?? name],
+        20_000,
+      );
+      if (sameRecipient.rows.length > 0) {
+        groups.push({
+          basis: "same-recipient",
+          reason: bn
+            ? `Other current agreements for the same recipient (business number ${bn})`
+            : `Other current agreements for the same recipient (exact legal name match; no business number on file)`,
+          records: sameRecipient.rows.map(toRec),
+        });
+      }
+      if (record.programCode) {
+        const sameProgram = await longQuery<Row>(
+          `SELECT * FROM (${FED_CURRENT_ROW.replace("__FILTER__", "owner_org_title = $2 AND prog_name_en = $3 AND COALESCE(recipient_business_number, recipient_legal_name) <> $4")}) cur
+            ORDER BY agreement_start_date DESC NULLS LAST LIMIT 5`,
+          [record.recordId, record.awardingDept, record.programCode, bn ?? name],
+          20_000,
+        );
+        if (sameProgram.rows.length > 0) {
+          groups.push({
+            basis: "same-program",
+            reason: `Other recipients funded under "${record.programCode}" by ${record.awardingDept} (most recent first)`,
+            records: sameProgram.rows.map(toRec),
+          });
+        }
+      }
+    } else {
+      const table = source === "ab_grants" ? "ab.ab_grants" : "ab.ab_contracts";
+      type AbRow = { id: number; recipient: string | null; program: string | null; ministry: string | null; amount: string | number | null; display_fiscal_year: string | null };
+      const rows = await longQuery<AbRow>(
+        `SELECT id, recipient, ${source === "ab_grants" ? "program" : "NULL::text AS program"}, ministry, amount, display_fiscal_year
+           FROM ${table}
+          WHERE recipient = $2 AND id::text <> $1 AND amount > 0
+          ORDER BY display_fiscal_year DESC NULLS LAST, amount DESC LIMIT 6`,
+        [record.recordId, name],
+        20_000,
+      );
+      if (rows.rows.length > 0) {
+        groups.push({
+          basis: "same-recipient",
+          reason: "Other Alberta payments to the same recipient (exact name match)",
+          records: rows.rows.map((row) => ({
+            recordId: String(row.id),
+            sourceDataset: source,
+            recipientLegalName: row.recipient ?? "—",
+            recipientBn: null,
+            recipientProvince: "AB",
+            awardingDept: row.ministry ?? "—",
+            programCode: row.program,
+            fiscalYear: Number((row.display_fiscal_year ?? "").match(/(\d{4})\s*-\s*(\d{4})/)?.[2] ?? 0),
+            agreementValue: Number(row.amount) || 0,
+            description: "",
+            similarity: 1,
+            retrievalReason: "keyword",
+          })),
+        });
+      }
+    }
+  } catch (err) {
+    console.warn("[loadRelatedRecords] failed:", (err as Error).message);
+  }
+  return groups;
 }

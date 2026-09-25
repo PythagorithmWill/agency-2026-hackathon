@@ -150,7 +150,7 @@ export function AmendmentTimeline({ events }: { events: AmendmentEvent[] }) {
         {points.map((p, i) => (
           <g key={p.i} className="cursor-help">
             <title>
-              {`Amendment ${p.amendmentNumber}${p.date ? ` · ${formatDate(p.date)}` : ""} · ${cad.format(p.agreementValue)}`}
+              {`${p.i === 0 ? "Original" : `Amendment ${p.amendmentNumber}`}${p.date ? ` · ${formatDate(p.date)}${p.dateKind === "start" ? " (start date)" : ""}` : ""} · total ${cad.format(p.agreementValue)}`}
             </title>
             {/* drop line */}
             <motion.line
