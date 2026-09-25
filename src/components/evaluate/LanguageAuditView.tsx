@@ -28,7 +28,7 @@ export function LanguageAuditView({
 }) {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  const [view, setView] = useState<"calibrated" | "original">("calibrated");
+  const [view, setView] = useState<"calibrated" | "original" | "compare">("calibrated");
 
   const originalSegments = useMemo(() => splitByFlags(draftText, flags), [draftText, flags]);
   const calibrated = useMemo(() => buildCalibratedDraft(draftText, flags), [draftText, flags]);
@@ -85,6 +85,9 @@ export function LanguageAuditView({
                 <ViewTab active={view === "original"} onClick={() => setView("original")}>
                   Original
                 </ViewTab>
+                <ViewTab active={view === "compare"} onClick={() => setView("compare")}>
+                  Compare
+                </ViewTab>
               </span>
               <button
                 type="button"
@@ -96,7 +99,41 @@ export function LanguageAuditView({
             </span>
           </div>
 
-          {view === "calibrated" ? (
+          {view === "compare" ? (
+            <p
+              data-testid="calibrated-compare"
+              className="mt-4 text-[var(--text-body)] leading-[28px] font-[var(--font-sans)] text-[var(--color-fg)] whitespace-pre-wrap"
+            >
+              {calibrated.segments.map((seg, i) => {
+                if (!seg.change) return <span key={i}>{seg.text}</span>;
+                const c = seg.change;
+                if (c.action === "manual") {
+                  return (
+                    <span key={i} className="calibration-flag" title={`${c.n}. ${c.reason}`}>
+                      {seg.text}
+                      <sup className="ml-0.5 font-[var(--font-mono)] text-[10px] text-[var(--color-accent-warn)] select-none">{c.n}</sup>
+                    </span>
+                  );
+                }
+                return (
+                  <span key={i} title={`${c.n}. ${c.reason}`}>
+                    <del className="rounded-[3px] px-0.5 bg-[rgba(255,99,99,0.16)] text-[var(--color-fg-muted)] line-through decoration-[rgba(255,99,99,0.8)]">
+                      {c.original}
+                    </del>
+                    {c.action === "replace" && (
+                      <>
+                        {" "}
+                        <ins className="rounded-[3px] px-0.5 bg-[rgba(64,224,168,0.16)] no-underline text-[var(--color-fg)]">
+                          {seg.text}
+                        </ins>
+                      </>
+                    )}
+                    <sup className="ml-0.5 font-[var(--font-mono)] text-[10px] text-[var(--color-accent)] select-none">{c.n}</sup>
+                  </span>
+                );
+              })}
+            </p>
+          ) : view === "calibrated" ? (
             <p
               data-testid="calibrated-draft"
               className="mt-4 text-[var(--text-body)] leading-[28px] font-[var(--font-sans)] text-[var(--color-fg)] whitespace-pre-wrap"
@@ -156,7 +193,9 @@ export function LanguageAuditView({
           )}
 
           <p className="mt-4 text-[var(--text-body-sm)] text-[var(--color-fg-subtle)] leading-[20px]">
-            {view === "calibrated"
+            {view === "compare"
+              ? "Struck-through red = original wording removed; green = calibrated replacement inserted; amber = kept for manual edit. Numbers match the change list."
+              : view === "calibrated"
               ? `${auto} change${auto === 1 ? "" : "s"} applied from the calibrated lexicon` +
                 (calibrated.counts.manual > 0
                   ? `; ${calibrated.counts.manual} phrase${calibrated.counts.manual === 1 ? "" : "s"} kept for manual edit (amber).`

@@ -50,11 +50,35 @@ export function RecipientConcentrationBar({
               transition: "filter 200ms",
               filter: hover === i ? "brightness(1.2)" : "brightness(1)",
             }}
-            className="cursor-help h-full first:rounded-l-[8px] last:rounded-r-[8px]"
+            title={`${r.name} · ${((r.totalAwarded / total) * 100).toFixed(1)}% of comparable funding`}
+            aria-label={`${r.name}, ${((r.totalAwarded / total) * 100).toFixed(1)} percent`}
+            className="cursor-pointer h-full first:rounded-l-[8px] last:rounded-r-[8px]"
           />
         ))}
-        {/* Show remaining as "other" if present */}
-        {concentration.topRecipients.length < 5 ? null : null}
+      </div>
+      {/* Hover / focus readout: which recipient the segment is */}
+      <div
+        aria-live="polite"
+        className="mt-2 min-h-[20px] font-[var(--font-mono)] text-[12px] text-[var(--color-fg-muted)]"
+      >
+        {hover !== null && concentration.topRecipients[hover] ? (
+          <>
+            <span
+              aria-hidden
+              className="inline-block w-2 h-2 rounded-sm mr-2 align-middle"
+              style={{ backgroundColor: PALETTE[hover] ?? "rgba(255,255,255,0.16)" }}
+            />
+            <span className="text-[var(--color-fg)]">{concentration.topRecipients[hover].name}</span>
+            {" · "}
+            {new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(
+              concentration.topRecipients[hover].totalAwarded,
+            )}
+            {" · "}
+            {((concentration.topRecipients[hover].totalAwarded / total) * 100).toFixed(1)}%
+          </>
+        ) : (
+          <span className="text-[var(--color-fg-subtle)]">Hover a segment to see the recipient.</span>
+        )}
       </div>
       <style>{`
         @keyframes seg-fill {
