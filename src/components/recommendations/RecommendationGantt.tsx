@@ -31,7 +31,12 @@ const SEVERITY_COLORS = {
 
 const ROW_HEIGHT = 64;
 const BAR_HEIGHT = 30;
-const LABEL_WIDTH = 280;
+const LABEL_WIDTH = 320;
+// Labels are LEFT-anchored inside the label gutter. Right-anchoring at
+// LABEL_WIDTH-14 let long titles/sublabels extend past x=0, where the SVG
+// viewBox clipped them ("text running into the left edge").
+const LABEL_X = 16;
+const LABEL_MAX_CHARS = 40;
 const RIGHT_PAD = 96;
 const TOP_PAD = 64;
 const BOTTOM_PAD = 56;
@@ -246,26 +251,25 @@ export function RecommendationGantt({
 
                 {/* Row label group */}
                 <text
-                  x={LABEL_WIDTH - 14}
+                  x={LABEL_X}
                   y={y + BAR_HEIGHT / 2 - 2}
-                  textAnchor="end"
+                  textAnchor="start"
                   fontSize="13"
                   fill="var(--color-fg)"
                 >
-                  {truncate(r.title, 38)}
+                  <title>{r.title}</title>
+                  {truncate(r.title, LABEL_MAX_CHARS)}
                 </text>
                 <text
-                  x={LABEL_WIDTH - 14}
+                  x={LABEL_X}
                   y={y + BAR_HEIGHT / 2 + 13}
-                  textAnchor="end"
+                  textAnchor="start"
                   fontSize="10"
                   fontFamily="var(--font-mono)"
                   fill="var(--color-fg-subtle)"
                   style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
                 >
-                  {r.dependsOn.length > 0
-                    ? `↳ depends on ${r.dependsOn.length} · `
-                    : ""}
+                  {r.dependsOn.length > 0 ? `↳ ${r.dependsOn.length} dep${r.dependsOn.length === 1 ? "" : "s"} · ` : ""}
                   {r.priority.replace("_", " ")} · {Math.round(r.timeline.durationDays / 30)}mo
                 </text>
 
