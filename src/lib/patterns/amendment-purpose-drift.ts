@@ -1,5 +1,5 @@
 import { longQuery } from "../db/pool";
-import { jaccard } from "../analytics/amendments";
+import { jaccard, keywordDiff } from "../analytics/amendments";
 import { getPattern } from "./registry";
 import { isNullLikeId } from "./identity";
 import {
@@ -148,6 +148,8 @@ export const amendmentPurposeDriftDetector: PatternDetector = {
       };
       const severity = severityFor(sim);
       const startIso = asIso(row.current_start_date);
+      const diff = keywordDiff(initial, current);
+      const excerpt = (s: string, n = 700) => (s.length > n ? `${s.slice(0, n).trimEnd()}…` : s);
       const m: PatternMatch = {
         patternId: "amendment-purpose-drift",
         matchId: `amendment-purpose-drift:${ref}`,
@@ -157,6 +159,13 @@ export const amendmentPurposeDriftDetector: PatternDetector = {
           { source: "fed.grants_contributions", rowId: ref, field: "amendment_count", value: num(row.amendment_count) },
           { source: "fed.grants_contributions", rowId: ref, field: "value_change", value: `${dollar.format(num(row.initial_value))} → ${dollar.format(num(row.current_value))}` },
           { source: "fed.grants_contributions", rowId: ref, field: "department", value: row.owner_org_title },
+          // Observations that led to the flag — rendered by MatchObservations.
+          { source: "fed.grants_contributions", rowId: ref, field: "initial_description", value: excerpt(initial) },
+          { source: "fed.grants_contributions", rowId: ref, field: "current_description", value: excerpt(current) },
+          { source: "fed.grants_contributions", rowId: ref, field: "keywords_only_in_initial", value: diff.onlyInitial.join(", ") || "—" },
+          { source: "fed.grants_contributions", rowId: ref, field: "keywords_only_in_current", value: diff.onlyCurrent.join(", ") || "—" },
+          { source: "fed.grants_contributions", rowId: ref, field: "keywords_shared", value: diff.shared },
+          { source: "fed.grants_contributions", rowId: ref, field: "current_start_date", value: startIso ? startIso.slice(0, 10) : null },
         ],
         calibratedSummary: `The dataset shows ${row.amendment_count} amendments to record ${ref} (${row.recipient_legal_name ?? "—"}, ${row.owner_org_title ?? "—"}). Keyword overlap between the initial and current description is ${(sim * 100).toFixed(0)}%; pattern consistent with amendment-purpose drift.`,
         severity,

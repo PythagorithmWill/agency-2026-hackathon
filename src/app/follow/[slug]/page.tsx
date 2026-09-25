@@ -13,6 +13,7 @@ import { MatchDashboard, type DashboardMatch } from "@/components/follow/MatchDa
 import { MatchFilterBar } from "@/components/follow/MatchFilterBar";
 import { MatchPagination } from "@/components/follow/MatchPagination";
 import { EvidenceStrengthMeter } from "@/components/follow/EvidenceStrengthMeter";
+import { MatchObservations } from "@/components/follow/MatchObservations";
 import {
   FOLLOW_PAGE_SIZE,
   followHref,
@@ -355,8 +356,9 @@ function MatchList({
               </p>
             )}
             <div className="mt-3 font-[var(--font-mono)] text-[10.5px] uppercase tracking-[0.06em] text-[var(--color-fg-subtle)]">
-              {m.evidence.length} source records cited
+              {m.evidence.length} cited fields from source records
             </div>
+            <MatchObservations patternId={m.patternId} evidence={m.evidence} />
             {m.subject.type === "agreement" && (
               <Link
                 href={`/record/fed/${encodeURIComponent(m.subject.id)}` as never}

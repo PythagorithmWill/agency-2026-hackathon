@@ -146,19 +146,40 @@ function calibratedAmendmentSummary(input: {
   return `The dataset shows ${input.amendmentCount} amendments to record ${input.recordId}, growing from ${dollar.format(input.initialValue)} initial commitment to ${dollar.format(input.currentValue)} current commitment (+${(input.totalGrowthPercent * 100).toFixed(0)}%).`;
 }
 
+/** Keyword tokens used by the drift measure: lower-cased words of 4+ chars. */
+export function keywordTokens(s: string): Set<string> {
+  return new Set(
+    s
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .split(/\s+/)
+      .filter((t) => t.length >= 4),
+  );
+}
+
+/**
+ * Observations behind a drift score: which keywords were only in the
+ * initial description, only in the current one, and how many were shared.
+ * This is what a reader needs to judge the flag; the score alone is not.
+ */
+export function keywordDiff(a: string, b: string, limit = 14): {
+  onlyInitial: string[];
+  onlyCurrent: string[];
+  shared: number;
+} {
+  const sa = keywordTokens(a);
+  const sb = keywordTokens(b);
+  const onlyInitial = [...sa].filter((t) => !sb.has(t)).sort();
+  const onlyCurrent = [...sb].filter((t) => !sa.has(t)).sort();
+  let shared = 0;
+  for (const t of sa) if (sb.has(t)) shared++;
+  return { onlyInitial: onlyInitial.slice(0, limit), onlyCurrent: onlyCurrent.slice(0, limit), shared };
+}
+
 /** Token-set Jaccard similarity for two strings. */
 export function jaccard(a: string, b: string): number {
-  const tokens = (s: string): Set<string> => {
-    return new Set(
-      s
-        .toLowerCase()
-        .replace(/[^\p{L}\p{N}\s]/gu, " ")
-        .split(/\s+/)
-        .filter((t) => t.length >= 4),
-    );
-  };
-  const sa = tokens(a);
-  const sb = tokens(b);
+  const sa = keywordTokens(a);
+  const sb = keywordTokens(b);
   if (sa.size === 0 && sb.size === 0) return 1;
   let intersection = 0;
   for (const t of sa) if (sb.has(t)) intersection++;
