@@ -55,8 +55,7 @@ async function main(): Promise<void> {
       [rdsUrl, "-q", "-v", "ON_ERROR_STOP=1",
         "-c", `CREATE TEMP TABLE sync_tmp (LIKE ${table} INCLUDING DEFAULTS)`,
         "-c", `\\copy sync_tmp (${colList}) FROM STDIN`,
-        "-c", `INSERT INTO ${table} (${colList}) SELECT ${colList} FROM sync_tmp ON CONFLICT DO NOTHING`,
-        "-c", `ANALYZE ${table}`],
+        "-c", `INSERT INTO ${table} (${colList}) SELECT ${colList} FROM sync_tmp ON CONFLICT DO NOTHING`],
       { stdio: ["pipe", "inherit", "inherit"] },
     );
     let bytes = 0;
@@ -65,9 +64,21 @@ async function main(): Promise<void> {
     const timer = setInterval(() => console.log(`[sync] ${(bytes / 1e6).toFixed(0)} MB sent, ${((Date.now() - t0) / 1000).toFixed(0)}s`), 30_000);
     const code = await new Promise<number>((res) => dst.on("close", (c) => res(c ?? 1)));
     clearInterval(timer);
-    if (code !== 0) throw new Error(`psql (RDS side) exited ${code}`);
     const seconds = ((Date.now() - t0) / 1000).toFixed(1);
     const after = await countRows(rds, table);
+    // Observed 2026-09-24: after a ~35 min COPY the psql client can lose the
+    // connection ("SSL SYSCALL error: Operation timed out") AFTER the INSERT
+    // has committed. Treat "rows arrived" as success so grants/log still run;
+    // only fail when nothing landed.
+    if (code !== 0 && after <= before) throw new Error(`psql (RDS side) exited ${code} and no rows arrived`);
+    if (code !== 0) console.warn(`[sync] psql exited ${code} after the INSERT committed — continuing with ANALYZE/grants`);
+    const client = await rds.connect();
+    try {
+      await client.query("SET statement_timeout = '900s'");
+      await client.query(`ANALYZE ${table}`);
+    } finally {
+      client.release();
+    }
     console.log(`[sync] ${table}: RDS now ${after.toLocaleString()} rows (+${(after - before).toLocaleString()}) in ${seconds}s, ${(bytes / 1e6).toFixed(0)} MB`);
     await rds.query(`INSERT INTO ${schema}.ingest_log (source, file, rows_loaded, seconds, note) VALUES ($1,$2,$3,$4,$5)`,
       [`sync-rds:${table}`, "local agency26", after - before, Number(seconds), where || null]);

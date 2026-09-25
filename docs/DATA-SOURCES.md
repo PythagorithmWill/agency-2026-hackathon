@@ -30,7 +30,10 @@ step logged and skipped; re-run `grantApp` (or the two GRANT statements) once
 the app role is created.** `sync-rds.ts` pipes `psql \copy` from local to RDS,
 which measured 2,660 rows/s versus ~800 rows/s for batched INSERTs on the
 conference link, so it is the preferred way to publish a table to RDS after a
-local load.
+local load. Quirk seen on the 6.26 M-row elections sync: after ~35 min the
+psql client lost its connection *after* the INSERT had committed; the script
+now checks the row count and still runs ANALYZE/grants/log when rows arrived
+(the elections grant was applied by hand that time; `ingest_log` says so).
 
 Shared parsing lives in `src/lib/sources/csv.ts` (streaming RFC-4180 parser,
 no dependency; `csv-parse` is not in `node_modules`) and
