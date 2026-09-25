@@ -8,6 +8,7 @@ const loadAmendmentChainCached = corpusCached(loadAmendmentChain, "amendment-cha
 const loadRelatedCached = corpusCached(loadRelatedRecords, "related-records");
 import { SourceBadge, getSourceLabel } from "@/components/SourceBadge";
 import { AmendmentTimeline } from "@/components/record/AmendmentTimeline";
+import { ExpandableText } from "@/components/ExpandableText";
 import type { DatasetSource } from "@/lib/types";
 
 const cad = new Intl.NumberFormat("en-CA", {
@@ -139,7 +140,9 @@ export default async function RecordPage({
                         <td className="py-2 text-right font-[var(--font-mono)] tabular-nums text-[var(--color-fg-muted)]">
                           {delta === null ? "—" : `${delta >= 0 ? "+" : "−"}${cad.format(Math.abs(delta))}`}
                         </td>
-                        <td className="py-2 pl-4 text-[var(--color-fg-muted)] max-w-[380px] truncate">{a.description ?? "—"}</td>
+                        <td className="py-2 pl-4 text-[var(--color-fg-muted)] max-w-[420px] align-top">
+                          <ExpandableText text={a.description} clamp={110} />
+                        </td>
                       </tr>
                     );
                   })}
