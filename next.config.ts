@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // pdf-parse/pdfjs must stay external: Turbopack cannot resolve pdfjs's
+  // worker chunk and the bundled copy pulls a native canvas binding.
+  serverExternalPackages: ["pdf-parse", "pdfjs-dist"],
   /**
    * Disabled because React 19 strict mode double-mounts every component,
    * and Turbopack's reconciler hits a "removeChild on a detached node"
