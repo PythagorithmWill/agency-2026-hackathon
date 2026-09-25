@@ -249,7 +249,8 @@ export function RecommendationGantt({
                   fillOpacity={0.4}
                 />
 
-                {/* Row label group */}
+                {/* Row label group — linked like the bar so the whole row is clickable */}
+                <a href={`/recommendations/${encodeURIComponent(r.id)}`}>
                 <text
                   x={LABEL_X}
                   y={y + BAR_HEIGHT / 2 - 2}
@@ -272,6 +273,7 @@ export function RecommendationGantt({
                   {r.dependsOn.length > 0 ? `↳ ${r.dependsOn.length} dep${r.dependsOn.length === 1 ? "" : "s"} · ` : ""}
                   {r.priority.replace("_", " ")} · {Math.round(r.timeline.durationDays / 30)}mo
                 </text>
+                </a>
 
                 {/* Bar — wrapped in <a> for click-through */}
                 <a href={`/recommendations/${encodeURIComponent(r.id)}`}>
