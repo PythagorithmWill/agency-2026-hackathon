@@ -24,10 +24,11 @@ Load order that was used: local `postgresql://localhost:5432/agency26` first
 (full writable copy, verified against source metadata), then RDS. On RDS the
 loader only ever touches its own schema (`fedc`, `lobby`, `elections`, `corp`),
 checks that no `INSERT INTO fed.grants…` is active before writing, and grants
-`USAGE`/`SELECT` to `glassbox_app` when that role exists. **On 2026-09-24 the
-RDS instance had no `glassbox_app` role (only `glassbox_admin`), so the grant
-step logged and skipped; re-run `grantApp` (or the two GRANT statements) once
-the app role is created.** `sync-rds.ts` pipes `psql \copy` from local to RDS,
+`USAGE`/`SELECT` to `glassbox_app` when that role exists. On 2026-09-24 the first
+smoke loads ran while RDS had no `glassbox_app` role (the grant step logged
+and skipped); the role existed by the time the full syncs ran and
+`has_schema_privilege('glassbox_app', s, 'USAGE')` is true for `fedc`,
+`elections` and `corp`, with SELECT on every table and view. `sync-rds.ts` pipes `psql \copy` from local to RDS,
 which measured 2,660 rows/s versus ~800 rows/s for batched INSERTs on the
 conference link, so it is the preferred way to publish a table to RDS after a
 local load. Quirk seen on the 6.26 M-row elections sync: after ~35 min the
@@ -53,7 +54,7 @@ normalisers). Both are unit-tested in `src/lib/sources/__tests__/`.
 | Licence | Open Government Licence – Canada (`ca-ogl-lgo`) |
 | Refresh | Departments publish quarterly (`reporting_period` = `YYYY-YYYY-Qn`); the CSV is rebuilt daily. Re-run the loader; upsert on the natural key. |
 | Natural key | `(owner_org, reference_number)` — verified 0 duplicates in the first 350,000 rows and enforced as the primary key on load |
-| Row counts | local: **1,313,272** (equals the record count of an independent Python `csv` pass; 99 `owner_org`s; 244,117 sole-source rows; 213,124 amendment rows; 1,100,234 distinct procurements) · RDS: _pending (COPY sync queued)_ |
+| Row counts | local: **1,313,272** (equals the record count of an independent Python `csv` pass; 99 `owner_org`s; 244,117 sole-source rows; 213,124 amendment rows; 1,100,234 distinct procurements) · RDS: **1,313,272** (equal; COPY sync 111 s for 738 MB once the uplink recovered — a second queued run was a +0 no-op, both in `fedc.ingest_log`) |
 | Runtime | local full load 136.3 s (≈9,600 rows/s, 2,000-row batches). Download from open.canada.ca ran at 12–40 KB/s for most of the session (≈30 min for 641 MB); the loader resumes with `curl -C -`. |
 
 Column mapping is 1:1 with the schema plus derived `vendor_name_norm`
