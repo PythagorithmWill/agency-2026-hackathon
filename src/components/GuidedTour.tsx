@@ -95,8 +95,14 @@ export function GuidedTour({ corpusSummary }: GuidedTourProps) {
   // Show the tour automatically on first visit. The localStorage flag is
   // set whenever the user finishes or skips. Returning visitors only see
   // the floating launcher button.
+  // Auto-start ONLY on the homepage. A first-time visitor who arrives on a
+  // deep link (a shared record, pattern or search) must land where they
+  // clicked — the tour's step navigation would otherwise router.push them to
+  // "/" before they see the page they came for. The launcher button still
+  // starts the tour from anywhere.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (window.location.pathname !== "/") return;
     try {
       if (!window.localStorage.getItem(STORAGE_KEY)) setActive(true);
     } catch {
