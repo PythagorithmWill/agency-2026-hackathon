@@ -241,7 +241,7 @@ export function SuitabilityScoreCircle({
             onMouseEnter={() => setHover(arc.id)}
             onMouseLeave={() => setHover(null)}
             className={
-              "flex items-center justify-between cursor-help transition-colors " +
+              "flex items-center justify-between cursor-pointer transition-colors " +
               (hover === arc.id ? "text-[var(--color-fg)]" : "text-[var(--color-fg-muted)]")
             }
           >
@@ -258,7 +258,16 @@ export function SuitabilityScoreCircle({
         ))}
       </ul>
 
-      {/* Floating explanation card on hover */}
+      {/* Explanation on hover: inline below the legend (all widths) ... */}
+      {hover && (
+        <p className="mt-3 xl:hidden text-[var(--text-body-sm)] leading-[20px] text-[var(--color-fg-muted)] border-l-2 border-[var(--color-border-strong)] pl-3">
+          <span className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
+            {DIMS.find((d) => d.id === hover)?.label} ·{" "}
+          </span>
+          {explanation[hover]}
+        </p>
+      )}
+      {/* ... and as a floating card beside the circle on wide screens */}
       {hover && (
         <div className="absolute top-1/2 left-full ml-8 -translate-y-1/2 hidden xl:block w-[280px] rounded-[12px] border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-2)] p-5 shadow-[0_24px_48px_rgba(0,0,0,0.5)]">
           <div className="font-[var(--font-mono)] text-[var(--text-caption)] uppercase tracking-[0.12em] text-[var(--color-fg-subtle)]">
