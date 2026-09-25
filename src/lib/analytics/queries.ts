@@ -1269,9 +1269,12 @@ export async function loadRecipientProfile(
     () =>
       run(budget)<Row>(
         `SELECT
-           MAX(recipient_legal_name) AS legal_name,
+           -- Most frequent name for this BN, not MAX(): institutions file many rows
+           -- under individual researchers' names, and MAX() picked the alphabetically
+           -- last one (UBC displayed as "Zumbo, Bruno D").
+           mode() WITHIN GROUP (ORDER BY recipient_legal_name) AS legal_name,
            MAX(recipient_bn_raw) AS bn,
-           MAX(recipient_province) AS province,
+           mode() WITHIN GROUP (ORDER BY recipient_province) AS province,
            SUM(current_value)::numeric AS total,
            COUNT(*) AS agreement_count,
            COUNT(DISTINCT department) AS department_count,
@@ -1286,9 +1289,12 @@ export async function loadRecipientProfile(
       run(budget)<Row>(
         `${recipientSliceCte(clause)}
          SELECT
-           MAX(recipient_legal_name) AS legal_name,
+           -- Most frequent name for this BN, not MAX(): institutions file many rows
+           -- under individual researchers' names, and MAX() picked the alphabetically
+           -- last one (UBC displayed as "Zumbo, Bruno D").
+           mode() WITHIN GROUP (ORDER BY recipient_legal_name) AS legal_name,
            MAX(recipient_business_number) AS bn,
-           MAX(recipient_province) AS province,
+           mode() WITHIN GROUP (ORDER BY recipient_province) AS province,
            SUM(agreement_value)::numeric AS total,
            COUNT(*) AS agreement_count,
            COUNT(DISTINCT owner_org_title) AS department_count,
