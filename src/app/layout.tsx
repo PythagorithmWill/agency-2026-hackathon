@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { GuidedTour } from "@/components/GuidedTour";
+import { GoogleTagManager } from "@/components/analytics/GoogleTagManager";
 import { getCorpusStats } from "@/lib/analytics/corpusStats";
 import "./globals.css";
 
@@ -88,6 +89,7 @@ export default async function RootLayout({
         className="min-h-screen bg-[var(--color-bg)] text-[var(--color-fg)] antialiased notranslate"
         translate="no"
       >
+        <GoogleTagManager />
         <SiteHeader />
         {children}
         <GuidedTour
