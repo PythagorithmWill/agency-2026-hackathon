@@ -41,7 +41,7 @@ async function maybePurge(): Promise<void> {
 
 function remember(e: EvaluationResult): void {
   cache.delete(e.evaluationId);
-  remember(e);
+  cache.set(e.evaluationId, e);
   while (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value as string);
 }
 
@@ -116,7 +116,7 @@ function ensureTable(): Promise<boolean> {
 }
 
 export async function saveEvaluation(e: EvaluationResult): Promise<void> {
-  cache.set(e.evaluationId, e);
+  remember(e);
   if (!(await ensureTable())) return;
   try {
     await query(
