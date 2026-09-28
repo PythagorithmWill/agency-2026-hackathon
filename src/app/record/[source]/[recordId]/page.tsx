@@ -10,6 +10,7 @@ import { SourceBadge, getSourceLabel } from "@/components/SourceBadge";
 import { AmendmentTimeline } from "@/components/record/AmendmentTimeline";
 import { ExpandableText } from "@/components/ExpandableText";
 import type { DatasetSource } from "@/lib/types";
+import { decodeParam } from "@/lib/params";
 
 const cad = new Intl.NumberFormat("en-CA", {
   style: "currency",
@@ -33,7 +34,8 @@ export default async function RecordPage({
   const { source: rawSource, recordId: rawId } = await params;
   const source = SEGMENT_TO_SOURCE[rawSource];
   if (!source) notFound();
-  const recordId = decodeURIComponent(rawId);
+  const recordId = decodeParam(rawId);
+  if (recordId === null || recordId.length > 200) notFound();
 
   const [record, amendments] = await Promise.all([
     loadRecordCached(source, recordId),

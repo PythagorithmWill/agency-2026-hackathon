@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { searchCorpusCached } from "@/lib/evaluate/search-cache";
+import { MAX_QUERY_LENGTH, searchCorpusCached } from "@/lib/evaluate/search-cache";
 import { SimilarRecordCard } from "@/components/evaluate/SimilarRecordCard";
 import { SearchEditBar } from "@/components/SearchEditBar";
 import { SourceBreakdown } from "@/components/SourceBreakdown";
@@ -22,8 +22,8 @@ export default async function SearchPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const rawQ = typeof sp.q === "string" ? sp.q : "";
-  const rawDept = typeof sp.dept === "string" ? sp.dept : undefined;
+  const rawQ = typeof sp.q === "string" ? sp.q.slice(0, MAX_QUERY_LENGTH) : "";
+  const rawDept = typeof sp.dept === "string" ? sp.dept.slice(0, MAX_QUERY_LENGTH) : undefined;
   const q = rawQ.trim();
   const corpus = await getCorpusStats();
 

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { findProofTokenById } from "@/lib/proofRegistry";
 import { proofTokenCompleteness, type Violation } from "@/lib/gov/validators";
 import { verifyProofTokenHash } from "@/lib/proof";
+import { decodeParam } from "@/lib/params";
 
 export const metadata = { title: "Verify audit token — Glassbox" };
 
@@ -11,7 +12,8 @@ export default async function VerifyPage({
   params: Promise<{ proofId: string }>;
 }) {
   const { proofId } = await params;
-  const decoded = decodeURIComponent(proofId);
+  const decoded = decodeParam(proofId);
+  if (decoded === null) notFound();
   const found = await findProofTokenById(decoded);
   if (!found) notFound();
 

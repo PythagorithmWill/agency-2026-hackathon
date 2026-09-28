@@ -282,7 +282,7 @@ function abGrantsSearchSql(
     : `amount >= ${amountFloor}`;
   const ministryParamIdx = withAmountRange ? 4 : 2;
   const ministryClause = withMinistry
-    ? `AND ($${ministryParamIdx}::text IS NULL OR ministry ILIKE '%' || $${ministryParamIdx} || '%')`
+    ? `AND ($${ministryParamIdx}::text IS NULL OR ministry ILIKE '%' || replace(replace(replace($${ministryParamIdx}, '\\', '\\\\'), '%', '\\%'), '_', '\\_') || '%')`
     : "";
   return `
     WITH ab_clean AS (
@@ -330,7 +330,7 @@ function abContractsSearchSql(
     : `amount >= ${amountFloor}`;
   const ministryParamIdx = withAmountRange ? 4 : 2;
   const ministryClause = withMinistry
-    ? `AND ($${ministryParamIdx}::text IS NULL OR ministry ILIKE '%' || $${ministryParamIdx} || '%')`
+    ? `AND ($${ministryParamIdx}::text IS NULL OR ministry ILIKE '%' || replace(replace(replace($${ministryParamIdx}, '\\', '\\\\'), '%', '\\%'), '_', '\\_') || '%')`
     : "";
   return `
     SELECT

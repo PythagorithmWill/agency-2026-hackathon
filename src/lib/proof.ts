@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import type { ProofToken } from "./types";
 
 /**
@@ -16,6 +16,21 @@ export function makeProofId(input: {
     .digest("hex")
     .slice(0, 6);
   return `ppm-${input.issuedAt}-${hash}`;
+}
+
+/** Unguessable evaluation ID (128 random bits). */
+export function newEvaluationId(): string {
+  return `ev-${randomBytes(16).toString("base64url")}`;
+}
+
+/** Unguessable proof ID, independent of the evaluation ID (128 random bits). */
+export function newProofId(): string {
+  return `pf-${randomBytes(16).toString("base64url")}`;
+}
+
+/** Shape check for any evaluation or proof ID in a URL (new and legacy formats). */
+export function isPlausibleId(id: string): boolean {
+  return /^[A-Za-z0-9_.:-]{6,100}$/.test(id);
 }
 
 export function hashEvidence(evidence: ReadonlyArray<unknown>): string {

@@ -6,7 +6,7 @@ import type { SignalStrength } from "@/lib/patterns/types";
 
 const MAX_LIMIT = 200;
 const DEFAULT_LIMIT = 50;
-const MAX_OFFSET = 1_000_000;
+const MAX_OFFSET = 10_000;
 const MAX_TEXT = 200;
 // Snapshot-backed responses are safe to cache briefly at the edge; live
 // table reads are not (they change on every refresh-derived run and the

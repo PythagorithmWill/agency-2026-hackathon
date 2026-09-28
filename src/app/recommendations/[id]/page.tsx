@@ -7,6 +7,7 @@ import {
   type Recommendation,
 } from "@/lib/recommendations/build";
 import { loadAllRecommendations } from "./load";
+import { decodeParam } from "@/lib/params";
 
 export const revalidate = 1800;
 
@@ -37,7 +38,7 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   const all = await loadAllRecommendations();
-  const decoded = decodeURIComponent(id);
+  const decoded = decodeParam(id) ?? "";
   const rec = all.find((r) => r.id === decoded);
   return { title: rec ? `${rec.title.slice(0, 60)} — Glassbox` : "Recommendation — Glassbox" };
 }
@@ -48,7 +49,7 @@ export default async function RecommendationDetail({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const decoded = decodeURIComponent(id);
+  const decoded = decodeParam(id) ?? "";
   const all = await loadAllRecommendations();
   const rec = all.find((r) => r.id === decoded);
   if (!rec) notFound();

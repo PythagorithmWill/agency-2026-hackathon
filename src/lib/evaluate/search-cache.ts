@@ -1,6 +1,9 @@
 import { corpusCached, SEARCH_REVALIDATE_S } from "../cache";
 import { searchCorpus, type SearchResult } from "./retrieval";
 
+/** Longest search query or department filter accepted, in characters. */
+export const MAX_QUERY_LENGTH = 200;
+
 /** Thrown inside the cached fn so a degraded result is returned but not stored. */
 class DegradedSearch extends Error {
   constructor(public readonly result: SearchResult) {
@@ -27,8 +30,12 @@ export async function searchCorpusCached(
   dept?: string,
   limit?: number,
 ): Promise<SearchResult> {
+  // Bound and normalise the inputs so near-duplicate queries share a cache
+  // entry and oversized input never reaches the database.
+  const qn = q.replace(/\s+/g, " ").trim().toLowerCase().slice(0, MAX_QUERY_LENGTH);
+  const dn = dept ? dept.trim().slice(0, MAX_QUERY_LENGTH) || undefined : undefined;
   try {
-    return await cached(q, dept, limit);
+    return await cached(qn, dn, limit);
   } catch (err) {
     if (err instanceof DegradedSearch) return err.result;
     throw err;

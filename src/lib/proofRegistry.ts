@@ -1,5 +1,6 @@
 import type { ProofToken } from "./types";
-import { loadEvaluation } from "./evaluate/store";
+import { loadEvaluation, loadEvaluationByProofId } from "./evaluate/store";
+import { isPlausibleId } from "./proof";
 
 /**
  * Resolve a proofId to its issuing context. For tomorrow's product the
@@ -9,11 +10,12 @@ import { loadEvaluation } from "./evaluate/store";
 export async function findProofTokenById(
   proofId: string,
 ): Promise<{ token: ProofToken; subjectName: string } | null> {
-  // Strip the "-eval" suffix to get the underlying evaluationId
-  const evaluationId = proofId.endsWith("-eval")
-    ? proofId.slice(0, -"-eval".length)
-    : proofId;
-  const evaluation = await loadEvaluation(evaluationId);
+  if (!isPlausibleId(proofId)) return null;
+  // Current tokens: look up by proof_id (independent random ID).
+  // Legacy tokens ("<evaluationId>-eval", before 2026-09-28): derive the evaluation.
+  const evaluation = proofId.endsWith("-eval")
+    ? await loadEvaluation(proofId.slice(0, -"-eval".length))
+    : await loadEvaluationByProofId(proofId);
   if (evaluation && evaluation.proofToken.proofId === proofId) {
     return {
       token: evaluation.proofToken,

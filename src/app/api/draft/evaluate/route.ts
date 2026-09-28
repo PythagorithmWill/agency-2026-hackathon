@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { buildEvaluationResult } from "@/lib/evaluate/buildResult";
 import { saveEvaluation } from "@/lib/evaluate/store";
 import type { DraftSubmission } from "@/lib/types";
+import { isSameOrigin } from "@/lib/sameOrigin";
 
 const MIN_DRAFT_LENGTH = 40;
 // Upper bounds: the draft text seeds a corpus retrieval query and the
@@ -20,6 +21,10 @@ function bad(error: string, status = 400): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isSameOrigin(request)) return bad("cross-site request refused", 403);
+  if (!(request.headers.get("content-type") ?? "").toLowerCase().startsWith("application/json")) {
+    return bad("expected Content-Type: application/json", 415);
+  }
   const declared = Number(request.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
     return bad(`request body exceeds ${MAX_BODY_BYTES} bytes`, 413);

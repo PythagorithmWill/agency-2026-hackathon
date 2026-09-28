@@ -19,6 +19,8 @@ const seriesCached = corpusCached(loadTemporalSeriesFed, "recipient-series");
 const goldenCached = corpusCached(loadGoldenRecord, "golden-record");
 import { AnimatedBar } from "@/components/viz/AnimatedBar";
 import { AnimatedAreaChart } from "@/components/viz/AnimatedAreaChart";
+import { decodeParam } from "@/lib/params";
+import { notFound } from "next/navigation";
 
 const dollar = new Intl.NumberFormat("en-CA", {
   style: "currency",
@@ -35,7 +37,7 @@ const compactDollar = (v: number) => {
 
 export async function generateMetadata({ params }: { params: Promise<{ bn: string }> }) {
   const { bn } = await params;
-  const decoded = decodeURIComponent(bn);
+  const decoded = (decodeParam(bn) ?? "").slice(0, 200);
   const profile = await profileCached(decoded, "long").catch(() => null);
   if (profile) return { title: `${profile.legalName} — Glassbox` };
   const golden = await goldenCached(decoded, "long").catch(() => null);
@@ -61,7 +63,9 @@ export default async function RecipientPage({
   params: Promise<{ bn: string }>;
 }) {
   const { bn } = await params;
-  const identifier = decodeURIComponent(bn);
+  const decodedId = decodeParam(bn);
+  if (decodedId === null || decodedId.length > 200) notFound();
+  const identifier = decodedId;
   const isBn = /^\d{9,}/.test(identifier);
 
   // Short-circuit on identifiers that can't possibly match a corpus row.

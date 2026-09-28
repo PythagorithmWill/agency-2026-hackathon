@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import mammoth from "mammoth";
+import { docxProblem } from "@/lib/evaluate/upload-guards";
+import { isSameOrigin } from "@/lib/sameOrigin";
 
 export const dynamic = "force-dynamic";
 
@@ -7,15 +9,23 @@ export const dynamic = "force-dynamic";
  * POST /api/draft/extract — multipart form with one `file` field.
  *
  * Turns an uploaded draft (.txt, .md, .docx, .pdf) into plain text for the
- * evaluate form's textarea. The file is validated by size, extension AND
- * magic bytes, read once into memory, converted, and discarded — nothing is
- * written to disk or the database, nothing is executed.
+ * evaluate form's textarea. The body is read with a hard byte cap; the file
+ * is validated by size, extension AND magic bytes; a .docx's zip directory is
+ * checked for decompression bombs before it is opened; a PDF's page count is
+ * checked before text extraction; extraction has a 10-second limit. Nothing
+ * is written to disk or the database, nothing is executed.
  *
  * Response: { text, kind, chars, truncated, fileName }
  *   - `chars` is the length of the returned text.
  *   - `truncated` is true when the text was cut at the draft limit.
  */
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+/** Whole request body: the file plus multipart framing. */
+const MAX_BODY_BYTES = MAX_UPLOAD_BYTES + 16 * 1024;
+/** PDF guard: page count, checked before any text is extracted. */
+const MAX_PDF_PAGES = 200;
+/** Wall-clock limit on any single extraction. */
+const EXTRACT_TIMEOUT_MS = 10_000;
 /** Mirrors MAX_DRAFT_LENGTH in ./evaluate/route.ts. */
 const MAX_DRAFT_LENGTH = 20_000;
 
@@ -36,15 +46,26 @@ function bad(error: string, status = 400): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isSameOrigin(request)) return bad("cross-site request refused", 403);
   const declared = Number(request.headers.get("content-length"));
   // Multipart framing adds a few hundred bytes; allow a small margin.
-  if (Number.isFinite(declared) && declared > MAX_UPLOAD_BYTES + 16 * 1024) {
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
     return bad(`file exceeds ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB`, 413);
   }
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().startsWith("multipart/form-data")) {
+    return bad("expected multipart/form-data with a `file` field");
+  }
+
+  // Read the body with a hard byte cap: Content-Length is optional (chunked
+  // uploads) and never trusted on its own.
+  const body = await readCapped(request, MAX_BODY_BYTES);
+  if (body === "too-large") return bad(`file exceeds ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB`, 413);
+  if (body === null) return bad("expected multipart/form-data with a `file` field");
 
   let form: FormData;
   try {
-    form = await request.formData();
+    form = await new Response(new Blob([Buffer.from(body)]), { headers: { "content-type": contentType } }).formData();
   } catch {
     return bad("expected multipart/form-data with a `file` field");
   }
@@ -65,11 +86,18 @@ export async function POST(request: Request): Promise<Response> {
     return bad(`the file does not look like a ${ext} file`, 415);
   }
 
+  if (kind === "docx") {
+    const problem = docxProblem(bytes);
+    if (problem) return bad(`could not read the docx file (${problem}) — paste the text instead`, 422);
+  }
+
   let text: string;
   try {
-    text = await extractText(kind, bytes);
+    text = await withTimeout(extractText(kind, bytes), EXTRACT_TIMEOUT_MS);
   } catch (err) {
     const message = (err as Error).message;
+    if (message === "extract-timeout") return bad("the file took too long to read — paste the text instead", 422);
+    if (message === "pdf-too-long") return bad(`the PDF has more than ${MAX_PDF_PAGES} pages — paste the relevant text instead`, 422);
     console.warn(`[api/draft/extract] ${kind} extraction failed:`, message);
     if (kind === "pdf") {
       return bad("PDF extraction not available yet — paste the text", 422);
@@ -134,13 +162,43 @@ async function extractText(kind: ExtractKind, bytes: Uint8Array): Promise<string
       // unpdf: a serverless-oriented pdfjs build that needs neither a worker
       // file nor a native canvas binding. (pdf-parse + pdfjs worker failed on
       // the Amplify runtime with "DOMMatrix is not defined" / worker lookup.)
-      const { extractText } = await import("unpdf");
-      const { text } = await extractText(new Uint8Array(bytes), { mergePages: true });
+      const { extractText, getDocumentProxy } = await import("unpdf");
+      const pdf = await getDocumentProxy(new Uint8Array(bytes));
+      if (pdf.numPages > MAX_PDF_PAGES) throw new Error("pdf-too-long");
+      const { text } = await extractText(pdf, { mergePages: true });
       return String(text ?? "");
     }
   }
 }
 
+
+/** Read a request body, stopping as soon as it exceeds `max` bytes. */
+async function readCapped(request: Request, max: number): Promise<Uint8Array | "too-large" | null> {
+  if (!request.body) return null;
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      await reader.cancel().catch(() => undefined);
+      return "too-large";
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.byteLength; }
+  return out;
+}
+
+function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("extract-timeout")), ms); });
+  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
+}
 
 /** Normalise line endings, strip control characters, collapse blank runs. */
 function normalise(text: string): string {

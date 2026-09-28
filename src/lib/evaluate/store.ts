@@ -24,6 +24,26 @@ declare global {
 
 const cache: Map<string, EvaluationResult> =
   globalThis.__pythStore ?? (globalThis.__pythStore = new Map());
+/** In-process cache cap: oldest entries are evicted first (Map keeps insertion order). */
+const CACHE_MAX = 500;
+/** Stored evaluations older than this are purged. */
+const RETENTION_DAYS = 90;
+
+/** Occasionally delete expired rows (about 1 in 50 writes); failures are ignored. */
+async function maybePurge(): Promise<void> {
+  if (Math.random() > 0.02) return;
+  try {
+    await query(`DELETE FROM ${TABLE} WHERE created_at < now() - make_interval(days => $1)`, [RETENTION_DAYS]);
+  } catch (err) {
+    console.warn("[store] purge skipped:", (err as Error).message);
+  }
+}
+
+function remember(e: EvaluationResult): void {
+  cache.delete(e.evaluationId);
+  remember(e);
+  while (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value as string);
+}
 
 const TABLE = "app.evaluations";
 
@@ -108,6 +128,7 @@ export async function saveEvaluation(e: EvaluationResult): Promise<void> {
   } catch (err) {
     console.warn("[store] persist failed (kept in memory):", (err as Error).message);
   }
+  await maybePurge();
 }
 
 export async function loadEvaluation(id: string): Promise<EvaluationResult | null> {
@@ -121,10 +142,25 @@ export async function loadEvaluation(id: string): Promise<EvaluationResult | nul
     );
     const row = r.rows[0];
     if (!row) return null;
-    cache.set(id, row.result);
+    remember(row.result);
     return row.result;
   } catch (err) {
     console.warn("[store] load failed:", (err as Error).message);
+    return null;
+  }
+}
+
+export async function loadEvaluationByProofId(proofId: string): Promise<EvaluationResult | null> {
+  for (const e of cache.values()) if (e.proofToken.proofId === proofId) return e;
+  if (!(await ensureTable())) return null;
+  try {
+    const r = await query<{ result: EvaluationResult }>(`SELECT result FROM ${TABLE} WHERE proof_id = $1`, [proofId]);
+    const row = r.rows[0];
+    if (!row) return null;
+    remember(row.result);
+    return row.result;
+  } catch (err) {
+    console.warn("[store] load by proof failed:", (err as Error).message);
     return null;
   }
 }

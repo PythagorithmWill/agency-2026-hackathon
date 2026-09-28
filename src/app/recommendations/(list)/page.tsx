@@ -45,9 +45,9 @@ interface DetectorResult {
 }
 
 /**
- * Load detector matches. Tries the snapshot first (instant, no DB);
- * falls back to live detection only if the snapshot doesn't have
- * cached results. The build-snapshot.ts pipeline runs every detector
+ * Load detector matches from the snapshot (instant, no DB). There is no
+ * live fallback: if the snapshot is missing, each detector reports
+ * "snapshot_unavailable" rather than running at request time. The build-snapshot.ts pipeline runs every detector
  * sequentially under the long pool — much more reliable than running
  * 6 detectors in parallel at request time.
  */
@@ -68,21 +68,9 @@ async function loadDetectorResults(): Promise<DetectorResult[]> {
     });
   }
 
-  // Live fallback — only when the snapshot is missing or stale.
-  const settled = await Promise.allSettled(
-    detectors.map(async (d) => ({
-      patternId: d.pattern.id,
-      matches: await d.detect({ limit: 50 }),
-    })),
-  );
-  return settled.map((s, i) => {
-    if (s.status === "fulfilled") return s.value;
-    return {
-      patternId: detectors[i].pattern.id,
-      matches: [],
-      error: (s.reason as Error)?.message ?? "detection_failed",
-    };
-  });
+  // No live fallback: running every detector per request made this page an
+  // easy way to load the database. Without a snapshot, say so.
+  return detectors.map((d) => ({ patternId: d.pattern.id, matches: [], error: "snapshot_unavailable" }));
 }
 
 export default async function RecommendationsPage() {

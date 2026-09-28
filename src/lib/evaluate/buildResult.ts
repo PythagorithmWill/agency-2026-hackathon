@@ -8,7 +8,7 @@ import { buildAwardeeConcentration } from "./mockComparables";
 import { retrieveComparables } from "./retrieval";
 import { loadCorpusAsOfDate } from "../analytics/queries";
 import { scoreSubmission } from "../suitability/engine";
-import { hashEvidence, makeProofId, sealProofToken, standardDisclaimers } from "../proof";
+import { hashEvidence, sealProofToken, standardDisclaimers, newEvaluationId, newProofId } from "../proof";
 
 /**
  * Compose a full EvaluationResult from a draft submission. Calls
@@ -58,13 +58,12 @@ export async function buildEvaluationResult(
 
   const issuedAt = new Date().toISOString();
   const evidenceHash = hashEvidence([submission, comparables.map((c) => c.recordId)]);
-  const evaluationId = makeProofId({
-    entityId: "draft-evaluation",
-    findingType: "draft_evaluation",
-    evidenceHash,
-    issuedAt,
-  });
-  const proofId = `${evaluationId}-eval`;
+  // Random, independent identifiers: the evaluation link is the only key to
+  // a submitted draft, so it must not be guessable or derivable from the
+  // (shareable) proof link. Older evaluations used "<evaluationId>-eval";
+  // proofRegistry still resolves those.
+  const evaluationId = newEvaluationId();
+  const proofId = newProofId();
 
   const proofToken: ProofToken = sealProofToken({
     proofId,
@@ -75,7 +74,7 @@ export async function buildEvaluationResult(
       type: "draft_evaluation",
       summary: `Draft evaluation: ${submission.workingTitle}. Suitability score ${suitability.composite}/30 — ${suitability.verdict}.`,
       subject: {
-        entityId: evaluationId,
+        entityId: proofId,
         canonicalName: submission.workingTitle,
         bnRoot: null,
         datasetCoverage: ["fed", "ab_grants", "ab_contracts"],
@@ -108,7 +107,7 @@ export async function buildEvaluationResult(
       contextual: {
         passed: true,
         tier: 2,
-        model: "voyage-3-large + bedrock-claude-opus-4-6",
+        model: "postgres-fts-ts_rank_cd (keyword retrieval; no generative model)",
         promptHash: evidenceHash.slice(0, 16),
         promptVersion: "evaluate-v1.0",
         temperature: 0.2,
@@ -132,7 +131,7 @@ export async function buildEvaluationResult(
         humanReviewed: false,
         humanReviewer: null,
         operatorAgent: "PYTH-LEAD",
-        logRef: `decisions.md#${evaluationId}`,
+        logRef: `decisions.md#${proofId}`,
       },
     },
     disclaimers: usedMock
